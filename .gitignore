@@ -1,0 +1,82 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+pnpm-debug.log*
+dist/
+build/
+.env
+.env.local
+.env.*.local
+
+# Frontend build outputs
+frontend-pos/dist/
+frontend-pos/build/
+frontend-pos/node_modules/
+
+# Java/Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# Maven
+.classpath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+*.ipr
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Misc
+.cache
+.parcel-cache
+.next
+out/
+.nuxt
+.cache/
+.vuepress/dist/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port

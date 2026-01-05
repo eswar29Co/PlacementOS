@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Apply for: <span th:text="${job.title}"></span></h1>
+        
+        <div class="card">
+            <h3>Submit Your Application</h3>
+            
+            <form th:action="@{/applications/apply/{id}(id=${job.id})}" method="post">
+                <div class="form-group">
+                    <label>Resume / Cover Letter (Text)</label>
+                    <textarea name="resumeText" required 
+                              placeholder="Paste your resume or cover letter here. Include your skills, experience, education, and why you're a good fit for this role. Minimum 300 characters recommended."></textarea>
+                    <small>Tip: Include relevant keywords like programming languages, frameworks, and project experience.</small>
+                </div>
+                
+                <button type="submit" class="btn btn-success">Submit Application</button>
+                <a th:href="@{/jobs/{id}(id=${job.id})}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+        
+        <div class="alert alert-info">
+            <strong>💡 Pro Tip:</strong> Write at least 300 characters and include relevant keywords related to the job role. The AI will screen your resume based on these factors!
+        </div>
+    </div>
+</body>
+</html>

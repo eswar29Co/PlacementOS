@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Result - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Assessment Result 📊</h1>
+        
+        <div class="card">
+            <h3>Application for: <span th:text="${application.job.title}"></span></h3>
+            
+            <div style="text-align: center; padding: 40px 0;">
+                <h2 style="font-size: 48px; margin-bottom: 20px;">
+                    <span th:text="${attempt.score}"></span>/100
+                </h2>
+                
+                <div th:if="${attempt.passed}" class="alert alert-success">
+                    <h2>✅ Congratulations! You Passed!</h2>
+                    <p th:text="${feedback}"></p>
+                    <p style="margin-top: 20px;"><strong>Next Step:</strong> Your interview has been scheduled. Check your interview status.</p>
+                </div>
+                
+                <div th:if="${!attempt.passed}" class="alert alert-error">
+                    <h2>❌ Assessment Not Passed</h2>
+                    <p th:text="${feedback}"></p>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <a th:if="${attempt.passed}" 
+                   th:href="@{/applications/{id}/interview(id=${application.id})}" 
+                   class="btn btn-success">View Interview Status</a>
+                
+                <a th:if="${!attempt.passed}" 
+                   th:href="@{/jobs}" 
+                   class="btn">Try Another Job</a>
+                
+                <a th:href="@{/applications/my-applications}" class="btn btn-secondary">My Applications</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

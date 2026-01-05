@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Details - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1 th:text="${job.title}"></h1>
+        
+        <div class="card">
+            <h3>Job Details</h3>
+            <p><strong>Role Type:</strong> <span th:text="${job.roleType}"></span></p>
+            <p><strong>Company Type:</strong> <span th:text="${job.companyType}"></span></p>
+            <p><strong>CTC Range:</strong> ₹<span th:text="${job.ctcMin}"></span>L - ₹<span th:text="${job.ctcMax}"></span>L per annum</p>
+            <p><strong>Application Deadline:</strong> <span th:text="${job.deadline}"></span></p>
+            
+            <h4 style="margin-top: 20px;">Eligibility Criteria</h4>
+            <p th:text="${job.eligibilityText}"></p>
+            
+            <div style="margin-top: 30px;">
+                <a th:href="@{/applications/apply/{id}(id=${job.id})}" class="btn btn-success">Apply Now</a>
+                <a th:href="@{/jobs}" class="btn btn-secondary">Back to Jobs</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

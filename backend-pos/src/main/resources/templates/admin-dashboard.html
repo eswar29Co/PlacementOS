@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/admin/interviews}">🎤 Conduct Interviews</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Admin Dashboard</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>🎤 Conduct Interviews</h3>
+                <p>Review and conduct interviews for shortlisted candidates.</p>
+                <a th:href="@{/admin/interviews}" class="btn mt-20">View Interviews</a>
+            </div>
+            
+            <div class="card">
+                <h3>📊 System Overview</h3>
+                <p>Monitor the overall placement simulation platform.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

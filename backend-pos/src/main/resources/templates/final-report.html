@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Report - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Application Final Report 📊</h1>
+        
+        <div class="card">
+            <h3>Application for: <span th:text="${application.job.title}"></span></h3>
+            <p><strong>Current Status:</strong> 
+                <span class="badge" 
+                      th:classappend="${application.status.name() == 'OFFERED' ? 'badge-offered' : 
+                                     (application.status.name() == 'REJECTED' || application.status.name() == 'RESUME_REJECTED' || application.status.name() == 'ASSESSMENT_FAILED' ? 'badge-rejected' : 'badge-passed')}"
+                      th:text="${application.status}"></span>
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3>Application Timeline</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>Applied</strong><br>
+                    <span th:text="${#temporals.format(application.appliedAt, 'dd MMM yyyy HH:mm')}"></span>
+                </div>
+                
+                <div class="timeline-item" th:if="${application.status != 'APPLIED'}">
+                    <strong>Resume Screening</strong><br>
+                    Status: <span th:text="${application.status.name().contains('RESUME') ? application.status : 'Completed'}"></span><br>
+                    <span th:if="${application.feedback != null}" th:text="${application.feedback}"></span>
+                </div>
+                
+                <div class="timeline-item" th:if="${attempt != null}">
+                    <strong>Technical Assessment</strong><br>
+                    Score: <span th:text="${attempt.score}"></span>/100<br>
+                    Result: <span th:text="${attempt.passed ? 'Passed ✅' : 'Failed ❌'}"></span>
+                </div>
+                
+                <div class="timeline-item" th:if="${interview != null}">
+                    <strong>Interview</strong><br>
+                    Interviewer: <span th:text="${interview.interviewerName}"></span><br>
+                    Verdict: <span th:text="${interview.verdict}"></span><br>
+                    <span th:if="${interview.feedback != null}">Feedback: <span th:text="${interview.feedback}"></span></span>
+                </div>
+                
+                <div class="timeline-item" th:if="${application.status.name() == 'OFFERED'}">
+                    <strong>Offer Extended</strong><br>
+                    🎉 Congratulations! You received an offer!
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" 
+             th:classappend="${application.status.name() == 'OFFERED' ? 'alert-success' : 
+                            (application.status.name() == 'REJECTED' || application.status.name() == 'RESUME_REJECTED' || application.status.name() == 'ASSESSMENT_FAILED' ? 'alert-error' : 'alert-info')}">
+            <h3>Readiness Assessment</h3>
+            
+            <div th:if="${application.status.name() == 'OFFERED'}">
+                <p><strong>🎯 Excellent!</strong> You've successfully completed the entire placement process. You demonstrated strong skills in resume writing, technical assessment, and interview performance.</p>
+            </div>
+            
+            <div th:if="${application.status.name() == 'RESUME_REJECTED'}">
+                <p><strong>💡 Learning Opportunity:</strong> Your resume needs improvement. Focus on including more relevant details and keywords specific to the role you're applying for.</p>
+            </div>
+            
+            <div th:if="${application.status.name() == 'ASSESSMENT_FAILED'}">
+                <p><strong>📚 Keep Practicing:</strong> You passed the resume screening but need to improve your technical skills. Practice more and attempt additional assessments.</p>
+            </div>
+            
+            <div th:if="${application.status.name() == 'REJECTED' && interview != null}">
+                <p><strong>🎤 Interview Skills:</strong> You've made it far! Work on your interview skills based on the feedback provided. This is great progress!</p>
+            </div>
+            
+            <div th:if="${application.status.name() == 'APPLIED' || application.status.name() == 'RESUME_SHORTLISTED' || application.status.name() == 'ASSESSMENT_PASSED'}">
+                <p><strong>⏳ In Progress:</strong> Your application is still being processed. Continue to the next stage!</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a th:href="@{/applications/my-applications}" class="btn btn-secondary">Back to Applications</a>
+            <a th:href="@{/jobs}" class="btn">Apply to More Jobs</a>
+        </div>
+    </div>
+</body>
+</html>

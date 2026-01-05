@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Welcome, <span th:text="${user.name}"></span>! 👋</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>🎯 Your Mission</h3>
+                <p>Practice the complete placement journey - from applying to receiving offers. Fail as many times as you need!</p>
+            </div>
+            
+            <div class="card">
+                <h3>💼 Browse Jobs</h3>
+                <p>Explore available job openings and start your application journey.</p>
+                <a th:href="@{/jobs}" class="btn mt-20">View Jobs</a>
+            </div>
+            
+            <div class="card">
+                <h3>📊 Track Progress</h3>
+                <p>Monitor all your applications and see detailed feedback for each stage.</p>
+                <a th:href="@{/applications/my-applications}" class="btn btn-secondary mt-20">My Applications</a>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 30px; background: #f0f9ff;">
+            <h3>📚 How It Works</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>Step 1: Apply</strong> - Submit your resume for any job
+                </div>
+                <div class="timeline-item">
+                    <strong>Step 2: AI Screening</strong> - Get instant feedback on your resume
+                </div>
+                <div class="timeline-item">
+                    <strong>Step 3: Assessment</strong> - Take a simulated technical test
+                </div>
+                <div class="timeline-item">
+                    <strong>Step 4: Interview</strong> - Get interviewed by admins
+                </div>
+                <div class="timeline-item">
+                    <strong>Step 5: Offer</strong> - Receive your offer letter!
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

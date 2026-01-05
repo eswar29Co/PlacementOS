@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Status - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Interview Status 🎤</h1>
+        
+        <div class="card">
+            <h3>Application for: <span th:text="${application.job.title}"></span></h3>
+            
+            <div th:if="${interview == null}">
+                <div class="alert alert-info">
+                    <p>Your interview has not been scheduled yet. Please check back later.</p>
+                </div>
+            </div>
+            
+            <div th:if="${interview != null && interview.verdict.name() == 'PENDING'}">
+                <div class="alert alert-info">
+                    <h3>⏳ Interview Scheduled</h3>
+                    <p><strong>Interviewer:</strong> <span th:text="${interview.interviewerName}"></span></p>
+                    <p>Your interview is pending. The interviewer will conduct the interview and provide feedback soon.</p>
+                </div>
+            </div>
+            
+            <div th:if="${interview != null && interview.verdict.name() == 'PASS'}">
+                <div class="alert alert-success">
+                    <h3>✅ Interview Passed!</h3>
+                    <p><strong>Interviewer:</strong> <span th:text="${interview.interviewerName}"></span></p>
+                    <p><strong>Feedback:</strong> <span th:text="${interview.feedback}"></span></p>
+                    <p style="margin-top: 20px;">Congratulations! You've been selected for an offer!</p>
+                </div>
+                <a th:href="@{/applications/{id}/offer(id=${application.id})}" class="btn btn-success mt-20">View Offer Letter</a>
+            </div>
+            
+            <div th:if="${interview != null && interview.verdict.name() == 'FAIL'}">
+                <div class="alert alert-error">
+                    <h3>❌ Interview Not Cleared</h3>
+                    <p><strong>Interviewer:</strong> <span th:text="${interview.interviewerName}"></span></p>
+                    <p><strong>Feedback:</strong> <span th:text="${interview.feedback}"></span></p>
+                    <p style="margin-top: 20px;">Don't worry! This is practice. Learn from the feedback and try again!</p>
+                </div>
+                <a th:href="@{/jobs}" class="btn mt-20">Apply to Another Job</a>
+            </div>
+            
+            <a th:href="@{/applications/my-applications}" class="btn btn-secondary mt-20">Back to Applications</a>
+        </div>
+    </div>
+</body>
+</html>

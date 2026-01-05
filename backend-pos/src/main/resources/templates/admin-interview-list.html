@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interviews - Admin - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/admin/interviews}">🎤 Conduct Interviews</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Interview Management 🎤</h1>
+        
+        <div th:if="${interviews.isEmpty()}" class="alert alert-info">
+            No interviews scheduled yet.
+        </div>
+        
+        <table th:if="${!interviews.isEmpty()}">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Job Position</th>
+                    <th>Status</th>
+                    <th>Scheduled At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="interview : ${interviews}">
+                    <td th:text="${interview.application.user.name}"></td>
+                    <td th:text="${interview.application.job.title}"></td>
+                    <td>
+                        <span class="badge" 
+                              th:classappend="${interview.verdict.name() == 'PENDING' ? 'badge-applied' : 
+                                             (interview.verdict.name() == 'PASS' ? 'badge-passed' : 'badge-rejected')}"
+                              th:text="${interview.verdict}"></span>
+                    </td>
+                    <td th:text="${#temporals.format(interview.conductedAt, 'dd MMM yyyy HH:mm')}"></td>
+                    <td>
+                        <a th:if="${interview.verdict.name() == 'PENDING'}" 
+                           th:href="@{/admin/interviews/{id}/conduct(id=${interview.id})}" 
+                           class="btn" style="padding: 5px 10px; font-size: 14px;">Conduct Interview</a>
+                        <span th:if="${interview.verdict.name() != 'PENDING'}">Completed</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

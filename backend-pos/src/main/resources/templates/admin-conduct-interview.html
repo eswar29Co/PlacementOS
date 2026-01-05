@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conduct Interview - Admin - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/admin/interviews}">🎤 Conduct Interviews</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>Conduct Interview 🎤</h1>
+        
+        <div class="card">
+            <h3>Candidate Information</h3>
+            <p><strong>Name:</strong> <span th:text="${interview.application.user.name}"></span></p>
+            <p><strong>Email:</strong> <span th:text="${interview.application.user.email}"></span></p>
+            <p><strong>College:</strong> <span th:text="${interview.application.user.college}"></span></p>
+            <p><strong>Position:</strong> <span th:text="${interview.application.job.title}"></span></p>
+        </div>
+        
+        <div class="card">
+            <h3>Candidate's Resume</h3>
+            <div style="padding: 15px; background: #f9fafb; border-radius: 5px; white-space: pre-wrap;">
+                <p th:text="${interview.application.resumeText}"></p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>Interview Feedback Form</h3>
+            
+            <form th:action="@{/admin/interviews/{id}/submit(id=${interview.id})}" method="post">
+                <div class="form-group">
+                    <label>Interview Feedback</label>
+                    <textarea name="feedback" required 
+                              placeholder="Provide detailed feedback about the candidate's performance, technical skills, communication, and overall impression..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Verdict</label>
+                    <select name="verdict" required>
+                        <option value="">-- Select Verdict --</option>
+                        <option value="PASS">✅ Pass - Recommend for Offer</option>
+                        <option value="FAIL">❌ Fail - Not Suitable</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-success">Submit Feedback</button>
+                <a th:href="@{/admin/interviews}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offer Letter - PlacementOS</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div>
+                <a th:href="@{/dashboard}">🏠 Dashboard</a>
+                <a th:href="@{/jobs}">💼 Browse Jobs</a>
+                <a th:href="@{/applications/my-applications}">📋 My Applications</a>
+            </div>
+            <div>
+                <span style="color: white; margin-right: 15px;">👤 <span th:text="${user.name}"></span></span>
+                <a th:href="@{/logout}">Logout</a>
+            </div>
+        </div>
+        
+        <h1>🎉 Offer Letter</h1>
+        
+        <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+            <h2 style="text-align: center; color: #92400e;">CONGRATULATIONS!</h2>
+            <h3 style="text-align: center; color: #92400e;">You've Received an Offer!</h3>
+            
+            <div style="margin-top: 30px; padding: 20px; background: white; border-radius: 8px;">
+                <p><strong>Dear <span th:text="${user.name}"></span>,</strong></p>
+                
+                <p style="margin-top: 20px;">
+                    We are pleased to offer you the position of <strong th:text="${application.job.title}"></strong> 
+                    with our organization.
+                </p>
+                
+                <p style="margin-top: 20px;">
+                    <strong>Position:</strong> <span th:text="${application.job.title}"></span><br>
+                    <strong>CTC Range:</strong> ₹<span th:text="${application.job.ctcMin}"></span>L - 
+                    ₹<span th:text="${application.job.ctcMax}"></span>L per annum<br>
+                    <strong>Company Type:</strong> <span th:text="${application.job.companyType}"></span>
+                </p>
+                
+                <p style="margin-top: 20px;">
+                    Your performance throughout the selection process has been impressive. We look forward to 
+                    having you as part of our team!
+                </p>
+                
+                <p style="margin-top: 30px;">
+                    <strong>Sincerely,</strong><br>
+                    HR Department
+                </p>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <a th:href="@{/applications/{id}/report(id=${application.id})}" class="btn btn-success">View Complete Report</a>
+                <a th:href="@{/applications/my-applications}" class="btn btn-secondary">My Applications</a>
+            </div>
+        </div>
+        
+        <div class="alert alert-success" style="margin-top: 20px;">
+            <strong>🎯 Mission Accomplished!</strong> You've successfully completed the entire placement simulation journey!
+        </div>
+    </div>
+</body>
+</html>
