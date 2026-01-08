@@ -1,13 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Job } from '@/types';
-import { mockJobs } from '@/data/mockData';
 
 interface JobsState {
   jobs: Job[];
 }
 
 const initialState: JobsState = {
-  jobs: mockJobs,
+  jobs: [],
 };
 
 const jobsSlice = createSlice({
@@ -27,7 +26,8 @@ const jobsSlice = createSlice({
       state.jobs = state.jobs.filter((j) => j.id !== action.payload);
     },
     setJobs: (state, action: PayloadAction<Job[]>) => {
-      state.jobs = action.payload;
+      // Ensure payload is always an array to prevent "filter is not a function" errors
+      state.jobs = Array.isArray(action.payload) ? action.payload : [];
     },
   },
 });

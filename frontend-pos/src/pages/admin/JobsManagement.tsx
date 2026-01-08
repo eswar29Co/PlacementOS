@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { addJob, updateJob, deleteJob } from '@/store/slices/jobsSlice';
+import { setJobs } from '@/store/slices/jobsSlice';
+import { jobService } from '@/services';
 import { Briefcase, Plus, Search, Edit, Trash2, Calendar, Users, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Job, LocationType } from '@/types';
@@ -21,6 +22,32 @@ export default function JobsManagement() {
   const { applications } = useAppSelector((state) => state.applications);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Normalize arrays to prevent "is not a function" errors
+  const jobsList = Array.isArray(jobs) ? jobs : [];
+  const applicationsList = Array.isArray(applications) ? applications : [];
+
+  // Fetch jobs from MongoDB on component mount
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setIsLoading(true);
+        const response = await jobService.getAllJobs();
+        if (response.success && response.data) {
+          // Extract jobs array from response.data.jobs
+          const jobsArray = response.data.jobs || response.data;
+          dispatch(setJobs(jobsArray));
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to load jobs');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [dispatch]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -36,13 +63,13 @@ export default function JobsManagement() {
     deadline: '',
   });
 
-  const filteredJobs = jobs.filter(job =>
+  const filteredJobs = jobsList.filter(job =>
     job.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.roleTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getJobStats = (jobId: string) => {
-    const jobApps = applications.filter(a => a.jobId === jobId);
+    const jobApps = applicationsList.filter(a => a.jobId === jobId);
     return {
       total: jobApps.length,
       active: jobApps.filter(a => !['rejected', 'offer_released', 'offer_accepted'].includes(a.status)).length,
@@ -51,54 +78,83 @@ export default function JobsManagement() {
     };
   };
 
-  const handleCreateJob = () => {
+  const handleCreateJob = async () => {
     if (!formData.companyName || !formData.roleTitle || !formData.ctcBand) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const newJob: Job = {
-      id: `job-${Date.now()}`,
-      companyName: formData.companyName,
-      roleTitle: formData.roleTitle,
-      ctcBand: formData.ctcBand,
-      package: formData.package || formData.ctcBand,
-      locationType: formData.locationType,
-      description: formData.description,
-      requirements: formData.requirements.split('\n').filter(r => r.trim()),
-      skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
-      requiredTechStack: formData.requiredTechStack.split(',').map(s => s.trim()).filter(s => s),
-      deadline: formData.deadline ? new Date(formData.deadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      isActive: true,
-      selectionProcess: ['Resume Screening', 'Assessment', 'AI Interview', 'Technical Round', 'Manager Round', 'HR Round'],
-    };
+    try {
+      const jobData = {
+        companyName: formData.companyName,
+        roleTitle: formData.roleTitle,
+        ctcBand: formData.ctcBand,
+        package: formData.package || formData.ctcBand,
+        locationType: formData.locationType,
+        description: formData.description,
+        requirements: formData.requirements.split('\n').filter(r => r.trim()),
+        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
+        requiredTechStack: formData.requiredTechStack.split(',').map(s => s.trim()).filter(s => s),
+        deadline: formData.deadline ? new Date(formData.deadline) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        isActive: true,
+        selectionProcess: ['Resume Screening', 'Assessment', 'AI Interview', 'Technical Round', 'Manager Round', 'HR Round'],
+      };
 
-    dispatch(addJob(newJob));
-    toast.success('Job created successfully!');
-    setIsCreateDialogOpen(false);
-    
-    // Reset form
-    setFormData({
-      companyName: '',
-      roleTitle: '',
-      ctcBand: '',
-      package: '',
-      locationType: 'Onsite',
-      description: '',
-      requirements: '',
-      skills: '',
-      requiredTechStack: '',
-      deadline: '',
-    });
+      const response = await jobService.createJob(jobData);
+      
+      if (response.success) {
+        // Refresh jobs list from MongoDB
+        const jobsResponse = await jobService.getAllJobs();
+        if (jobsResponse.success && jobsResponse.data) {
+          const jobsArray = jobsResponse.data.jobs || jobsResponse.data;
+          dispatch(setJobs(jobsArray));
+        }
+        
+        toast.success('Job created successfully!');
+        setIsCreateDialogOpen(false);
+        
+        // Reset form
+        setFormData({
+          companyName: '',
+          roleTitle: '',
+          ctcBand: '',
+          package: '',
+          locationType: 'Onsite',
+          description: '',
+          requirements: '',
+          skills: '',
+          requiredTechStack: '',
+          deadline: '',
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to create job:', error);
+      toast.error(error.message || 'Failed to create job');
+    }
   };
 
-  const handleToggleJobStatus = (jobId: string, currentStatus: boolean) => {
-    dispatch(updateJob({ id: jobId, updates: { isActive: !currentStatus } }));
-    toast.success(`Job ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+  const handleToggleJobStatus = async (jobId: string, currentStatus: boolean) => {
+    try {
+      const response = await jobService.updateJob(jobId, { isActive: !currentStatus });
+      
+      if (response.success) {
+        // Refresh jobs list from MongoDB
+        const jobsResponse = await jobService.getAllJobs();
+        if (jobsResponse.success && jobsResponse.data) {
+          const jobsArray = jobsResponse.data.jobs || jobsResponse.data;
+          dispatch(setJobs(jobsArray));
+        }
+        
+        toast.success(`Job ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      }
+    } catch (error: any) {
+      console.error('Failed to update job:', error);
+      toast.error(error.message || 'Failed to update job status');
+    }
   };
 
   const handleDeleteJob = (jobId: string) => {
-    const jobApps = applications.filter(a => a.jobId === jobId);
+    const jobApps = applicationsList.filter(a => a.jobId === jobId);
     if (jobApps.length > 0) {
       toast.error('Cannot delete job with existing applications');
       return;
@@ -107,9 +163,22 @@ export default function JobsManagement() {
     toast.success('Job deleted successfully');
   };
 
-  const activeJobsCount = jobs.filter(j => j.isActive).length;
-  const totalApplications = jobs.reduce((sum, j) => sum + getJobStats(j.id).total, 0);
-  const totalOffers = jobs.reduce((sum, j) => sum + getJobStats(j.id).offers, 0);
+  const activeJobsCount = jobsList.filter(j => j.isActive).length;
+  const totalApplications = jobsList.reduce((sum, j) => sum + getJobStats(j.id).total, 0);
+  const totalOffers = jobsList.reduce((sum, j) => sum + getJobStats(j.id).offers, 0);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Jobs Management" subtitle="Create and manage job postings">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading jobs...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Jobs Management" subtitle="Create and manage job postings">
@@ -123,7 +192,7 @@ export default function JobsManagement() {
                   <Briefcase className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{jobs.length}</p>
+                  <p className="text-3xl font-bold">{jobsList.length}</p>
                   <p className="text-sm text-muted-foreground">Total Jobs</p>
                 </div>
               </div>
