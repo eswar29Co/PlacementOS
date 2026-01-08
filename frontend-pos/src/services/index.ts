@@ -5,6 +5,7 @@ export { applicationService } from './applicationService';
 export { assessmentService } from './assessmentService';
 export { notificationService } from './notificationService';
 export { professionalService } from './professionalService';
+export { studentService } from './studentService';
 export { dashboardService } from './dashboardService';
 
 // Export API client for custom requests
