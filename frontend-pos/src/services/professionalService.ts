@@ -45,7 +45,7 @@ export const professionalService = {
     data: { status: 'approved' | 'rejected'; notes?: string }
   ): Promise<{ success: boolean; data: Professional }> {
     try {
-      const response = await apiClient.patch(`/professionals/${id}/status`, data);
+      const response = await apiClient.put(`/professionals/${id}/status`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

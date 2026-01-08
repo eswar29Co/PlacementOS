@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateProfessional } from '@/store/slices/professionalsSlice';
+import { setProfessionals } from '@/store/slices/professionalsSlice';
+import { professionalService } from '@/services';
 import { UserCheck, Search, Star, Briefcase, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -16,8 +17,34 @@ export default function ProfessionalsManagement() {
   const { professionals } = useAppSelector((state) => state.professionals);
   const { applications } = useAppSelector((state) => state.applications);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredProfessionals = professionals.filter(prof =>
+  // Normalize arrays
+  const professionalsList = Array.isArray(professionals) ? professionals : [];
+  const applicationsList = Array.isArray(applications) ? applications : [];
+
+  // Fetch professionals from MongoDB
+  useEffect(() => {
+    const fetchProfessionals = async () => {
+      try {
+        setIsLoading(true);
+        const response = await professionalService.getAllProfessionals();
+        if (response.success && response.data) {
+          const profsArray = response.data.professionals || response.data;
+          dispatch(setProfessionals(profsArray));
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch professionals:', error);
+        toast.error(error.message || 'Failed to load professionals');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfessionals();
+  }, [dispatch]);
+
+  const filteredProfessionals = professionalsList.filter(prof =>
     prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,20 +52,20 @@ export default function ProfessionalsManagement() {
   );
 
   const getProfessionalStats = (profId: string) => {
-    const profApps = applications.filter(a => 
+    const profApps = applicationsList.filter(a => 
       a.assignedProfessionalId === profId || 
       a.assignedManagerId === profId || 
       a.assignedHRId === profId
     );
     
-    const feedbackCount = applications.reduce((count, app) => {
+    const feedbackCount = applicationsList.reduce((count, app) => {
       if (app.interviewFeedback) {
         return count + app.interviewFeedback.filter(f => f.professionalId === profId).length;
       }
       return count;
     }, 0);
 
-    const avgRating = applications.reduce((sum, app) => {
+    const avgRating = applicationsList.reduce((sum, app) => {
       if (app.interviewFeedback) {
         const profFeedback = app.interviewFeedback.filter(f => f.professionalId === profId);
         const ratings = profFeedback.map(f => f.rating || 0);
@@ -54,20 +81,65 @@ export default function ProfessionalsManagement() {
     };
   };
 
-  const handleApproveProfessional = (profId: string) => {
-    dispatch(updateProfessional({ id: profId, updates: { status: 'approved' } }));
-    toast.success('Professional approved!');
+  const handleApproveProfessional = async (profId: string) => {
+    try {
+      const response = await professionalService.updateProfessionalStatus(profId, { status: 'approved' });
+      
+      if (response.success) {
+        // Refresh professionals list
+        const profsResponse = await professionalService.getAllProfessionals();
+        if (profsResponse.success && profsResponse.data) {
+          const profsArray = profsResponse.data.professionals || profsResponse.data;
+          dispatch(setProfessionals(profsArray));
+        }
+        
+        toast.success('Professional approved!');
+      }
+    } catch (error: any) {
+      console.error('Failed to approve professional:', error);
+      toast.error(error.message || 'Failed to approve professional');
+    }
   };
 
-  const handleRejectProfessional = (profId: string) => {
-    dispatch(updateProfessional({ id: profId, updates: { status: 'rejected' } }));
-    toast.error('Professional rejected');
+  const handleRejectProfessional = async (profId: string) => {
+    try {
+      const response = await professionalService.updateProfessionalStatus(profId, { status: 'rejected' });
+      
+      if (response.success) {
+        // Refresh professionals list
+        const profsResponse = await professionalService.getAllProfessionals();
+        if (profsResponse.success && profsResponse.data) {
+          const profsArray = profsResponse.data.professionals || profsResponse.data;
+          dispatch(setProfessionals(profsArray));
+        }
+        
+        toast.success('Professional rejected!');
+      }
+    } catch (error: any) {
+      console.error('Failed to reject professional:', error);
+      toast.error(error.message || 'Failed to reject professional');
+    }
   };
 
-  const pendingCount = professionals.filter(p => p.status === 'pending').length;
-  const approvedCount = professionals.filter(p => p.status === 'approved').length;
-  const activeInterviewsCount = professionals.reduce((sum, p) => sum + (p.activeInterviewCount || 0), 0);
-  const avgExperience = (professionals.reduce((sum, p) => sum + p.yearsOfExperience, 0) / professionals.length).toFixed(1);
+  const pendingCount = professionalsList.filter(p => p.status === 'pending').length;
+  const approvedCount = professionalsList.filter(p => p.status === 'approved').length;
+  const activeInterviewsCount = professionalsList.reduce((sum, p) => sum + (p.activeInterviewCount || 0), 0);
+  const avgExperience = professionalsList.length > 0 
+    ? (professionalsList.reduce((sum, p) => sum + p.yearsOfExperience, 0) / professionalsList.length).toFixed(1)
+    : '0';
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Professionals Management" subtitle="Manage professional interviewers">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading professionals...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Professionals Management" subtitle="View and manage all registered professionals">

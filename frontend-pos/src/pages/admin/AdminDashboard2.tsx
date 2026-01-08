@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateProfessional } from '@/store/slices/professionalsSlice';
+import { setProfessionals, updateProfessional } from '@/store/slices/professionalsSlice';
 import { updateApplication } from '@/store/slices/applicationsSlice';
 import { addNotification } from '@/store/slices/notificationsSlice';
+import { professionalService } from '@/services';
 import { Users, UserCheck, Briefcase, TrendingUp, CheckCircle2, XCircle, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStatusAfterResumeApproval, getStatusAfterAssessmentApproval, getNextInterviewStage } from '@/lib/flowHelpers';
@@ -42,6 +43,23 @@ export default function AdminDashboard() {
   const { jobs } = useAppSelector((state) => state.jobs);
 
   const [professionalRoles, setProfessionalRoles] = useState<Record<string, string>>({});
+
+  // Fetch professionals from MongoDB
+  useEffect(() => {
+    const fetchProfessionals = async () => {
+      try {
+        const response = await professionalService.getAllProfessionals();
+        if (response.success && response.data) {
+          const profsArray = response.data.professionals || response.data;
+          dispatch(setProfessionals(profsArray));
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch professionals:', error);
+      }
+    };
+
+    fetchProfessionals();
+  }, [dispatch]);
 
   // Assignment Dialog State
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -133,7 +151,7 @@ export default function AdminDashboard() {
     { label: 'Pending Approvals', value: pendingProfessionals.length, icon: Clock, color: 'text-warning' },
   ];
 
-  const handleApproveProfessional = (professionalId: string) => {
+  const handleApproveProfessional = async (professionalId: string) => {
     const professional = professionals.find(p => p.id === professionalId);
     const assignedRole = professionalRoles[professionalId];
 
@@ -142,22 +160,47 @@ export default function AdminDashboard() {
         toast.error('Please assign a role before approving');
         return;
       }
-      dispatch(updateProfessional({
-        id: professionalId,
-        updates: {
-          status: 'approved',
-          professionalRole: assignedRole as any
+      
+      try {
+        const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'approved' });
+        
+        if (response.success) {
+          // Refresh professionals list
+          const profsResponse = await professionalService.getAllProfessionals();
+          if (profsResponse.success && profsResponse.data) {
+            const profsArray = profsResponse.data.professionals || profsResponse.data;
+            dispatch(setProfessionals(profsArray));
+          }
+          
+          toast.success(`Professional approved as ${assignedRole}!`);
         }
-      }));
-      toast.success(`Professional approved as ${assignedRole}!`);
+      } catch (error: any) {
+        console.error('Failed to approve professional:', error);
+        toast.error(error.message || 'Failed to approve professional');
+      }
     }
   };
 
-  const handleRejectProfessional = (professionalId: string) => {
+  const handleRejectProfessional = async (professionalId: string) => {
     const professional = professionals.find(p => p.id === professionalId);
     if (professional) {
-      dispatch(updateProfessional({ id: professionalId, updates: { status: 'rejected' } }));
-      toast.error('Professional rejected');
+      try {
+        const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'rejected' });
+        
+        if (response.success) {
+          // Refresh professionals list
+          const profsResponse = await professionalService.getAllProfessionals();
+          if (profsResponse.success && profsResponse.data) {
+            const profsArray = profsResponse.data.professionals || profsResponse.data;
+            dispatch(setProfessionals(profsArray));
+          }
+          
+          toast.error('Professional rejected');
+        }
+      } catch (error: any) {
+        console.error('Failed to reject professional:', error);
+        toast.error(error.message || 'Failed to reject professional');
+      }
     }
   };
 

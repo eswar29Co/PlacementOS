@@ -30,8 +30,8 @@ export default function ProfessionalDashboard() {
       a.assignedHRId === professional?.id
   );
 
-  console.log('My assignments:', myAssignments);
-  console.log('Professional role:', professional?.professionalRole);
+  // console.log('My assignments:', myAssignments);
+  // console.log('Professional role:', professional?.professionalRole);
 
   // Filter by status - pending means not yet scheduled
   const pending = myAssignments.filter(a => {
