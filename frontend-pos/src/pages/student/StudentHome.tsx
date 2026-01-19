@@ -7,6 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { useAppSelector } from '@/store/hooks';
 import { Student } from '@/types';
 import { Briefcase, FileText, ClipboardCheck, Video, Award, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
+import { jobService } from '@/services/jobService';
 
 const statusOrder = [
   'applied', 'resume_uploaded', 'resume_shortlisted', 'assessment_pending', 
@@ -20,8 +23,24 @@ export default function StudentHome() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
-  const { applications } = useAppSelector((state) => state.applications);
-  const { jobs } = useAppSelector((state) => state.jobs);
+  
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: applicationService.getMyApplications,
+  });
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
   
   const myApplications = applications.filter(a => a.studentId === student?.id);
   const activeApplications = myApplications.filter(a => !['rejected', 'offer_released'].includes(a.status));

@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services';
 import { Clock, FileCheck, AlertCircle, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,13 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 export default function AssessmentShortlist() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
+  
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => applicationService.getMyApplications(),
+  });
+  
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
   
   const myApplication = applications.find(
     (app) => app.studentId === user?.id && 

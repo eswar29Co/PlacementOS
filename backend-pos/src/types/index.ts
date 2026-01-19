@@ -145,6 +145,9 @@ export interface IApplication {
   // Resume phase
   resumeUrl?: string;
   resumeScore?: number;
+  resumeApproved?: boolean | null; // null = pending, true = approved, false = rejected
+  resumeApprovedAt?: Date;
+  resumeApprovedBy?: string;
   
   // Assessment phase
   assessmentDeadline?: Date;
@@ -152,10 +155,16 @@ export interface IApplication {
   assessmentAnswers?: any[];
   assessmentScore?: number;
   submittedAt?: Date;
+  assessmentApproved?: boolean | null; // null = pending, true = approved, false = rejected
+  assessmentApprovedAt?: Date;
+  assessmentApprovedBy?: string;
   
   // Interview phases
   aiInterviewScore?: number;
   aiInterviewAnswers?: string[];
+  aiInterviewApproved?: boolean | null; // null = pending, true = approved, false = rejected
+  aiInterviewApprovedAt?: Date;
+  aiInterviewApprovedBy?: string;
   
   // Professional assignment
   assignedProfessionalId?: string;

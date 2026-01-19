@@ -8,16 +8,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setProfessionals, updateProfessional } from '@/store/slices/professionalsSlice';
-import { updateApplication } from '@/store/slices/applicationsSlice';
-import { addNotification } from '@/store/slices/notificationsSlice';
-import { professionalService } from '@/services';
+import { professionalService, applicationService, jobService, studentService } from '@/services';
 import { Users, UserCheck, Briefcase, TrendingUp, CheckCircle2, XCircle, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStatusAfterResumeApproval, getStatusAfterAssessmentApproval, getNextInterviewStage } from '@/lib/flowHelpers';
-import { assignProfessionalToStudent } from '@/store/slices/applicationsSlice';
-import { incrementInterviewCount } from '@/store/slices/professionalsSlice';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -36,30 +31,143 @@ import {
 } from '@/components/ui/table';
 
 export default function AdminDashboard() {
-  const dispatch = useAppDispatch();
-  const { students } = useAppSelector((state) => state.students);
-  const { professionals } = useAppSelector((state) => state.professionals);
-  const { applications } = useAppSelector((state) => state.applications);
-  const { jobs } = useAppSelector((state) => state.jobs);
+  const queryClient = useQueryClient();
+  
+  // Fetch data from MongoDB using React Query
+  const { data: professionalsData } = useQuery({
+    queryKey: ['professionals'],
+    queryFn: () => professionalService.getAllProfessionals(),
+  });
+  const professionals = Array.isArray(professionalsData?.data?.professionals)
+    ? professionalsData.data.professionals
+    : Array.isArray(professionalsData?.data)
+    ? professionalsData.data
+    : [];
+  
+  const { data: applicationsData, isLoading: applicationsLoading, error: applicationsError } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  
+  // Backend returns { data: { applications: [...], pagination: {...} } }
+  const applications = Array.isArray(applicationsData?.data?.applications) 
+    ? applicationsData.data.applications 
+    : Array.isArray(applicationsData?.data)
+    ? applicationsData.data
+    : [];
+  
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
+  
+  const { data: studentsData } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAllStudents(),
+  });
+  const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
 
   const [professionalRoles, setProfessionalRoles] = useState<Record<string, string>>({});
 
-  // Fetch professionals from MongoDB
-  useEffect(() => {
-    const fetchProfessionals = async () => {
-      try {
-        const response = await professionalService.getAllProfessionals();
-        if (response.success && response.data) {
-          const profsArray = response.data.professionals || response.data;
-          dispatch(setProfessionals(profsArray));
-        }
-      } catch (error: any) {
-        console.error('Failed to fetch professionals:', error);
-      }
-    };
+  // Mutations for approvals
+  const approveResumeMutation = useMutation({
+    mutationFn: (id: string) => applicationService.approveResume(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Resume approved! Assessment released to student.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve resume');
+    },
+  });
 
-    fetchProfessionals();
-  }, [dispatch]);
+  const rejectResumeMutation = useMutation({
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+      applicationService.rejectResume(id, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.error('Resume rejected with feedback sent to student');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reject resume');
+    },
+  });
+
+  const approveAssessmentMutation = useMutation({
+    mutationFn: (id: string) => applicationService.approveAssessment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Assessment approved! AI interview round unlocked.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve assessment');
+    },
+  });
+
+  const rejectAssessmentMutation = useMutation({
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+      applicationService.rejectAssessment(id, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.error('Assessment rejected');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reject assessment');
+    },
+  });
+
+  const approveAIInterviewMutation = useMutation({
+    mutationFn: (id: string) => applicationService.approveAIInterview(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('AI interview approved! Ready for professional interview.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve AI interview');
+    },
+  });
+
+  const rejectAIInterviewMutation = useMutation({
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+      applicationService.rejectAIInterview(id, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.error('AI interview rejected');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reject AI interview');
+    },
+  });
+
+  const assignProfessionalMutation = useMutation({
+    mutationFn: (data: { applicationId: string; professionalId: string; round: 'professional' | 'manager' | 'hr' }) => 
+      applicationService.assignProfessional(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      toast.success('Professional assigned successfully!');
+      setIsAssignDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to assign professional');
+    },
+  });
+
+  const updateApplicationMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Application> }) => 
+      applicationService.updateApplication(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update application');
+    },
+  });
 
   // Assignment Dialog State
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -75,49 +183,11 @@ export default function AdminDashboard() {
   const handleAssignProfessional = () => {
     if (!selectedAppIdForAssignment || !selectedProfessional) return;
 
-    const app = applications.find(a => a.id === selectedAppIdForAssignment);
-    const professional = professionals.find(p => p.id === selectedProfessional);
-
-    if (app && professional) {
-      // Update application
-      dispatch(updateApplication({
-        id: app.id,
-        updates: {
-          assignedProfessionalId: professional.id,
-          interviewRound: 'professional',
-          status: 'professional_interview_pending'
-        }
-      }));
-
-      // Increment count
-      dispatch(incrementInterviewCount(professional.id));
-
-      // Notifications
-      dispatch(addNotification({
-        id: `notif-${Date.now()}-student`,
-        userId: app.studentId,
-        type: 'interview_assigned',
-        title: 'Interview Assigned',
-        message: `${professional.name} from ${professional.company} has been assigned for your Technical interview.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: `/student/interviews`,
-      }));
-
-      dispatch(addNotification({
-        id: `notif-${Date.now()}-prof`,
-        userId: professional.id,
-        type: 'interview_assigned',
-        title: 'New Interview Assigned',
-        message: `You have been assigned to conduct a Technical interview for ${app.student?.name || 'a student'}. Please review their profile and resume.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: `/professional/dashboard`,
-      }));
-
-      toast.success('Professional assigned successfully!');
-      setIsAssignDialogOpen(false);
-    }
+    assignProfessionalMutation.mutate({
+      applicationId: selectedAppIdForAssignment,
+      professionalId: selectedProfessional,
+      round: 'professional'
+    });
   };
 
   const getAvailableProfessionals = (appId: string) => {
@@ -139,9 +209,16 @@ export default function AdminDashboard() {
 
   const pendingProfessionals = professionals.filter(p => p.status === 'pending');
   const approvedProfessionals = professionals.filter(p => p.status === 'approved');
-  const resumeReviewApps = applications.filter(a => a.status === 'resume_under_review');
-  const assessmentReviewApps = applications.filter(a => a.status === 'assessment_completed');
-  const aiInterviewReviewApps = applications.filter(a => a.status === 'ai_interview_completed');
+  
+  // Applications needing resume approval (applied but resume not yet approved/rejected)
+  const resumeReviewApps = applications.filter(a => a.resumeApproved === null && a.status === 'applied');
+  
+  // Applications needing assessment approval (assessment completed but not yet approved/rejected)
+  const assessmentReviewApps = applications.filter(a => a.assessmentApproved === null && a.status === 'assessment_completed');
+  
+  // Applications needing AI interview approval (AI interview completed but not yet approved/rejected)
+  const aiInterviewReviewApps = applications.filter(a => a.aiInterviewApproved === null && a.status === 'ai_interview_completed');
+  
   const offerReadyApps = applications.filter(a => a.status === 'hr_round_completed');
 
   const stats = [
@@ -205,28 +282,7 @@ export default function AdminDashboard() {
   };
 
   const handleApproveResume = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      dispatch(updateApplication({
-        id: applicationId,
-        updates: {
-          status: getStatusAfterResumeApproval(),
-          assessmentDeadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
-        }
-      }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'application_update',
-        title: 'Resume Approved!',
-        message: `Your resume has been shortlisted for ${job?.companyName}! Assessment is now available. You have 2 days to complete it.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.success('Resume approved! Assessment released to student.');
-    }
+    approveResumeMutation.mutate(applicationId);
   };
 
   const handleRejectResume = (applicationId: string) => {
@@ -262,56 +318,21 @@ export default function AdminDashboard() {
         ? `\n\nAreas for improvement:\n${improvementPointers.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
         : '';
 
-      dispatch(updateApplication({ id: applicationId, updates: { status: 'rejected' } }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'resume_rejected',
-        title: 'Resume Not Shortlisted',
-        message: `Your application to ${job?.companyName} for ${job?.roleTitle} was not shortlisted at the resume screening stage.${improvementMessage}`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.error('Resume rejected with improvement feedback sent to student');
+      const feedback = `Your application to ${job?.companyName} for ${job?.roleTitle} was not shortlisted at the resume screening stage.${improvementMessage}`;
+      rejectResumeMutation.mutate({ id: applicationId, feedback });
     }
   };
 
   const handleApproveAssessment = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      dispatch(updateApplication({ id: applicationId, updates: { status: getStatusAfterAssessmentApproval() } }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'assessment_approved',
-        title: 'Assessment Approved!',
-        message: `Your assessment for ${job?.companyName} has been approved! AI Mock Interview is now available.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.success('Assessment approved! AI interview round unlocked.');
-    }
+    approveAssessmentMutation.mutate(applicationId);
   };
 
   const handleRejectAssessment = (applicationId: string) => {
     const app = applications.find(a => a.id === applicationId);
     if (app) {
       const job = getJobById(app.jobId);
-      dispatch(updateApplication({ id: applicationId, updates: { status: 'rejected' } }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'assessment_rejected',
-        title: 'Assessment Update',
-        message: `Your assessment for ${job?.companyName} did not meet the required criteria.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.error('Assessment rejected');
+      const feedback = `Your assessment for ${job?.companyName} did not meet the required criteria.`;
+      rejectAssessmentMutation.mutate({ id: applicationId, feedback });
     }
   };
 
@@ -334,8 +355,11 @@ export default function AdminDashboard() {
       const nextStage = getNextInterviewStage(app.status);
       if (nextStage === 'manager') {
         // Auto-assign manager for next round
-        dispatch(assignProfessionalToStudent(applicationId, 'manager'));
-        toast.success('Manager assigned for Manager Interview round.');
+        assignProfessionalMutation.mutate({
+          applicationId,
+          professionalId: 'manager', // TODO: Get actual manager ID
+          round: 'manager'
+        });
       }
     }
   };
@@ -347,8 +371,11 @@ export default function AdminDashboard() {
       const nextStage = getNextInterviewStage(app.status);
       if (nextStage === 'hr') {
         // Auto-assign HR for final round
-        dispatch(assignProfessionalToStudent(applicationId, 'hr'));
-        toast.success('HR assigned for HR Interview round.');
+        assignProfessionalMutation.mutate({
+          applicationId,
+          professionalId: 'hr', // TODO: Get actual HR ID
+          round: 'hr'
+        });
       }
     }
   };
@@ -357,9 +384,8 @@ export default function AdminDashboard() {
     const app = applications.find(a => a.id === applicationId);
     if (app) {
       const job = getJobById(app.jobId);
-      const student = getStudentById(app.studentId);
-
-      dispatch(updateApplication({
+      
+      updateApplicationMutation.mutate({
         id: applicationId,
         updates: {
           status: 'offer_released',
@@ -370,19 +396,7 @@ export default function AdminDashboard() {
             joiningDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           }
         }
-      }));
-
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'offer_released',
-        title: 'Congratulations! Offer Letter Released',
-        message: `You have received an offer from ${job?.companyName} for ${job?.roleTitle} position.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/offers',
-      }));
-
+      });
       toast.success('Offer letter released successfully!');
     }
   };
@@ -674,7 +688,7 @@ export default function AdminDashboard() {
                             variant="destructive"
                             size="sm"
                             onClick={() => {
-                              dispatch(updateApplication({ id: app.id, updates: { status: 'rejected' } }));
+                              updateApplicationMutation.mutate({ id: app.id, updates: { status: 'rejected' } });
                               toast.error('Application rejected');
                             }}
                           >

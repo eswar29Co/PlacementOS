@@ -7,12 +7,27 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
+import { professionalService } from '@/services/professionalService';
 
 export default function ProfessionalInterview() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
-  const professionals = useAppSelector((state) => state.professionals.professionals);
+  
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: applicationService.getMyApplications,
+  });
+  const applications = applicationsData?.data || [];
+  
+  // Fetch professionals from MongoDB
+  const { data: professionalsData } = useQuery({
+    queryKey: ['professionals'],
+    queryFn: () => professionalService.getAllProfessionals(),
+  });
+  const professionals = professionalsData?.data || [];
   
   const myApplication = applications.find(
     (app) => app.studentId === user?.id && 

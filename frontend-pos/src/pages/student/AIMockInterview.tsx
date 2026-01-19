@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateApplication } from '@/store/slices/applicationsSlice';
-import { addNotification } from '@/store/slices/notificationsSlice';
+import { useAppSelector } from '@/store/hooks';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { applicationService, notificationService } from '@/services';
 import { Bot, Send, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,15 @@ const AI_QUESTIONS = [
 export default function AIMockInterview() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
+  
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => applicationService.getMyApplications(),
+  });
+  
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
 
   const myApplication = applicationId
     ? applications.find(app => app.id === applicationId)
@@ -38,6 +44,20 @@ export default function AIMockInterview() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<string[]>(Array(AI_QUESTIONS.length).fill(''));
   const [isCompleted, setIsCompleted] = useState(false);
+  
+  // Mutation for submitting AI interview
+  const submitMutation = useMutation({
+    mutationFn: (data: { aiInterviewAnswers: string[]; aiInterviewScore: number; status: string }) =>
+      applicationService.updateApplicationStatus(myApplication?.id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+      setIsCompleted(true);
+      toast.success('AI Mock Interview completed! Your responses are now under review by the admin.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to submit interview');
+    },
+  });
 
   // Check if student can access AI interview
   useEffect(() => {
@@ -89,29 +109,11 @@ export default function AIMockInterview() {
       const avgChars = totalChars / answers.length;
       const score = Math.min(100, Math.max(40, Math.round((avgChars / 150) * 100)));
 
-      dispatch(updateApplication({
-        id: myApplication.id,
-        updates: {
-          status: getStatusAfterAIInterview(),
-          aiInterviewAnswers: answers,
-          aiInterviewScore: score
-        }
-      }));
-
-      // Notify admin
-      dispatch(addNotification({
-        id: `notif-ai-interview-${Date.now()}`,
-        userId: 'admin-1', // Default admin
-        type: 'application_update',
-        title: 'AI Interview Completed',
-        message: `${user?.name} has completed the AI Mock Interview. Review pending properly.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/admin/dashboard',
-      }));
-
-      setIsCompleted(true);
-      toast.success('AI Mock Interview completed! Your responses are now under review by the admin.');
+      submitMutation.mutate({
+        aiInterviewAnswers: answers,
+        aiInterviewScore: score,
+        status: getStatusAfterAIInterview()
+      });
     }
   };
 

@@ -120,4 +120,78 @@ export const applicationService = {
       throw new Error(handleApiError(error));
     }
   },
+
+  // Submit assessment (student)
+  async submitAssessment(data: {
+    applicationId: string;
+    assessmentCode?: string;
+    assessmentAnswers?: { questionId: string; answer: string }[];
+  }): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post('/applications/submit-assessment', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Approve resume (admin)
+  async approveResume(id: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/approve-resume`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Reject resume (admin)
+  async rejectResume(id: string, feedback?: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/reject-resume`, { feedback });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Approve assessment (admin)
+  async approveAssessment(id: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/approve-assessment`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Reject assessment (admin)
+  async rejectAssessment(id: string, feedback?: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/reject-assessment`, { feedback });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Approve AI interview (admin)
+  async approveAIInterview(id: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/approve-ai-interview`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Reject AI interview (admin)
+  async rejectAIInterview(id: string, feedback?: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/reject-ai-interview`, { feedback });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
 };

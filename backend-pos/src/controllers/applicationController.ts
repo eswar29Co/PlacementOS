@@ -155,16 +155,20 @@ export const getApplicationById = async (req: AuthRequest, res: Response) => {
     // Check authorization
     if (
       userRole === 'student' &&
-      application.studentId.toString() !== userId
+      (application.studentId as any)._id?.toString() !== userId &&
+      (application.studentId as any).toString() !== userId
     ) {
       return ApiResponse.forbidden(res, 'Not authorized to view this application');
     }
 
     if (
       userRole === 'professional' &&
-      application.assignedProfessionalId?.toString() !== userId &&
-      application.assignedManagerId?.toString() !== userId &&
-      application.assignedHRId?.toString() !== userId
+      (application.assignedProfessionalId as any)?._id?.toString() !== userId &&
+      (application.assignedProfessionalId as any)?.toString() !== userId &&
+      (application.assignedManagerId as any)?._id?.toString() !== userId &&
+      (application.assignedManagerId as any)?.toString() !== userId &&
+      (application.assignedHRId as any)?._id?.toString() !== userId &&
+      (application.assignedHRId as any)?.toString() !== userId
     ) {
       return ApiResponse.forbidden(res, 'Not authorized to view this application');
     }
@@ -596,5 +600,322 @@ export const submitInterviewFeedback = async (req: AuthRequest, res: Response) =
   } catch (error: any) {
     console.error('Submit interview feedback error:', error);
     return ApiResponse.error(res, error.message || 'Failed to submit interview feedback');
+  }
+};
+
+// Student: Submit assessment
+export const submitAssessment = async (req: AuthRequest, res: Response) => {
+  try {
+    const { applicationId, assessmentCode, assessmentAnswers } = req.body;
+    const studentId = req.user!.userId;
+
+    const application = await Application.findOne({
+      _id: applicationId,
+      studentId,
+    })
+      .populate('jobId', 'companyName roleTitle');
+
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Check if assessment can be submitted
+    if (!['assessment_pending', 'resume_shortlisted', 'assessment_released'].includes(application.status)) {
+      return ApiResponse.badRequest(res, 'Assessment cannot be submitted at this stage');
+    }
+
+    // Update application with assessment data
+    application.assessmentCode = assessmentCode;
+    application.assessmentAnswers = assessmentAnswers;
+    application.status = 'assessment_completed';
+    application.submittedAt = new Date();
+
+    application.timeline.push({
+      status: 'assessment_completed',
+      timestamp: new Date(),
+      notes: 'Assessment submitted by student',
+    });
+
+    await application.save();
+
+    // Note: Admin notifications would require proper admin user management
+    // For now, admins can see new assessments in the dashboard
+
+    return ApiResponse.success(
+      res,
+      application,
+      'Assessment submitted successfully'
+    );
+  } catch (error: any) {
+    console.error('Submit assessment error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to submit assessment');
+  }
+};
+
+// Admin: Approve Resume
+export const approveResume = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user!.userId;
+
+    const application = await Application.findById(id).populate('jobId studentId');
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Update approval status
+    application.resumeApproved = true;
+    application.resumeApprovedAt = new Date();
+    application.resumeApprovedBy = adminId as any;
+    application.status = 'assessment_released' as ApplicationStatus;
+    application.assessmentDeadline = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000); // 2 days
+
+    application.timeline.push({
+      status: 'assessment_released',
+      timestamp: new Date(),
+      notes: 'Resume approved by admin, assessment released',
+    });
+
+    await application.save();
+
+    // Notify student
+    const job = application.jobId as any;
+    await Notification.create({
+      userId: application.studentId,
+      type: 'resume_approved',
+      title: 'Resume Approved!',
+      message: `Your resume has been shortlisted for ${job.roleTitle} at ${job.companyName}! Assessment is now available.`,
+      read: false,
+      createdAt: new Date(),
+      actionUrl: '/student/applications',
+    });
+
+    return ApiResponse.success(res, application, 'Resume approved successfully');
+  } catch (error: any) {
+    console.error('Approve resume error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to approve resume');
+  }
+};
+
+// Admin: Reject Resume
+export const rejectResume = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { feedback } = req.body;
+    const adminId = req.user!.userId;
+
+    const application = await Application.findById(id).populate('jobId studentId');
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Update approval status
+    application.resumeApproved = false;
+    application.resumeApprovedAt = new Date();
+    application.resumeApprovedBy = adminId as any;
+    application.status = 'rejected' as ApplicationStatus;
+
+    application.timeline.push({
+      status: 'rejected',
+      timestamp: new Date(),
+      notes: feedback || 'Resume rejected by admin',
+    });
+
+    await application.save();
+
+    // Notify student
+    const job = application.jobId as any;
+    await Notification.create({
+      userId: application.studentId,
+      type: 'resume_rejected',
+      title: 'Application Update',
+      message: `Unfortunately, your application for ${job.roleTitle} at ${job.companyName} was not shortlisted.`,
+      read: false,
+      createdAt: new Date(),
+      actionUrl: '/student/applications',
+    });
+
+    return ApiResponse.success(res, application, 'Resume rejected');
+  } catch (error: any) {
+    console.error('Reject resume error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to reject resume');
+  }
+};
+
+// Admin: Approve Assessment
+export const approveAssessment = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user!.userId;
+
+    const application = await Application.findById(id).populate('jobId studentId');
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Update approval status
+    application.assessmentApproved = true;
+    application.assessmentApprovedAt = new Date();
+    application.assessmentApprovedBy = adminId as any;
+    application.status = 'ai_interview_pending' as ApplicationStatus;
+
+    application.timeline.push({
+      status: 'ai_interview_pending',
+      timestamp: new Date(),
+      notes: 'Assessment approved by admin, AI interview available',
+    });
+
+    await application.save();
+
+    // Notify student
+    const job = application.jobId as any;
+    await Notification.create({
+      userId: application.studentId,
+      type: 'assessment_approved',
+      title: 'Assessment Approved!',
+      message: `You passed the assessment for ${job.roleTitle} at ${job.companyName}! AI Mock Interview is now available.`,
+      read: false,
+      createdAt: new Date(),
+      actionUrl: '/student/applications',
+    });
+
+    return ApiResponse.success(res, application, 'Assessment approved successfully');
+  } catch (error: any) {
+    console.error('Approve assessment error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to approve assessment');
+  }
+};
+
+// Admin: Reject Assessment
+export const rejectAssessment = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { feedback } = req.body;
+    const adminId = req.user!.userId;
+
+    const application = await Application.findById(id).populate('jobId studentId');
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Update approval status
+    application.assessmentApproved = false;
+    application.assessmentApprovedAt = new Date();
+    application.assessmentApprovedBy = adminId as any;
+    application.status = 'rejected' as ApplicationStatus;
+
+    application.timeline.push({
+      status: 'rejected',
+      timestamp: new Date(),
+      notes: feedback || 'Assessment rejected by admin',
+    });
+
+    await application.save();
+
+    // Notify student
+    const job = application.jobId as any;
+    await Notification.create({
+      userId: application.studentId,
+      type: 'assessment_rejected',
+      title: 'Assessment Result',
+      message: `Unfortunately, you did not pass the assessment for ${job.roleTitle} at ${job.companyName}.`,
+      read: false,
+      createdAt: new Date(),
+      actionUrl: '/student/applications',
+    });
+
+    return ApiResponse.success(res, application, 'Assessment rejected');
+  } catch (error: any) {
+    console.error('Reject assessment error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to reject assessment');
+  }
+};
+
+// Admin: Approve AI Interview
+export const approveAIInterview = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user!.userId;
+
+    const application = await Application.findById(id).populate('jobId studentId');
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Update approval status
+    application.aiInterviewApproved = true;
+    application.aiInterviewApprovedAt = new Date();
+    application.aiInterviewApprovedBy = adminId as any;
+    application.status = 'professional_interview_pending' as ApplicationStatus;
+
+    application.timeline.push({
+      status: 'professional_interview_pending',
+      timestamp: new Date(),
+      notes: 'AI interview approved by admin, awaiting professional assignment',
+    });
+
+    await application.save();
+
+    // Notify student
+    const job = application.jobId as any;
+    await Notification.create({
+      userId: application.studentId,
+      type: 'application_update',
+      title: 'AI Interview Passed!',
+      message: `You passed the AI interview for ${job.roleTitle} at ${job.companyName}! A professional will be assigned soon.`,
+      read: false,
+      createdAt: new Date(),
+      actionUrl: '/student/applications',
+    });
+
+    return ApiResponse.success(res, application, 'AI interview approved successfully');
+  } catch (error: any) {
+    console.error('Approve AI interview error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to approve AI interview');
+  }
+};
+
+// Admin: Reject AI Interview
+export const rejectAIInterview = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { feedback } = req.body;
+    const adminId = req.user!.userId;
+
+    const application = await Application.findById(id).populate('jobId studentId');
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    // Update approval status
+    application.aiInterviewApproved = false;
+    application.aiInterviewApprovedAt = new Date();
+    application.aiInterviewApprovedBy = adminId as any;
+    application.status = 'rejected' as ApplicationStatus;
+
+    application.timeline.push({
+      status: 'rejected',
+      timestamp: new Date(),
+      notes: feedback || 'AI interview rejected by admin',
+    });
+
+    await application.save();
+
+    // Notify student
+    const job = application.jobId as any;
+    await Notification.create({
+      userId: application.studentId,
+      type: 'application_update',
+      title: 'AI Interview Result',
+      message: `Unfortunately, you did not pass the AI interview for ${job.roleTitle} at ${job.companyName}.`,
+      read: false,
+      createdAt: new Date(),
+      actionUrl: '/student/applications',
+    });
+
+    return ApiResponse.success(res, application, 'AI interview rejected');
+  } catch (error: any) {
+    console.error('Reject AI interview error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to reject AI interview');
   }
 };

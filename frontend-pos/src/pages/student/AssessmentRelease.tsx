@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateApplicationStatus } from '@/store/slices/applicationsSlice';
+import { useAppSelector } from '@/store/hooks';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { applicationService } from '@/services';
 import { Clock, FileText, AlertCircle, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,14 +13,28 @@ import { formatDistanceToNow } from 'date-fns';
 
 export default function AssessmentRelease() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
+  
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => applicationService.getMyApplications(),
+  });
+  
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
   
   const myApplication = applications.find(
     (app) => app.studentId === user?.id && 
     (app.status === 'assessment_released' || app.status === 'assessment_in_progress')
   );
+  
+  const updateStatusMutation = useMutation({
+    mutationFn: (status: string) => 
+      applicationService.updateApplicationStatus(myApplication?.id!, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+    },
+  });
 
   const [timeLeft, setTimeLeft] = useState('');
   const [progress, setProgress] = useState(100);
@@ -58,10 +73,7 @@ export default function AssessmentRelease() {
 
   const handleStartAssessment = () => {
     if (myApplication) {
-      dispatch(updateApplicationStatus({ 
-        id: myApplication.id, 
-        status: 'assessment_in_progress' 
-      }));
+      updateStatusMutation.mutate('assessment_in_progress');
       navigate('/student/take-assessment');
     }
   };

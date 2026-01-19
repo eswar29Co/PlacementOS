@@ -63,6 +63,9 @@ const applicationSchema = new Schema<IApplicationDocument>(
     // Resume phase
     resumeUrl: { type: String },
     resumeScore: { type: Number, min: 0, max: 100 },
+    resumeApproved: { type: Boolean, default: null }, // null = pending, true = approved, false = rejected
+    resumeApprovedAt: { type: Date },
+    resumeApprovedBy: { type: Schema.Types.ObjectId, ref: 'Admin' },
     
     // Assessment phase
     assessmentDeadline: { type: Date },
@@ -70,10 +73,16 @@ const applicationSchema = new Schema<IApplicationDocument>(
     assessmentAnswers: [{ type: Schema.Types.Mixed }],
     assessmentScore: { type: Number, min: 0, max: 100 },
     submittedAt: { type: Date },
+    assessmentApproved: { type: Boolean, default: null }, // null = pending, true = approved, false = rejected
+    assessmentApprovedAt: { type: Date },
+    assessmentApprovedBy: { type: Schema.Types.ObjectId, ref: 'Admin' },
     
     // AI Interview
     aiInterviewScore: { type: Number, min: 0, max: 100 },
     aiInterviewAnswers: [{ type: String }],
+    aiInterviewApproved: { type: Boolean, default: null }, // null = pending, true = approved, false = rejected
+    aiInterviewApprovedAt: { type: Date },
+    aiInterviewApprovedBy: { type: Schema.Types.ObjectId, ref: 'Admin' },
     
     // Professional assignments
     assignedProfessionalId: { 

@@ -9,14 +9,38 @@ import { useAppSelector } from '@/store/hooks';
 import { Professional } from '@/types';
 import { Users, Calendar, CheckCircle2, Star, Video } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService, studentService, jobService } from '@/services';
 
 export default function ProfessionalDashboard() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const professional = user as Professional;
-  const { applications } = useAppSelector((state) => state.applications);
-  const { students } = useAppSelector((state) => state.students);
-  const { jobs } = useAppSelector((state) => state.jobs);
+
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+
+  // Fetch students from MongoDB
+  const { data: studentsData } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAllStudents(),
+  });
+  const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
+
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
 
   // Debug: Log current professional and applications
   console.log('Current professional:', professional);

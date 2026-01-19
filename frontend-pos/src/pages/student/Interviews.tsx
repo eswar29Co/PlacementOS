@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/store/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services';
 import { Student } from '@/types';
 import { Video, Calendar, Clock, User, Bot, Star, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
@@ -12,7 +14,13 @@ export default function Interviews() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
-  const { applications } = useAppSelector((state) => state.applications);
+  
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => applicationService.getMyApplications(),
+  });
+  
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
   
   // Extract interviews from applications
   const myApplications = applications.filter(a => a.studentId === student?.id);

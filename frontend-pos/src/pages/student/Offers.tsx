@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/store/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService, jobService } from '@/services';
 import { Student } from '@/types';
 import { Award, Download, Calendar, IndianRupee, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -10,8 +12,23 @@ import { format } from 'date-fns';
 export default function Offers() {
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
-  const { applications } = useAppSelector((state) => state.applications);
-  const { jobs } = useAppSelector((state) => state.jobs);
+  
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => applicationService.getMyApplications(),
+  });
+  
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
   
   const offers = applications.filter(a => a.studentId === student?.id && a.status === 'offer_released');
 

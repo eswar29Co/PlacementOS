@@ -1,4 +1,6 @@
 import { useAppSelector } from '@/store/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService, professionalService } from '@/services';
 import { Calendar as CalendarIcon, Video, Clock, User, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +10,23 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 export default function InterviewCalendar() {
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
-  const professionals = useAppSelector((state) => state.professionals.professionals);
+  
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: () => applicationService.getMyApplications(),
+  });
+  
+  const { data: professionalsData } = useQuery({
+    queryKey: ['professionals'],
+    queryFn: () => professionalService.getAllProfessionals(),
+  });
+  
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  const professionals = Array.isArray(professionalsData?.data?.professionals)
+    ? professionalsData.data.professionals
+    : Array.isArray(professionalsData?.data)
+    ? professionalsData.data
+    : [];
 
   const myApplications = applications.filter(app => app.studentId === user?.id);
 

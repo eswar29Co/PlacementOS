@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAppSelector } from '@/store/hooks';
-import { Student, ApplicationStatus } from '@/types';
-import { Eye, ChevronRight, Clock, CheckCircle2, XCircle, FileText } from 'lucide-react';
+import { Student, ApplicationStatus, Application } from '@/types';
+import { Eye, ChevronRight, Clock, CheckCircle2, XCircle, FileText, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { 
   getStatusLabel, 
@@ -15,15 +15,65 @@ import {
   getActionButtonText, 
   getActionRoute 
 } from '@/lib/flowHelpers';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
+import { jobService } from '@/services/jobService';
 
 export default function Applications() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
-  const { applications } = useAppSelector((state) => state.applications);
-  const { jobs } = useAppSelector((state) => state.jobs);
   
-  const myApplications = applications.filter(a => a.studentId === student?.id);
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = (() => {
+    if (!jobsData?.data) return [];
+    if (Array.isArray(jobsData.data)) return jobsData.data;
+    if ('jobs' in jobsData.data && Array.isArray(jobsData.data.jobs)) return jobsData.data.jobs;
+    return [];
+  })();
+  
+  // Fetch applications from backend API
+  const { data: applicationsData, isLoading, error } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: async () => {
+      const result = await applicationService.getMyApplications();
+      return result.data;
+    },
+    enabled: !!user,
+  });
+
+  const myApplications: Application[] = Array.isArray(applicationsData) ? applicationsData : [];
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="My Applications" subtitle="Track your placement journey">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout title="My Applications" subtitle="Track your placement journey">
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center text-destructive">
+              <p>Failed to load applications. Please try again.</p>
+              <Button className="mt-4" onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="My Applications" subtitle="Track your placement journey">
@@ -33,7 +83,7 @@ export default function Applications() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-bold">{applications.length}</p>
+              <p className="text-2xl font-bold">{myApplications.length}</p>
             </CardContent>
           </Card>
           <Card>

@@ -7,11 +7,23 @@ import { useAppSelector } from '@/store/hooks';
 import { ArrowLeft, IndianRupee, MapPin, CheckCircle2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { jobService } from '@/services/jobService';
 
 export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { jobs } = useAppSelector((state) => state.jobs);
+  
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
   const job = jobs.find(j => j.id === id);
 
   if (!job) {

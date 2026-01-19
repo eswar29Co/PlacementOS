@@ -6,42 +6,27 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setStudents } from '@/store/slices/studentsSlice';
-import { studentService } from '@/services';
+import { studentService, applicationService } from '@/services';
 import { Users, Search, GraduationCap, Briefcase, Mail, Phone, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 export default function StudentsManagement() {
-  const dispatch = useAppDispatch();
-  const { students } = useAppSelector((state) => state.students);
-  const { applications } = useAppSelector((state) => state.applications);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch students from API on component mount
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setIsLoading(true);
-        const response = await studentService.getAllStudents();
-        if (response.success && response.data) {
-          dispatch(setStudents(response.data));
-        }
-      } catch (error: any) {
-        console.error('Failed to fetch students:', error);
-        toast.error(error.response?.data?.message || 'Failed to load students');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Fetch students from MongoDB
+  const { data: studentsData, isLoading } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAllStudents(),
+  });
+  const studentsList = Array.isArray(studentsData?.data) ? studentsData.data : [];
 
-    fetchStudents();
-  }, [dispatch]);
-
-  // Normalize arrays to prevent TypeErrors
-  const studentsList = Array.isArray(students) ? students : [];
-  const applicationsList = Array.isArray(applications) ? applications : [];
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  const applicationsList = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
 
   const filteredStudents = studentsList.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

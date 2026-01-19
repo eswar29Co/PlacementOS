@@ -5,12 +5,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Star, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
+import { jobService } from '@/services/jobService';
+import { studentService } from '@/services/studentService';
 
 export default function InterviewHistory() {
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
-  const students = useAppSelector((state) => state.students.students);
-  const jobs = useAppSelector((state) => state.jobs.jobs);
+  
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
+  
+  // Fetch students from MongoDB
+  const { data: studentsData } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAllStudents(),
+  });
+  const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
 
   // Filter applications where current user gave feedback
   const completedInterviews = applications.filter((app) =>

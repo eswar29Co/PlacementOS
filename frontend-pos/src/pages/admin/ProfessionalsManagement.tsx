@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,43 +6,34 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setProfessionals } from '@/store/slices/professionalsSlice';
-import { professionalService } from '@/services';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { professionalService, applicationService } from '@/services';
 import { UserCheck, Search, Star, Briefcase, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProfessionalsManagement() {
-  const dispatch = useAppDispatch();
-  const { professionals } = useAppSelector((state) => state.professionals);
-  const { applications } = useAppSelector((state) => state.applications);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Normalize arrays
-  const professionalsList = Array.isArray(professionals) ? professionals : [];
-  const applicationsList = Array.isArray(applications) ? applications : [];
 
   // Fetch professionals from MongoDB
-  useEffect(() => {
-    const fetchProfessionals = async () => {
-      try {
-        setIsLoading(true);
-        const response = await professionalService.getAllProfessionals();
-        if (response.success && response.data) {
-          const profsArray = response.data.professionals || response.data;
-          dispatch(setProfessionals(profsArray));
-        }
-      } catch (error: any) {
-        console.error('Failed to fetch professionals:', error);
-        toast.error(error.message || 'Failed to load professionals');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const { data: professionalsData, isLoading } = useQuery({
+    queryKey: ['professionals'],
+    queryFn: () => professionalService.getAllProfessionals(),
+  });
 
-    fetchProfessionals();
-  }, [dispatch]);
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+
+  // Normalize arrays
+  const professionalsList = Array.isArray(professionalsData?.data?.professionals) 
+    ? professionalsData.data.professionals 
+    : Array.isArray(professionalsData?.data) 
+    ? professionalsData.data 
+    : [];
+  const applicationsList = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
 
   const filteredProfessionals = professionalsList.filter(prof =>
     prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,44 +72,40 @@ export default function ProfessionalsManagement() {
     };
   };
 
-  const handleApproveProfessional = async (profId: string) => {
-    try {
-      const response = await professionalService.updateProfessionalStatus(profId, { status: 'approved' });
-      
-      if (response.success) {
-        // Refresh professionals list
-        const profsResponse = await professionalService.getAllProfessionals();
-        if (profsResponse.success && profsResponse.data) {
-          const profsArray = profsResponse.data.professionals || profsResponse.data;
-          dispatch(setProfessionals(profsArray));
-        }
-        
-        toast.success('Professional approved!');
-      }
-    } catch (error: any) {
+  // Mutation for approving professional
+  const approveMutation = useMutation({
+    mutationFn: (profId: string) => 
+      professionalService.updateProfessionalStatus(profId, { status: 'approved' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      toast.success('Professional approved!');
+    },
+    onError: (error: any) => {
       console.error('Failed to approve professional:', error);
       toast.error(error.message || 'Failed to approve professional');
-    }
-  };
+    },
+  });
 
-  const handleRejectProfessional = async (profId: string) => {
-    try {
-      const response = await professionalService.updateProfessionalStatus(profId, { status: 'rejected' });
-      
-      if (response.success) {
-        // Refresh professionals list
-        const profsResponse = await professionalService.getAllProfessionals();
-        if (profsResponse.success && profsResponse.data) {
-          const profsArray = profsResponse.data.professionals || profsResponse.data;
-          dispatch(setProfessionals(profsArray));
-        }
-        
-        toast.success('Professional rejected!');
-      }
-    } catch (error: any) {
+  // Mutation for rejecting professional
+  const rejectMutation = useMutation({
+    mutationFn: (profId: string) => 
+      professionalService.updateProfessionalStatus(profId, { status: 'rejected' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      toast.success('Professional rejected!');
+    },
+    onError: (error: any) => {
       console.error('Failed to reject professional:', error);
       toast.error(error.message || 'Failed to reject professional');
-    }
+    },
+  });
+
+  const handleApproveProfessional = (profId: string) => {
+    approveMutation.mutate(profId);
+  };
+
+  const handleRejectProfessional = (profId: string) => {
+    rejectMutation.mutate(profId);
   };
 
   const pendingCount = professionalsList.filter(p => p.status === 'pending').length;
@@ -153,7 +140,7 @@ export default function ProfessionalsManagement() {
                   <UserCheck className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{professionals.length}</p>
+                  <p className="text-3xl font-bold">{professionalsList.length}</p>
                   <p className="text-sm text-muted-foreground">Total Professionals</p>
                 </div>
               </div>
