@@ -432,6 +432,12 @@ export const assignProfessional = async (req: AuthRequest, res: Response) => {
     // Assign based on round
     switch (round) {
       case 'professional':
+        // If assigning professional round after AI interview, auto-approve AI interview
+        if (application.status === 'ai_interview_completed' && application.aiInterviewApproved === null) {
+          application.aiInterviewApproved = true;
+          application.aiInterviewApprovedAt = new Date();
+          application.aiInterviewApprovedBy = req.user!.userId as any;
+        }
         application.assignedProfessionalId = professionalId;
         application.interviewRound = 'professional';
         application.status = 'professional_interview_pending';
