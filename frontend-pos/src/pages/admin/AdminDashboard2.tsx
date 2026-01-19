@@ -158,14 +158,15 @@ export default function AdminDashboard() {
     },
   });
 
-  const updateApplicationMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Application> }) => 
-      applicationService.updateApplication(id, updates),
+  const releaseOfferMutation = useMutation({
+    mutationFn: (id: string) => 
+      applicationService.updateApplicationStatus(id, { status: 'offer_released' as ApplicationStatus }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Offer letter released successfully!');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update application');
+      toast.error(error.message || 'Failed to release offer');
     },
   });
 
@@ -195,16 +196,30 @@ export default function AdminDashboard() {
     if (!app) return [];
 
     const job = jobs.find(j => j.id === app.jobId);
-    if (!job) return [];
+    
+    // First, get all approved professionals
+    const approvedProfs = professionals.filter(p => p.status === 'approved');
+    
+    if (!job || !job.requiredTechStack || job.requiredTechStack.length === 0) {
+      // If no job requirements, return all approved professionals
+      return approvedProfs;
+    }
 
-    return professionals.filter(p => {
-      if (p.status !== 'approved') return false;
-      // Basic matching logic (can be enhanced)
+    // Try to find professionals with matching skills
+    const matchingProfs = approvedProfs.filter(p => {
+      if (!p.techStack || p.techStack.length === 0) return false;
       const hasMatchingSkill = p.techStack.some(ts =>
-        job.requiredTechStack.some(rts => ts.toLowerCase().includes(rts.toLowerCase()))
+        job.requiredTechStack.some(rts => 
+          ts.toLowerCase().includes(rts.toLowerCase()) || 
+          rts.toLowerCase().includes(ts.toLowerCase())
+        )
       );
       return hasMatchingSkill;
     });
+
+    // If no matching professionals, return all approved professionals
+    // (better to have someone than no one)
+    return matchingProfs.length > 0 ? matchingProfs : approvedProfs;
   };
 
   const pendingProfessionals = professionals.filter(p => p.status === 'pending');
@@ -219,7 +234,17 @@ export default function AdminDashboard() {
   // Applications needing AI interview approval (AI interview completed but not yet approved/rejected)
   const aiInterviewReviewApps = applications.filter(a => a.aiInterviewApproved === null && a.status === 'ai_interview_completed');
   
-  const offerReadyApps = applications.filter(a => a.status === 'hr_round_completed');
+  // Applications ready for offer release (completed all rounds)
+  const offerReadyApps = applications.filter(a => 
+    a.status === 'hr_round_completed' || 
+    a.status === 'hr_interview_completed' ||
+    // Also show if professional/manager rounds completed and have feedback
+    ((a.status === 'professional_interview_completed' || 
+      a.status === 'manager_interview_completed' || 
+      a.status === 'manager_round_completed') && 
+     a.interviewFeedback && 
+     a.interviewFeedback.length > 0)
+  );
 
   const stats = [
     { label: 'Total Students', value: students.length, icon: Users, color: 'text-primary' },
@@ -243,11 +268,7 @@ export default function AdminDashboard() {
         
         if (response.success) {
           // Refresh professionals list
-          const profsResponse = await professionalService.getAllProfessionals();
-          if (profsResponse.success && profsResponse.data) {
-            const profsArray = profsResponse.data.professionals || profsResponse.data;
-            dispatch(setProfessionals(profsArray));
-          }
+          queryClient.invalidateQueries({ queryKey: ['professionals'] });
           
           toast.success(`Professional approved as ${assignedRole}!`);
         }
@@ -266,11 +287,7 @@ export default function AdminDashboard() {
         
         if (response.success) {
           // Refresh professionals list
-          const profsResponse = await professionalService.getAllProfessionals();
-          if (profsResponse.success && profsResponse.data) {
-            const profsArray = profsResponse.data.professionals || profsResponse.data;
-            dispatch(setProfessionals(profsArray));
-          }
+          queryClient.invalidateQueries({ queryKey: ['professionals'] });
           
           toast.error('Professional rejected');
         }
@@ -381,24 +398,7 @@ export default function AdminDashboard() {
   };
 
   const handleReleaseOffer = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      
-      updateApplicationMutation.mutate({
-        id: applicationId,
-        updates: {
-          status: 'offer_released',
-          offerDetails: {
-            jobTitle: job?.roleTitle || 'Software Engineer',
-            company: job?.companyName || 'Company',
-            package: job?.package || 'Competitive package',
-            joiningDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          }
-        }
-      });
-      toast.success('Offer letter released successfully!');
-    }
+    releaseOfferMutation.mutate(applicationId);
   };
 
   const getStudentById = (id: string) => students.find(s => s.id === id);
@@ -532,23 +532,101 @@ export default function AdminDashboard() {
                   resumeReviewApps.map((app) => {
                     const student = getStudentById(app.studentId);
                     const job = getJobById(app.jobId);
+                    const atsScore = app.resumeScore || 0;
+
+                    // Calculate skill match
+                    const jobSkills = [...(job?.skills || []), ...(job?.requiredTechStack || [])];
+                    const matchingSkills = student?.skills.filter(s =>
+                      jobSkills.some(js => js.toLowerCase().includes(s.toLowerCase()))
+                    ) || [];
+                    const missingSkills = jobSkills.filter(js =>
+                      !student?.skills.some(s => s.toLowerCase().includes(js.toLowerCase()))
+                    );
+
+                    // Determine ATS score badge color
+                    const getScoreBadgeVariant = (score: number) => {
+                      if (score >= 75) return 'default';
+                      if (score >= 50) return 'secondary';
+                      return 'destructive';
+                    };
 
                     return (
                       <div key={app.id} className="p-4 border rounded-lg space-y-3">
                         <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium">{student?.name}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-medium">{student?.name}</p>
+                              {atsScore > 0 && (
+                                <Badge variant={getScoreBadgeVariant(atsScore)} className="gap-1">
+                                  ATS Score: {atsScore}%
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">{student?.college} • {student?.branch}</p>
                             <p className="text-sm text-muted-foreground">Applied for: {job?.companyName} - {job?.roleTitle}</p>
                             <p className="text-sm text-muted-foreground">CGPA: {student?.cgpa} • Grad Year: {student?.graduationYear}</p>
                           </div>
                         </div>
+
+                        {/* Skill Match Analysis */}
+                        {matchingSkills.length > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1.5">✅ Matching Skills ({matchingSkills.length}/{jobSkills.length}):</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {matchingSkills.map((skill) => (
+                                <Badge key={skill} variant="default" className="text-xs bg-green-600">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {missingSkills.length > 0 && missingSkills.length <= 10 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1.5">❌ Missing Required Skills:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {missingSkills.slice(0, 10).map((skill) => (
+                                <Badge key={skill} variant="outline" className="text-xs text-orange-600 border-orange-600">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex flex-wrap gap-1.5">
-                          <span className="text-xs text-muted-foreground">Skills:</span>
+                          <span className="text-xs text-muted-foreground">All Student Skills:</span>
                           {student?.skills.map((skill) => (
                             <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
                           ))}
                         </div>
+
+                        {/* ATS Score Indicator */}
+                        {atsScore > 0 && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Resume Compatibility</span>
+                              <span className="font-medium">{atsScore}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full transition-all ${
+                                  atsScore >= 75 ? 'bg-green-600' : 
+                                  atsScore >= 50 ? 'bg-yellow-600' : 
+                                  'bg-red-600'
+                                }`}
+                                style={{ width: `${atsScore}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {atsScore >= 75 ? '✅ Strong match - Recommended for approval' :
+                               atsScore >= 50 ? '⚠️ Moderate match - Review carefully' :
+                               '❌ Weak match - Consider rejection'}
+                            </p>
+                          </div>
+                        )}
+
                         {app.resumeUrl && (
                           <Button variant="outline" size="sm" asChild>
                             <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">
@@ -719,8 +797,9 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   offerReadyApps.map((app) => {
-                    const student = getStudentById(app.studentId);
-                    const job = getJobById(app.jobId);
+                    // jobId and studentId are already populated from backend
+                    const student = typeof app.studentId === 'object' ? app.studentId : getStudentById(app.studentId);
+                    const job = typeof app.jobId === 'object' ? app.jobId : getJobById(app.jobId);
 
                     return (
                       <div key={app.id} className="p-4 border rounded-lg space-y-3">
@@ -760,15 +839,81 @@ export default function AdminDashboard() {
                         </div>
 
                         {app.interviewFeedback && app.interviewFeedback.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium mb-2">Interview Summary:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {app.interviewFeedback.map((feedback, idx) => (
-                                <Badge key={idx} variant="outline" className="capitalize">
-                                  {feedback.round}: {feedback.rating}/5 ⭐
-                                </Badge>
-                              ))}
-                            </div>
+                          <div className="space-y-3 mt-4 pt-4 border-t">
+                            <p className="text-sm font-semibold flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-primary" />
+                              Interview Feedback Summary
+                            </p>
+                            {app.interviewFeedback.map((feedback, idx) => (
+                              <div key={idx} className="border-l-4 border-primary rounded-lg p-4 bg-muted/30 space-y-2">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <Badge variant="outline" className="capitalize mb-2">
+                                      {feedback.round === 'professional' ? 'Technical Round' : 
+                                       feedback.round === 'manager' ? 'Manager Round' : 'HR Round'}
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground">
+                                      Interviewer: {feedback.professionalName}
+                                    </p>
+                                    {feedback.conductedAt && (
+                                      <p className="text-xs text-muted-foreground">
+                                        Conducted: {new Date(feedback.conductedAt).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-sm font-medium">Rating:</span>
+                                      <Badge variant={feedback.rating >= 4 ? 'default' : feedback.rating >= 3 ? 'secondary' : 'destructive'}>
+                                        {feedback.rating}/5 ⭐
+                                      </Badge>
+                                    </div>
+                                    <Badge variant={
+                                      feedback.recommendation === 'Strongly Recommend' || feedback.recommendation === 'Pass' ? 'default' : 
+                                      feedback.recommendation === 'Recommend' || feedback.recommendation === 'Maybe' ? 'secondary' : 
+                                      'destructive'
+                                    }>
+                                      {feedback.recommendation}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                
+                                {feedback.comments && (
+                                  <div className="bg-background/50 rounded p-2">
+                                    <p className="text-xs font-medium text-muted-foreground mb-1">Overall Comments:</p>
+                                    <p className="text-sm">{feedback.comments}</p>
+                                  </div>
+                                )}
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                  {feedback.strengths && (
+                                    <div className="bg-green-50 dark:bg-green-950/20 rounded p-2">
+                                      <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">✓ Strengths:</p>
+                                      <p className="text-sm text-green-600 dark:text-green-300">{feedback.strengths}</p>
+                                    </div>
+                                  )}
+                                  {feedback.weaknesses && (
+                                    <div className="bg-orange-50 dark:bg-orange-950/20 rounded p-2">
+                                      <p className="text-xs font-medium text-orange-700 dark:text-orange-400 mb-1">⚠ Areas for Improvement:</p>
+                                      <p className="text-sm text-orange-600 dark:text-orange-300">{feedback.weaknesses}</p>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {feedback.improvementAreas && feedback.improvementAreas.length > 0 && (
+                                  <div>
+                                    <p className="text-xs font-medium text-muted-foreground mb-2">Focus Areas:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {feedback.improvementAreas.map((area, i) => (
+                                        <Badge key={i} variant="outline" className="text-xs">
+                                          {area}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         )}
 
@@ -1000,7 +1145,9 @@ export default function AdminDashboard() {
           <DialogHeader>
             <DialogTitle>Assign Professional for Technical Interview</DialogTitle>
             <DialogDescription>
-              Select a professional to conduct the technical round. Showing professionals matching job requirements.
+              {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0
+                ? "No approved professionals found. Please approve professionals in the Professional Approvals tab first."
+                : "Select a professional to conduct the technical round."}
             </DialogDescription>
           </DialogHeader>
 
@@ -1019,8 +1166,12 @@ export default function AdminDashboard() {
               <TableBody>
                 {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                      No matching professionals found.
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2">
+                        <Users className="h-12 w-12 opacity-50" />
+                        <p className="font-medium">No approved professionals found</p>
+                        <p className="text-sm">Go to Professional Approvals tab to approve professionals first.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (

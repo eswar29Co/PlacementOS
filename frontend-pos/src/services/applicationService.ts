@@ -41,6 +41,16 @@ export const applicationService = {
     }
   },
 
+  // Get assigned applications (professional only)
+  async getAssignedApplications(): Promise<{ success: boolean; data: Application[] }> {
+    try {
+      const response = await apiClient.get('/applications/assigned');
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
   // Get application by ID
   async getApplicationById(id: string): Promise<{ success: boolean; data: Application }> {
     try {
@@ -57,7 +67,7 @@ export const applicationService = {
     data: { status: ApplicationStatus; notes?: string }
   ): Promise<{ success: boolean; data: Application }> {
     try {
-      const response = await apiClient.patch(`/applications/${id}/status`, data);
+      const response = await apiClient.put(`/applications/${id}/status`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -81,7 +91,8 @@ export const applicationService = {
     round: 'professional' | 'manager' | 'hr';
   }): Promise<{ success: boolean; data: Application }> {
     try {
-      const response = await apiClient.post('/applications/assign-professional', data);
+      const { applicationId, ...payload } = data;
+      const response = await apiClient.post(`/applications/${applicationId}/assign-professional`, payload);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -95,7 +106,8 @@ export const applicationService = {
     zoomLink?: string;
   }): Promise<{ success: boolean; data: Application }> {
     try {
-      const response = await apiClient.post('/applications/schedule-interview', data);
+      const { applicationId, ...body } = data;
+      const response = await apiClient.post(`/applications/${applicationId}/schedule-interview`, body);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -114,7 +126,8 @@ export const applicationService = {
     recommendation: 'Strongly Recommend' | 'Recommend' | 'Maybe' | 'Reject' | 'Pass' | 'Fail';
   }): Promise<{ success: boolean; data: Application }> {
     try {
-      const response = await apiClient.post('/applications/interview-feedback', data);
+      const { applicationId, ...body } = data;
+      const response = await apiClient.post(`/applications/${applicationId}/interview-feedback`, body);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -129,6 +142,19 @@ export const applicationService = {
   }): Promise<{ success: boolean; data: Application }> {
     try {
       const response = await apiClient.post('/applications/submit-assessment', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Submit AI interview (student)
+  async submitAIInterview(data: {
+    applicationId: string;
+    aiInterviewAnswers: string[];
+  }): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post('/applications/submit-ai-interview', data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -189,6 +215,26 @@ export const applicationService = {
   async rejectAIInterview(id: string, feedback?: string): Promise<{ success: boolean; data: Application }> {
     try {
       const response = await apiClient.post(`/applications/${id}/reject-ai-interview`, { feedback });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Accept offer (student)
+  async acceptOffer(id: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/accept-offer`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Reject offer (student)
+  async rejectOffer(id: string, reason?: string): Promise<{ success: boolean; data: Application }> {
+    try {
+      const response = await apiClient.post(`/applications/${id}/reject-offer`, { reason });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

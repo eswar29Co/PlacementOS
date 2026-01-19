@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationService, notificationService } from '@/services';
-import { Bot, Send, CheckCircle } from 'lucide-react';
+import { Bot, Send, CheckCircle, Mic, MicOff, Video, VideoOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,12 +45,21 @@ export default function AIMockInterview() {
   const [answers, setAnswers] = useState<string[]>(Array(AI_QUESTIONS.length).fill(''));
   const [isCompleted, setIsCompleted] = useState(false);
   
+  // Video and speech recognition states
+  const [isRecording, setIsRecording] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<any>(null);
+  
   // Mutation for submitting AI interview
   const submitMutation = useMutation({
-    mutationFn: (data: { aiInterviewAnswers: string[]; aiInterviewScore: number; status: string }) =>
-      applicationService.updateApplicationStatus(myApplication?.id!, data),
+    mutationFn: (data: { applicationId: string; aiInterviewAnswers: string[] }) =>
+      applicationService.submitAIInterview(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
+      stopCamera();
       setIsCompleted(true);
       toast.success('AI Mock Interview completed! Your responses are now under review by the admin.');
     },
@@ -59,20 +68,143 @@ export default function AIMockInterview() {
     },
   });
 
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        
+        // Update current answer with speech-to-text
+        const newAnswers = [...answers];
+        newAnswers[currentQuestion] = answers[currentQuestion] + ' ' + transcript;
+        setAnswers(newAnswers);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          toast.error('Microphone access denied. Please enable microphone permissions.');
+        }
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        if (isListening) {
+          recognitionRef.current.start();
+        }
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  // Start/stop camera
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true,
+        audio: false 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setIsCameraOn(true);
+        toast.success('Camera enabled');
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+      toast.error('Failed to access camera. Please check permissions.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      setIsCameraOn(false);
+    }
+  };
+
+  // Toggle speech recognition
+  const toggleSpeechRecognition = () => {
+    if (!recognitionRef.current) {
+      toast.error('Speech recognition not supported in your browser');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      toast.info('Speech recognition stopped');
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast.success('Speech recognition started. Start speaking...');
+      } catch (error) {
+        console.error('Recognition start error:', error);
+        toast.error('Failed to start speech recognition');
+      }
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   // Check if student can access AI interview
   useEffect(() => {
+    console.log('AI Interview Check:', {
+      applicationId,
+      myApplication: myApplication ? {
+        id: myApplication.id,
+        status: myApplication.status,
+        canTake: canTakeAIInterview(myApplication.status)
+      } : null,
+      allApplications: applications.map(app => ({
+        id: app.id,
+        status: app.status
+      }))
+    });
+
     if (!myApplication) {
-      toast.error('Application not found');
-      navigate('/student/applications');
+      toast.error('Application not found. Please select an application from your Interviews page.');
+      setTimeout(() => navigate('/student/interviews'), 2000);
       return;
     }
 
     if (!canTakeAIInterview(myApplication.status)) {
-      toast.error('AI Interview not available yet. Please wait for admin to approve your assessment.');
-      navigate('/student/applications');
+      toast.error(`AI Interview not available. Current status: ${myApplication.status}. Please wait for admin to approve your assessment.`);
+      setTimeout(() => navigate('/student/interviews'), 2000);
       return;
     }
-  }, [myApplication, navigate]);
+
+    // Auto-start camera when interview begins
+    startCamera();
+  }, [myApplication, navigate, applicationId]);
 
   const handleAnswerChange = (value: string) => {
     const newAnswers = [...answers];
@@ -104,15 +236,9 @@ export default function AIMockInterview() {
     }
 
     if (myApplication) {
-      // Calculate a mock score based on answer lengths
-      const totalChars = answers.reduce((sum, ans) => sum + ans.length, 0);
-      const avgChars = totalChars / answers.length;
-      const score = Math.min(100, Math.max(40, Math.round((avgChars / 150) * 100)));
-
       submitMutation.mutate({
-        aiInterviewAnswers: answers,
-        aiInterviewScore: score,
-        status: getStatusAfterAIInterview()
+        applicationId: myApplication.id,
+        aiInterviewAnswers: answers
       });
     }
   };

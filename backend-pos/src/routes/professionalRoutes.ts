@@ -5,6 +5,7 @@ import {
   updateProfessionalStatus,
   getProfessionalStatistics,
   getAvailableProfessionals,
+  updateProfessionalProfile,
 } from '../controllers/professionalController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -44,5 +45,12 @@ router.get('/:id/statistics', authenticate, getProfessionalStatistics);
  * @access  Private (Admin)
  */
 router.put('/:id/status', authenticate, authorize('admin'), updateProfessionalStatus);
+
+/**
+ * @route   PUT /api/v1/professionals/profile
+ * @desc    Update professional profile
+ * @access  Private (Professional)
+ */
+router.put('/profile', authenticate, authorize('professional'), updateProfessionalProfile);
 
 export default router;

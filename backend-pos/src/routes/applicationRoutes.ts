@@ -17,6 +17,9 @@ import {
   rejectAssessment,
   approveAIInterview,
   rejectAIInterview,
+  submitAIInterview,
+  acceptOffer,
+  rejectOffer,
 } from '../controllers/applicationController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -100,6 +103,13 @@ router.post('/:id/interview-feedback', authenticate, authorize('professional'), 
 router.post('/submit-assessment', authenticate, authorize('student'), submitAssessment);
 
 /**
+ * @route   POST /api/v1/applications/submit-ai-interview
+ * @desc    Submit AI interview
+ * @access  Private (Student)
+ */
+router.post('/submit-ai-interview', authenticate, authorize('student'), submitAIInterview);
+
+/**
  * @route   POST /api/v1/applications/:id/approve-resume
  * @desc    Approve resume
  * @access  Private (Admin)
@@ -140,5 +150,19 @@ router.post('/:id/approve-ai-interview', authenticate, authorize('admin'), appro
  * @access  Private (Admin)
  */
 router.post('/:id/reject-ai-interview', authenticate, authorize('admin'), rejectAIInterview);
+
+/**
+ * @route   POST /api/v1/applications/:id/accept-offer
+ * @desc    Accept offer (student)
+ * @access  Private (Student)
+ */
+router.post('/:id/accept-offer', authenticate, authorize('student'), acceptOffer);
+
+/**
+ * @route   POST /api/v1/applications/:id/reject-offer
+ * @desc    Reject offer (student)
+ * @access  Private (Student)
+ */
+router.post('/:id/reject-offer', authenticate, authorize('student'), rejectOffer);
 
 export default router;

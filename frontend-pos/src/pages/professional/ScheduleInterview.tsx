@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateApplication } from '@/store/slices/applicationsSlice';
-import { addNotification } from '@/store/slices/notificationsSlice';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { applicationService } from '@/services';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,23 +15,35 @@ import { format } from 'date-fns';
 export default function ScheduleInterview() {
   const { appId } = useParams<{ appId: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
 
-  const application = useAppSelector((state) =>
-    state.applications.applications.find((a) => a.id === appId)
-  );
-  const job = useAppSelector((state) =>
-    state.jobs.jobs.find((j) => j.id === application?.jobId)
-  );
-  const student = useAppSelector((state) =>
-    state.students.students.find((s) => s.id === application?.studentId)
-  );
+  const { data: applicationData } = useQuery({
+    queryKey: ['application', appId],
+    queryFn: () => applicationService.getApplicationById(appId!),
+    enabled: !!appId,
+  });
+
+  const application = applicationData?.data;
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
 
-  if (!application || !job || !student) {
+  const scheduleInterviewMutation = useMutation({
+    mutationFn: (data: { applicationId: string; scheduledDate: Date; zoomLink?: string }) =>
+      applicationService.scheduleInterview(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['application', appId] });
+      queryClient.invalidateQueries({ queryKey: ['professional-applications'] });
+      toast.success('Interview scheduled successfully!');
+      navigate('/professional/dashboard');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to schedule interview');
+    },
+  });
+
+  if (!application) {
     return (
       <DashboardLayout title="Schedule Interview" subtitle="Interview not found">
         <Card>
@@ -48,6 +59,9 @@ export default function ScheduleInterview() {
     );
   }
 
+  const job = application.job;
+  const student = application.student;
+
   const handleSchedule = () => {
     if (!selectedDate || !time || !meetingLink) {
       toast.error('Please fill all fields');
@@ -59,61 +73,24 @@ export default function ScheduleInterview() {
     const scheduledDateTime = new Date(selectedDate);
     scheduledDateTime.setHours(parseInt(hours), parseInt(minutes));
 
-    // Determine the correct status based on interview round
-    let newStatus: any = 'professional_interview_scheduled';
-    if (application.interviewRound === 'manager') {
-      newStatus = 'manager_interview_scheduled';
-    } else if (application.interviewRound === 'hr') {
-      newStatus = 'hr_interview_scheduled';
-    }
-
-    dispatch(updateApplication({
-      id: application.id,
-      updates: {
-        meetingLink,
-        scheduledDate: scheduledDateTime,
-        status: newStatus,
-      },
-    }));
-
-    // Notify Student
-    dispatch(addNotification({
-      id: `notif-${Date.now()}`,
-      userId: student.id,
-      type: 'interview_scheduled',
-      title: 'Interview Scheduled',
-      message: `Your ${application.interviewRound} interview has been scheduled for ${format(scheduledDateTime, 'PPp')}.`,
-      read: false,
-      createdAt: new Date(),
-      actionUrl: `/student/${application.interviewRound}-interview`,
-    }));
-
-    // Notify Admin
-    dispatch(addNotification({
-      id: `notif-admin-${Date.now()}`,
-      userId: 'admin-1', // Default admin
-      type: 'interview_scheduled',
-      title: 'Interview Scheduled',
-      message: `${getRoundTitle()} scheduled for ${student.name} on ${format(scheduledDateTime, 'PPp')}.`,
-      read: false,
-      createdAt: new Date(),
-      actionUrl: `/admin/dashboard`,
-    }));
-
-    toast.success('Interview scheduled successfully!');
-    navigate('/professional/dashboard');
+    scheduleInterviewMutation.mutate({
+      applicationId: application.id,
+      scheduledDate: scheduledDateTime,
+      meetingLink: meetingLink,
+    });
   };
 
   const getRoundTitle = () => {
-    if (application.interviewRound === 'manager') return 'Manager Round';
-    if (application.interviewRound === 'hr') return 'HR Round';
+    if (!application) return 'Technical Interview';
+    if (application.status.includes('manager')) return 'Manager Round';
+    if (application.status.includes('hr')) return 'HR Round';
     return 'Technical Interview';
   };
 
   return (
     <DashboardLayout
       title="Schedule Interview"
-      subtitle={`Schedule ${getRoundTitle()} for ${student.name}`}
+      subtitle={`Schedule ${getRoundTitle()} for ${student?.name || 'Candidate'}`}
     >
       <div className="space-y-6">
         {/* Student & Job Info */}
@@ -126,13 +103,13 @@ export default function ScheduleInterview() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground">Candidate</Label>
-                <p className="font-medium">{student.name}</p>
-                <p className="text-sm text-muted-foreground">{student.email}</p>
+                <p className="font-medium">{student?.name || 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">{student?.email || ''}</p>
               </div>
               <div>
                 <Label className="text-muted-foreground">Position</Label>
-                <p className="font-medium">{job.roleTitle}</p>
-                <p className="text-sm text-muted-foreground">{job.companyName}</p>
+                <p className="font-medium">{job?.title || 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">{job?.company || ''}</p>
               </div>
               <div>
                 <Label className="text-muted-foreground">Interview Round</Label>
@@ -141,12 +118,12 @@ export default function ScheduleInterview() {
               <div>
                 <Label className="text-muted-foreground">Skills</Label>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {student.skills.slice(0, 3).map((skill) => (
+                  {student?.skills?.slice(0, 3).map((skill: string) => (
                     <span key={skill} className="text-xs bg-secondary px-2 py-1 rounded">
                       {skill}
                     </span>
                   ))}
-                  {student.skills.length > 3 && (
+                  {student?.skills && student.skills.length > 3 && (
                     <span className="text-xs text-muted-foreground">
                       +{student.skills.length - 3} more
                     </span>

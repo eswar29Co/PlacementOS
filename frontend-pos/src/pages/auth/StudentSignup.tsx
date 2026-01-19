@@ -8,10 +8,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch } from '@/store/hooks';
-import { addStudent } from '@/store/slices/studentsSlice';
 import { login } from '@/store/slices/authSlice';
 import { toast } from 'sonner';
-import { Student } from '@/types';
+import { authService } from '@/services/authService';
 
 export default function StudentSignup() {
   const navigate = useNavigate();
@@ -49,30 +48,36 @@ export default function StudentSignup() {
     
     setLoading(true);
     
-    const newStudent: Student = {
-      id: `student-${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: 'student',
-      phone: formData.phone,
-      college: formData.college,
-      degree: formData.degree,
-      branch: formData.branch,
-      cgpa: parseFloat(formData.cgpa),
-      graduationYear: parseInt(formData.graduationYear),
-      skills: skills,
-      linkedinUrl: formData.linkedinUrl || undefined,
-      githubUrl: formData.githubUrl || undefined,
-      createdAt: new Date(),
-    };
-    
-    dispatch(addStudent(newStudent));
-    dispatch(login(newStudent));
-    
-    setLoading(false);
-    toast.success('Account created successfully!');
-    navigate('/student/home');
+    try {
+      // Register student via API
+      const response = await authService.register({
+        role: 'student',
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        college: formData.college,
+        degree: formData.degree,
+        branch: formData.branch,
+        cgpa: parseFloat(formData.cgpa),
+        graduationYear: parseInt(formData.graduationYear),
+        skills: skills,
+        linkedinUrl: formData.linkedinUrl || undefined,
+        githubUrl: formData.githubUrl || undefined,
+      });
+
+      if (response.success) {
+        // Login user with returned data
+        dispatch(login(response.data.user));
+        toast.success('Account created successfully!');
+        navigate('/student/home');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Failed to create account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateField = (field: string, value: string) => {

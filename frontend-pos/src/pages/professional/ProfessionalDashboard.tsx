@@ -17,42 +17,21 @@ export default function ProfessionalDashboard() {
   const { user } = useAppSelector((state) => state.auth);
   const professional = user as Professional;
 
-  // Fetch applications from MongoDB
+  // Fetch applications assigned to this professional
   const { data: applicationsData } = useQuery({
-    queryKey: ['applications'],
-    queryFn: () => applicationService.getAllApplications(),
+    queryKey: ['assigned-applications'],
+    queryFn: () => applicationService.getAssignedApplications(),
   });
   const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
 
-  // Fetch students from MongoDB
-  const { data: studentsData } = useQuery({
-    queryKey: ['students'],
-    queryFn: () => studentService.getAllStudents(),
-  });
-  const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
-
-  // Fetch jobs from MongoDB
-  const { data: jobsData } = useQuery({
-    queryKey: ['jobs'],
-    queryFn: () => jobService.getAllJobs(),
-  });
-  const jobs = Array.isArray(jobsData?.data)
-    ? jobsData.data
-    : (jobsData?.data && 'jobs' in jobsData.data)
-    ? jobsData.data.jobs
-    : [];
 
   // Debug: Log current professional and applications
   console.log('Current professional:', professional);
   console.log('All applications:', applications);
   console.log('Professional ID:', professional?.id);
 
-  // Get applications assigned to this professional
-  const myAssignments = applications.filter(
-    a => a.assignedProfessionalId === professional?.id ||
-      a.assignedManagerId === professional?.id ||
-      a.assignedHRId === professional?.id
-  );
+  // Applications are already filtered to only assigned ones from the API
+  const myAssignments = applications;
 
   // console.log('My assignments:', myAssignments);
   // console.log('Professional role:', professional?.professionalRole);
@@ -139,9 +118,6 @@ export default function ProfessionalDashboard() {
     { label: 'Completed', value: completed.length, icon: CheckCircle2, color: 'text-success' },
   ];
 
-  const getStudentById = (studentId: string) => students.find(s => s.id === studentId);
-  const getJobById = (jobId: string) => jobs.find(j => j.id === jobId);
-
   return (
     <DashboardLayout title="Dashboard" subtitle={`Welcome, ${professional.name.split(' ')[0]}!`}>
       <div className="space-y-6">
@@ -206,8 +182,8 @@ export default function ProfessionalDashboard() {
               </Card>
             ) : (
               pending.map((app) => {
-                const student = getStudentById(app.studentId);
-                const job = getJobById(app.jobId);
+                const student = app.studentId;
+                const job = app.jobId;
 
                 return (
                   <Card key={app.id}>
@@ -254,8 +230,8 @@ export default function ProfessionalDashboard() {
               </Card>
             ) : (
               scheduled.map((app) => {
-                const student = getStudentById(app.studentId);
-                const job = getJobById(app.jobId);
+                const student = app.studentId;
+                const job = app.jobId;
 
                 return (
                   <Card key={app.id}>
@@ -308,8 +284,8 @@ export default function ProfessionalDashboard() {
               </Card>
             ) : (
               completed.map((app) => {
-                const student = getStudentById(app.studentId);
-                const job = getJobById(app.jobId);
+                const student = app.studentId;
+                const job = app.jobId;
                 const feedback = app.interviewFeedback?.find(f =>
                   (f.round === 'professional' && app.assignedProfessionalId === professional.id) ||
                   (f.round === 'manager' && app.assignedManagerId === professional.id) ||

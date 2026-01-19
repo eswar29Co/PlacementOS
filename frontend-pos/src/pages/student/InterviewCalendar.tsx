@@ -1,6 +1,6 @@
 import { useAppSelector } from '@/store/hooks';
 import { useQuery } from '@tanstack/react-query';
-import { applicationService, professionalService } from '@/services';
+import { applicationService } from '@/services';
 import { Calendar as CalendarIcon, Video, Clock, User, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,17 +16,7 @@ export default function InterviewCalendar() {
     queryFn: () => applicationService.getMyApplications(),
   });
   
-  const { data: professionalsData } = useQuery({
-    queryKey: ['professionals'],
-    queryFn: () => professionalService.getAllProfessionals(),
-  });
-  
   const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
-  const professionals = Array.isArray(professionalsData?.data?.professionals)
-    ? professionalsData.data.professionals
-    : Array.isArray(professionalsData?.data)
-    ? professionalsData.data
-    : [];
 
   const myApplications = applications.filter(app => app.studentId === user?.id);
 
@@ -34,37 +24,35 @@ export default function InterviewCalendar() {
     const interviews = [];
     
     if (app.status === 'professional_interview_scheduled' && app.assignedProfessionalId) {
-      const prof = professionals.find(p => p.id === app.assignedProfessionalId);
+      // Professional info is already populated in assignedProfessionalId
       interviews.push({
         type: 'Professional',
-        professional: prof,
+        professionalId: app.assignedProfessionalId,
         meetingLink: app.meetingLink,
         scheduledDate: app.scheduledDate,
-        job: app.job,
+        job: app.jobId,
         status: 'scheduled'
       });
     }
     
     if (app.status === 'manager_interview_scheduled' && app.assignedManagerId) {
-      const prof = professionals.find(p => p.id === app.assignedManagerId);
       interviews.push({
         type: 'Manager',
-        professional: prof,
+        professionalId: app.assignedManagerId,
         meetingLink: app.meetingLink,
         scheduledDate: app.scheduledDate,
-        job: app.job,
+        job: app.jobId,
         status: 'scheduled'
       });
     }
     
     if (app.status === 'hr_interview_scheduled' && app.assignedHRId) {
-      const prof = professionals.find(p => p.id === app.assignedHRId);
       interviews.push({
         type: 'HR',
-        professional: prof,
+        professionalId: app.assignedHRId,
         meetingLink: app.meetingLink,
         scheduledDate: app.scheduledDate,
-        job: app.job,
+        job: app.jobId,
         status: 'scheduled'
       });
     }
@@ -72,13 +60,12 @@ export default function InterviewCalendar() {
     // Add completed interviews
     if (app.interviewFeedback && Array.isArray(app.interviewFeedback)) {
       app.interviewFeedback.forEach(feedback => {
-        const prof = professionals.find(p => p.id === feedback.professionalId);
         interviews.push({
-          type: feedback.interviewRound === 'professional' ? 'Professional' : 
-                feedback.interviewRound === 'manager' ? 'Manager' : 'HR',
-          professional: prof,
+          type: feedback.round === 'professional' ? 'Professional' : 
+                feedback.round === 'manager' ? 'Manager' : 'HR',
+          professionalId: feedback.professionalId,
           feedback: feedback,
-          job: app.job,
+          job: app.jobId,
           status: 'completed'
         });
       });
@@ -116,21 +103,21 @@ export default function InterviewCalendar() {
                           <div className="flex items-start justify-between">
                             <div>
                               <Badge className="mb-2">{interview.type} Round</Badge>
-                              <p className="font-medium">{interview.job?.roleTitle}</p>
-                              <p className="text-sm text-muted-foreground">{interview.job?.companyName}</p>
+                              <p className="font-medium">{interview.job?.roleTitle || 'Interview'}</p>
+                              <p className="text-sm text-muted-foreground">{interview.job?.companyName || 'Company'}</p>
                             </div>
                           </div>
 
-                          {interview.professional && (
+                          {interview.professionalId && (
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
-                                <AvatarFallback className="text-xs">
-                                  {interview.professional.name.split(' ').map(n => n[0]).join('')}
+                                <AvatarFallback className="text-xs bg-primary/10">
+                                  <User className="h-4 w-4" />
                                 </AvatarFallback>
                               </Avatar>
                               <div className="text-sm">
-                                <p className="font-medium">{interview.professional.name}</p>
-                                <p className="text-muted-foreground text-xs">{interview.professional.designation}</p>
+                                <p className="font-medium">Interviewer Assigned</p>
+                                <p className="text-muted-foreground text-xs">{interview.type} Interviewer</p>
                               </div>
                             </div>
                           )}
@@ -160,7 +147,6 @@ export default function InterviewCalendar() {
               )}
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

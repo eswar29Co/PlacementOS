@@ -137,6 +137,35 @@ export const getProfessionalStatistics = async (req: AuthRequest, res: Response)
   }
 };
 
+// Update professional profile (professional only)
+export const updateProfessionalProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const professionalId = req.user!.userId;
+    const { techStack, yearsOfExperience, bio } = req.body;
+
+    const professional = await Professional.findById(professionalId);
+
+    if (!professional) {
+      return ApiResponse.notFound(res, 'Professional not found');
+    }
+
+    // Update allowed fields
+    if (techStack !== undefined) professional.techStack = techStack;
+    if (yearsOfExperience !== undefined) {
+      professional.yearsOfExperience = yearsOfExperience;
+      professional.experience = yearsOfExperience; // Keep both fields in sync
+    }
+    if (bio !== undefined) professional.bio = bio;
+
+    await professional.save();
+
+    return ApiResponse.success(res, professional, 'Profile updated successfully');
+  } catch (error: any) {
+    console.error('Update professional profile error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to update profile');
+  }
+};
+
 // Get available professionals for assignment
 export const getAvailableProfessionals = async (req: AuthRequest, res: Response) => {
   try {
