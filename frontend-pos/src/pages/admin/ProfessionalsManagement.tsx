@@ -6,18 +6,36 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateProfessional } from '@/store/slices/professionalsSlice';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { professionalService, applicationService } from '@/services';
 import { UserCheck, Search, Star, Briefcase, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProfessionalsManagement() {
-  const dispatch = useAppDispatch();
-  const { professionals } = useAppSelector((state) => state.professionals);
-  const { applications } = useAppSelector((state) => state.applications);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredProfessionals = professionals.filter(prof =>
+  // Fetch professionals from MongoDB
+  const { data: professionalsData, isLoading } = useQuery({
+    queryKey: ['professionals'],
+    queryFn: () => professionalService.getAllProfessionals(),
+  });
+
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+
+  // Normalize arrays
+  const professionalsList = Array.isArray(professionalsData?.data?.professionals) 
+    ? professionalsData.data.professionals 
+    : Array.isArray(professionalsData?.data) 
+    ? professionalsData.data 
+    : [];
+  const applicationsList = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+
+  const filteredProfessionals = professionalsList.filter(prof =>
     prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,20 +43,20 @@ export default function ProfessionalsManagement() {
   );
 
   const getProfessionalStats = (profId: string) => {
-    const profApps = applications.filter(a => 
+    const profApps = applicationsList.filter(a => 
       a.assignedProfessionalId === profId || 
       a.assignedManagerId === profId || 
       a.assignedHRId === profId
     );
     
-    const feedbackCount = applications.reduce((count, app) => {
+    const feedbackCount = applicationsList.reduce((count, app) => {
       if (app.interviewFeedback) {
         return count + app.interviewFeedback.filter(f => f.professionalId === profId).length;
       }
       return count;
     }, 0);
 
-    const avgRating = applications.reduce((sum, app) => {
+    const avgRating = applicationsList.reduce((sum, app) => {
       if (app.interviewFeedback) {
         const profFeedback = app.interviewFeedback.filter(f => f.professionalId === profId);
         const ratings = profFeedback.map(f => f.rating || 0);
@@ -54,20 +72,61 @@ export default function ProfessionalsManagement() {
     };
   };
 
+  // Mutation for approving professional
+  const approveMutation = useMutation({
+    mutationFn: (profId: string) => 
+      professionalService.updateProfessionalStatus(profId, { status: 'approved' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      toast.success('Professional approved!');
+    },
+    onError: (error: any) => {
+      console.error('Failed to approve professional:', error);
+      toast.error(error.message || 'Failed to approve professional');
+    },
+  });
+
+  // Mutation for rejecting professional
+  const rejectMutation = useMutation({
+    mutationFn: (profId: string) => 
+      professionalService.updateProfessionalStatus(profId, { status: 'rejected' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      toast.success('Professional rejected!');
+    },
+    onError: (error: any) => {
+      console.error('Failed to reject professional:', error);
+      toast.error(error.message || 'Failed to reject professional');
+    },
+  });
+
   const handleApproveProfessional = (profId: string) => {
-    dispatch(updateProfessional({ id: profId, updates: { status: 'approved' } }));
-    toast.success('Professional approved!');
+    approveMutation.mutate(profId);
   };
 
   const handleRejectProfessional = (profId: string) => {
-    dispatch(updateProfessional({ id: profId, updates: { status: 'rejected' } }));
-    toast.error('Professional rejected');
+    rejectMutation.mutate(profId);
   };
 
-  const pendingCount = professionals.filter(p => p.status === 'pending').length;
-  const approvedCount = professionals.filter(p => p.status === 'approved').length;
-  const activeInterviewsCount = professionals.reduce((sum, p) => sum + (p.activeInterviewCount || 0), 0);
-  const avgExperience = (professionals.reduce((sum, p) => sum + p.yearsOfExperience, 0) / professionals.length).toFixed(1);
+  const pendingCount = professionalsList.filter(p => p.status === 'pending').length;
+  const approvedCount = professionalsList.filter(p => p.status === 'approved').length;
+  const activeInterviewsCount = professionalsList.reduce((sum, p) => sum + (p.activeInterviewCount || 0), 0);
+  const avgExperience = professionalsList.length > 0 
+    ? (professionalsList.reduce((sum, p) => sum + p.yearsOfExperience, 0) / professionalsList.length).toFixed(1)
+    : '0';
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Professionals Management" subtitle="Manage professional interviewers">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading professionals...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Professionals Management" subtitle="View and manage all registered professionals">
@@ -81,7 +140,7 @@ export default function ProfessionalsManagement() {
                   <UserCheck className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{professionals.length}</p>
+                  <p className="text-3xl font-bold">{professionalsList.length}</p>
                   <p className="text-sm text-muted-foreground">Total Professionals</p>
                 </div>
               </div>

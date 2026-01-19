@@ -8,22 +8,32 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { addApplication } from '@/store/slices/applicationsSlice';
-import { addNotification } from '@/store/slices/notificationsSlice';
-import { Student, Application } from '@/types';
+import { useAppSelector } from '@/store/hooks';
+import { Student } from '@/types';
 import { Upload, FileText, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateATSAnalysis } from '@/lib/atsUtils';
+import { applicationService } from '@/services/applicationService';
+import { useQuery } from '@tanstack/react-query';
+import { jobService } from '@/services/jobService';
 
 export default function ApplyJob() {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
-  const { jobs } = useAppSelector((state) => state.jobs);
-  const { applications } = useAppSelector((state) => state.applications);
+  
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = (() => {
+    if (!jobsData?.data) return [];
+    if (Array.isArray(jobsData.data)) return jobsData.data;
+    if ('jobs' in jobsData.data && Array.isArray(jobsData.data.jobs)) return jobsData.data.jobs;
+    return [];
+  })();
   const job = jobs.find(j => j.id === jobId);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -114,61 +124,32 @@ export default function ApplyJob() {
       return;
     }
 
-    // Check if student has reached application limit (2 active applications)
-    const activeApps = applications.filter(
-      a => a.studentId === student.id && !['rejected', 'offer_released'].includes(a.status)
-    );
-    if (activeApps.length >= 5) {
-      toast.error('You have reached the maximum of 2 active applications');
-      return;
-    }
-
-    // Check if already applied to this job
-    const existingApp = applications.find(a => a.studentId === student.id && a.jobId === jobId);
-    if (existingApp) {
-      toast.error('You have already applied to this job');
+    if (!jobId) {
+      toast.error('Invalid job ID');
       return;
     }
 
     setUploading(true);
-    // Simulate upload and AI resume screening
-    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const newApplication: Application = {
-      id: `app-${Date.now()}`,
-      studentId: student.id,
-      jobId: jobId!,
-      status: 'resume_under_review',
-      resumeUrl: `/uploads/${resumeFile.name}`,
-      appliedAt: new Date().toISOString(),
-      interviewFeedback: [],
-      timeline: [
-        {
-          status: 'applied',
-          timestamp: new Date().toISOString(),
-          notes: 'Application submitted successfully'
-        }
-      ]
-    };
+    try {
+      // Call the backend API to create the application
+      const resumeUrl = `/uploads/${resumeFile.name}`; // This should be updated to actual file upload later
+      
+      const result = await applicationService.applyForJob({
+        jobId,
+        resumeUrl,
+      });
 
-    dispatch(addApplication(newApplication));
-
-    // Notify admin about new application (using default admin ID)
-    dispatch(addNotification({
-      id: `notif-admin-${Date.now()}`,
-      userId: 'admin-1', // Default admin user ID
-      type: 'application_update',
-      title: 'New Application Received',
-      message: `${student.name} has applied for ${job.roleTitle} at ${job.companyName}. Resume pending review.`,
-      read: false,
-      createdAt: new Date(),
-      actionUrl: '/admin/dashboard',
-    }));
-
-    setUploading(false);
-
-    toast.success('Application submitted! Your resume is being reviewed.');
-    navigate('/student/applications');
+      if (result.success) {
+        toast.success('Application submitted successfully! Your resume is being reviewed.');
+        navigate('/student/applications');
+      }
+    } catch (error: any) {
+      console.error('Application error:', error);
+      toast.error(error.message || 'Failed to submit application. Please try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (

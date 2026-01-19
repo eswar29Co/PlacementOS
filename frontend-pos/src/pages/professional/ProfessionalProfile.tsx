@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateProfessional } from '@/store/slices/professionalsSlice';
+import { useAppSelector } from '@/store/hooks';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { professionalService } from '@/services';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,11 +13,15 @@ import { toast } from 'sonner';
 import { X, Plus, Save, Briefcase, Award, User } from 'lucide-react';
 
 export default function ProfessionalProfile() {
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const { user } = useAppSelector((state) => state.auth);
-  const professional = useAppSelector((state) =>
-    state.professionals.professionals.find((p) => p.id === user?.id)
-  );
+  
+  const { data: profileData } = useQuery({
+    queryKey: ['my-profile'],
+    queryFn: () => professionalService.getMyProfile(),
+  });
+
+  const professional = profileData?.data;
 
   const [techStack, setTechStack] = useState<string[]>([]);
   const [newTech, setNewTech] = useState('');
@@ -45,6 +50,18 @@ export default function ProfessionalProfile() {
     setTechStack(techStack.filter((t) => t !== tech));
   };
 
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: { techStack: string[]; yearsOfExperience: number; bio: string }) =>
+      professionalService.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+      toast.success('Profile updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update profile');
+    },
+  });
+
   const handleSave = () => {
     if (techStack.length === 0) {
       toast.error('Please add at least one technology');
@@ -56,18 +73,11 @@ export default function ProfessionalProfile() {
       return;
     }
 
-    if (!professional) return;
-
-    dispatch(updateProfessional({
-      id: professional.id,
-      updates: {
-        techStack,
-        yearsOfExperience,
-        bio,
-      },
-    }));
-
-    toast.success('Profile updated successfully!');
+    updateProfileMutation.mutate({
+      techStack,
+      yearsOfExperience,
+      bio,
+    });
   };
 
   if (!professional) {

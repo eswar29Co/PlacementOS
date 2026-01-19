@@ -90,6 +90,7 @@ export type LocationType = 'Onsite' | 'Hybrid' | 'Remote';
 
 export interface Job {
   id: string;
+  _id?: string; // MongoDB ID
   companyName: string;
   roleTitle: string;
   ctcBand: string;
@@ -117,6 +118,9 @@ export interface Application {
   // Resume phase
   resumeUrl?: string;
   resumeScore?: number;
+  resumeApproved?: boolean | null; // null = pending, true = approved, false = rejected
+  resumeApprovedAt?: Date;
+  resumeApprovedBy?: string;
   
   // Assessment phase
   assessmentDeadline?: Date;
@@ -124,10 +128,16 @@ export interface Application {
   assessmentAnswers?: any[];
   assessmentScore?: number;
   submittedAt?: Date;
+  assessmentApproved?: boolean | null; // null = pending, true = approved, false = rejected
+  assessmentApprovedAt?: Date;
+  assessmentApprovedBy?: string;
   
   // Interview phases
   aiInterviewScore?: number;
   aiInterviewAnswers?: string[];
+  aiInterviewApproved?: boolean | null; // null = pending, true = approved, false = rejected
+  aiInterviewApprovedAt?: Date;
+  aiInterviewApprovedBy?: string;
   
   // Professional assignment
   assignedProfessionalId?: string;

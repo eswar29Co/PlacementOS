@@ -45,7 +45,31 @@ export const professionalService = {
     data: { status: 'approved' | 'rejected'; notes?: string }
   ): Promise<{ success: boolean; data: Professional }> {
     try {
-      const response = await apiClient.patch(`/professionals/${id}/status`, data);
+      const response = await apiClient.put(`/professionals/${id}/status`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Get my profile (professional only)
+  async getMyProfile(): Promise<{ success: boolean; data: Professional }> {
+    try {
+      const response = await apiClient.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Update profile (professional only)
+  async updateProfile(data: {
+    techStack?: string[];
+    yearsOfExperience?: number;
+    bio?: string;
+  }): Promise<{ success: boolean; data: Professional }> {
+    try {
+      const response = await apiClient.put('/professionals/profile', data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

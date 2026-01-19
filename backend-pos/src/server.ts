@@ -14,6 +14,7 @@ import jobRoutes from './routes/jobRoutes';
 import applicationRoutes from './routes/applicationRoutes';
 import assessmentRoutes from './routes/assessmentRoutes';
 import professionalRoutes from './routes/professionalRoutes';
+import studentRoutes from './routes/studentRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 
@@ -65,6 +66,7 @@ app.use(`${API_PREFIX}/jobs`, jobRoutes);
 app.use(`${API_PREFIX}/applications`, applicationRoutes);
 app.use(`${API_PREFIX}/assessments`, assessmentRoutes);
 app.use(`${API_PREFIX}/professionals`, professionalRoutes);
+app.use(`${API_PREFIX}/students`, studentRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 

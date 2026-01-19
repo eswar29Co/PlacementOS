@@ -1,85 +1,68 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAppDispatch } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
-import { initializeStore } from '@/store/initializeData';
+import { authService } from '@/services';
 import { toast } from 'sonner';
 
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const students = useAppSelector((state) => state.students.students);
-  const professionals = useAppSelector((state) => state.professionals.professionals);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Initialize store with mock data if empty
-  useEffect(() => {
-    if (students.length === 0 && professionals.length === 0) {
-      initializeStore(dispatch);
-    }
-  }, [dispatch, students.length, professionals.length]);
+  const [role, setRole] = useState<'student' | 'professional' | 'admin'>('student');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please enter email and password');
+      return;
+    }
+
     setLoading(true);
 
-    // Check admin credentials first (hardcoded)
-    if (email === 'admin@placementos.com' && password === 'admin123') {
-      const adminUser = {
-        id: 'admin-1',
-        name: 'System Admin',
-        email: 'admin@placementos.com',
-        role: 'admin' as const,
-        createdAt: new Date(),
-      };
-      dispatch(login(adminUser));
-      toast.success('Welcome Admin!');
-      setLoading(false);
-      navigate('/admin/dashboard');
-      return;
-    }
-
-    // Check student credentials
-    const student = students.find(
-      (s) => s.email === email && s.password === password
-    );
-    if (student) {
-      dispatch(login(student));
-      toast.success(`Welcome back, ${student.name}!`);
-      setLoading(false);
-      navigate('/student/home');
-      return;
-    }
-
-    // Check professional credentials
-    const professional = professionals.find(
-      (p) => p.email === email && p.password === password
-    );
-    if (professional) {
-      dispatch(login(professional));
-      toast.success(`Welcome back, ${professional.name}!`);
-      setLoading(false);
+    try {
+      // Call the actual login API
+      const response = await authService.login({ email, password, role });
       
-      if (professional.status === 'pending') {
-        navigate('/professional/dashboard'); // Will show pending message via ApprovedProfessionalRoute
-      } else if (professional.status === 'approved') {
-        navigate('/professional/dashboard');
-      } else {
-        navigate('/professional/dashboard'); // Will show rejected message via ApprovedProfessionalRoute
+      if (response.success && response.data.user && response.data.token) {
+        // Store token in localStorage
+        localStorage.setItem('token', response.data.token);
+        
+        // Dispatch login action to Redux
+        dispatch(login(response.data.user));
+        
+        toast.success(`Welcome back, ${response.data.user.name}!`);
+        
+        // Navigate based on role
+        switch (response.data.user.role) {
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          case 'student':
+            navigate('/student/home');
+            break;
+          case 'professional':
+            navigate('/professional/dashboard');
+            break;
+          default:
+            navigate('/');
+        }
       }
-      return;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
     }
-
-    // No match found
-    toast.error('Invalid email or password');
-    setLoading(false);
   };
 
   return (
@@ -101,6 +84,20 @@ export default function Login() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="role">Login As</Label>
+                <Select value={role} onValueChange={(value: any) => setRole(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">Student</SelectItem>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input 
                   id="email" 
@@ -116,6 +113,7 @@ export default function Login() {
                 <Input 
                   id="password" 
                   type="password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -154,9 +152,10 @@ export default function Login() {
 
             <div className="mt-6 p-3 bg-muted rounded-lg text-xs space-y-1">
               <p className="font-semibold">Demo Credentials:</p>
-              <p>Student: priya.sharma@college.edu / password123</p>
-              <p>Professional: amit.kumar@techcorp.com / password123</p>
               <p>Admin: admin@placementos.com / admin123</p>
+              <p className="text-muted-foreground text-[10px] mt-1">
+                (Select "Admin" in the "Login As" dropdown)
+              </p>
             </div>
           </CardContent>
         </Card>

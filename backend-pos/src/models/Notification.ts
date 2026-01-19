@@ -25,7 +25,8 @@ const notificationSchema = new Schema<INotificationDocument>(
         'interview_scheduled',
         'interview_completed',
         'application_update',
-        'offer_released'
+        'offer_released',
+        'new_application'
       ]
     },
     title: { type: String, required: true },

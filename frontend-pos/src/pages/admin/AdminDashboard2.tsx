@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,15 +8,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateProfessional } from '@/store/slices/professionalsSlice';
-import { updateApplication } from '@/store/slices/applicationsSlice';
-import { addNotification } from '@/store/slices/notificationsSlice';
+import { professionalService, applicationService, jobService, studentService } from '@/services';
 import { Users, UserCheck, Briefcase, TrendingUp, CheckCircle2, XCircle, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { getStatusAfterResumeApproval, getStatusAfterAssessmentApproval, getNextInterviewStage } from '@/lib/flowHelpers';
-import { assignProfessionalToStudent } from '@/store/slices/applicationsSlice';
-import { incrementInterviewCount } from '@/store/slices/professionalsSlice';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -35,13 +31,144 @@ import {
 } from '@/components/ui/table';
 
 export default function AdminDashboard() {
-  const dispatch = useAppDispatch();
-  const { students } = useAppSelector((state) => state.students);
-  const { professionals } = useAppSelector((state) => state.professionals);
-  const { applications } = useAppSelector((state) => state.applications);
-  const { jobs } = useAppSelector((state) => state.jobs);
+  const queryClient = useQueryClient();
+  
+  // Fetch data from MongoDB using React Query
+  const { data: professionalsData } = useQuery({
+    queryKey: ['professionals'],
+    queryFn: () => professionalService.getAllProfessionals(),
+  });
+  const professionals = Array.isArray(professionalsData?.data?.professionals)
+    ? professionalsData.data.professionals
+    : Array.isArray(professionalsData?.data)
+    ? professionalsData.data
+    : [];
+  
+  const { data: applicationsData, isLoading: applicationsLoading, error: applicationsError } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  
+  // Backend returns { data: { applications: [...], pagination: {...} } }
+  const applications = Array.isArray(applicationsData?.data?.applications) 
+    ? applicationsData.data.applications 
+    : Array.isArray(applicationsData?.data)
+    ? applicationsData.data
+    : [];
+  
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
+  
+  const { data: studentsData } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAllStudents(),
+  });
+  const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
 
   const [professionalRoles, setProfessionalRoles] = useState<Record<string, string>>({});
+
+  // Mutations for approvals
+  const approveResumeMutation = useMutation({
+    mutationFn: (id: string) => applicationService.approveResume(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Resume approved! Assessment released to student.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve resume');
+    },
+  });
+
+  const rejectResumeMutation = useMutation({
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+      applicationService.rejectResume(id, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.error('Resume rejected with feedback sent to student');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reject resume');
+    },
+  });
+
+  const approveAssessmentMutation = useMutation({
+    mutationFn: (id: string) => applicationService.approveAssessment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Assessment approved! AI interview round unlocked.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve assessment');
+    },
+  });
+
+  const rejectAssessmentMutation = useMutation({
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+      applicationService.rejectAssessment(id, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.error('Assessment rejected');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reject assessment');
+    },
+  });
+
+  const approveAIInterviewMutation = useMutation({
+    mutationFn: (id: string) => applicationService.approveAIInterview(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('AI interview approved! Ready for professional interview.');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to approve AI interview');
+    },
+  });
+
+  const rejectAIInterviewMutation = useMutation({
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+      applicationService.rejectAIInterview(id, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.error('AI interview rejected');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reject AI interview');
+    },
+  });
+
+  const assignProfessionalMutation = useMutation({
+    mutationFn: (data: { applicationId: string; professionalId: string; round: 'professional' | 'manager' | 'hr' }) => 
+      applicationService.assignProfessional(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      toast.success('Professional assigned successfully!');
+      setIsAssignDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to assign professional');
+    },
+  });
+
+  const releaseOfferMutation = useMutation({
+    mutationFn: (id: string) => 
+      applicationService.updateApplicationStatus(id, { status: 'offer_released' as ApplicationStatus }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast.success('Offer letter released successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to release offer');
+    },
+  });
 
   // Assignment Dialog State
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -57,49 +184,11 @@ export default function AdminDashboard() {
   const handleAssignProfessional = () => {
     if (!selectedAppIdForAssignment || !selectedProfessional) return;
 
-    const app = applications.find(a => a.id === selectedAppIdForAssignment);
-    const professional = professionals.find(p => p.id === selectedProfessional);
-
-    if (app && professional) {
-      // Update application
-      dispatch(updateApplication({
-        id: app.id,
-        updates: {
-          assignedProfessionalId: professional.id,
-          interviewRound: 'professional',
-          status: 'professional_interview_pending'
-        }
-      }));
-
-      // Increment count
-      dispatch(incrementInterviewCount(professional.id));
-
-      // Notifications
-      dispatch(addNotification({
-        id: `notif-${Date.now()}-student`,
-        userId: app.studentId,
-        type: 'interview_assigned',
-        title: 'Interview Assigned',
-        message: `${professional.name} from ${professional.company} has been assigned for your Technical interview.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: `/student/interviews`,
-      }));
-
-      dispatch(addNotification({
-        id: `notif-${Date.now()}-prof`,
-        userId: professional.id,
-        type: 'interview_assigned',
-        title: 'New Interview Assigned',
-        message: `You have been assigned to conduct a Technical interview for ${app.student?.name || 'a student'}. Please review their profile and resume.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: `/professional/dashboard`,
-      }));
-
-      toast.success('Professional assigned successfully!');
-      setIsAssignDialogOpen(false);
-    }
+    assignProfessionalMutation.mutate({
+      applicationId: selectedAppIdForAssignment,
+      professionalId: selectedProfessional,
+      round: 'professional'
+    });
   };
 
   const getAvailableProfessionals = (appId: string) => {
@@ -107,24 +196,55 @@ export default function AdminDashboard() {
     if (!app) return [];
 
     const job = jobs.find(j => j.id === app.jobId);
-    if (!job) return [];
+    
+    // First, get all approved professionals
+    const approvedProfs = professionals.filter(p => p.status === 'approved');
+    
+    if (!job || !job.requiredTechStack || job.requiredTechStack.length === 0) {
+      // If no job requirements, return all approved professionals
+      return approvedProfs;
+    }
 
-    return professionals.filter(p => {
-      if (p.status !== 'approved') return false;
-      // Basic matching logic (can be enhanced)
+    // Try to find professionals with matching skills
+    const matchingProfs = approvedProfs.filter(p => {
+      if (!p.techStack || p.techStack.length === 0) return false;
       const hasMatchingSkill = p.techStack.some(ts =>
-        job.requiredTechStack.some(rts => ts.toLowerCase().includes(rts.toLowerCase()))
+        job.requiredTechStack.some(rts => 
+          ts.toLowerCase().includes(rts.toLowerCase()) || 
+          rts.toLowerCase().includes(ts.toLowerCase())
+        )
       );
       return hasMatchingSkill;
     });
+
+    // If no matching professionals, return all approved professionals
+    // (better to have someone than no one)
+    return matchingProfs.length > 0 ? matchingProfs : approvedProfs;
   };
 
   const pendingProfessionals = professionals.filter(p => p.status === 'pending');
   const approvedProfessionals = professionals.filter(p => p.status === 'approved');
-  const resumeReviewApps = applications.filter(a => a.status === 'resume_under_review');
-  const assessmentReviewApps = applications.filter(a => a.status === 'assessment_completed');
-  const aiInterviewReviewApps = applications.filter(a => a.status === 'ai_interview_completed');
-  const offerReadyApps = applications.filter(a => a.status === 'hr_round_completed');
+  
+  // Applications needing resume approval (applied but resume not yet approved/rejected)
+  const resumeReviewApps = applications.filter(a => a.resumeApproved === null && a.status === 'applied');
+  
+  // Applications needing assessment approval (assessment completed but not yet approved/rejected)
+  const assessmentReviewApps = applications.filter(a => a.assessmentApproved === null && a.status === 'assessment_completed');
+  
+  // Applications needing AI interview approval (AI interview completed but not yet approved/rejected)
+  const aiInterviewReviewApps = applications.filter(a => a.aiInterviewApproved === null && a.status === 'ai_interview_completed');
+  
+  // Applications ready for offer release (completed all rounds)
+  const offerReadyApps = applications.filter(a => 
+    a.status === 'hr_round_completed' || 
+    a.status === 'hr_interview_completed' ||
+    // Also show if professional/manager rounds completed and have feedback
+    ((a.status === 'professional_interview_completed' || 
+      a.status === 'manager_interview_completed' || 
+      a.status === 'manager_round_completed') && 
+     a.interviewFeedback && 
+     a.interviewFeedback.length > 0)
+  );
 
   const stats = [
     { label: 'Total Students', value: students.length, icon: Users, color: 'text-primary' },
@@ -133,7 +253,7 @@ export default function AdminDashboard() {
     { label: 'Pending Approvals', value: pendingProfessionals.length, icon: Clock, color: 'text-warning' },
   ];
 
-  const handleApproveProfessional = (professionalId: string) => {
+  const handleApproveProfessional = async (professionalId: string) => {
     const professional = professionals.find(p => p.id === professionalId);
     const assignedRole = professionalRoles[professionalId];
 
@@ -142,48 +262,44 @@ export default function AdminDashboard() {
         toast.error('Please assign a role before approving');
         return;
       }
-      dispatch(updateProfessional({
-        id: professionalId,
-        updates: {
-          status: 'approved',
-          professionalRole: assignedRole as any
+      
+      try {
+        const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'approved' });
+        
+        if (response.success) {
+          // Refresh professionals list
+          queryClient.invalidateQueries({ queryKey: ['professionals'] });
+          
+          toast.success(`Professional approved as ${assignedRole}!`);
         }
-      }));
-      toast.success(`Professional approved as ${assignedRole}!`);
+      } catch (error: any) {
+        console.error('Failed to approve professional:', error);
+        toast.error(error.message || 'Failed to approve professional');
+      }
     }
   };
 
-  const handleRejectProfessional = (professionalId: string) => {
+  const handleRejectProfessional = async (professionalId: string) => {
     const professional = professionals.find(p => p.id === professionalId);
     if (professional) {
-      dispatch(updateProfessional({ id: professionalId, updates: { status: 'rejected' } }));
-      toast.error('Professional rejected');
+      try {
+        const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'rejected' });
+        
+        if (response.success) {
+          // Refresh professionals list
+          queryClient.invalidateQueries({ queryKey: ['professionals'] });
+          
+          toast.error('Professional rejected');
+        }
+      } catch (error: any) {
+        console.error('Failed to reject professional:', error);
+        toast.error(error.message || 'Failed to reject professional');
+      }
     }
   };
 
   const handleApproveResume = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      dispatch(updateApplication({
-        id: applicationId,
-        updates: {
-          status: getStatusAfterResumeApproval(),
-          assessmentDeadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
-        }
-      }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'application_update',
-        title: 'Resume Approved!',
-        message: `Your resume has been shortlisted for ${job?.companyName}! Assessment is now available. You have 2 days to complete it.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.success('Resume approved! Assessment released to student.');
-    }
+    approveResumeMutation.mutate(applicationId);
   };
 
   const handleRejectResume = (applicationId: string) => {
@@ -219,56 +335,21 @@ export default function AdminDashboard() {
         ? `\n\nAreas for improvement:\n${improvementPointers.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
         : '';
 
-      dispatch(updateApplication({ id: applicationId, updates: { status: 'rejected' } }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'resume_rejected',
-        title: 'Resume Not Shortlisted',
-        message: `Your application to ${job?.companyName} for ${job?.roleTitle} was not shortlisted at the resume screening stage.${improvementMessage}`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.error('Resume rejected with improvement feedback sent to student');
+      const feedback = `Your application to ${job?.companyName} for ${job?.roleTitle} was not shortlisted at the resume screening stage.${improvementMessage}`;
+      rejectResumeMutation.mutate({ id: applicationId, feedback });
     }
   };
 
   const handleApproveAssessment = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      dispatch(updateApplication({ id: applicationId, updates: { status: getStatusAfterAssessmentApproval() } }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'assessment_approved',
-        title: 'Assessment Approved!',
-        message: `Your assessment for ${job?.companyName} has been approved! AI Mock Interview is now available.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.success('Assessment approved! AI interview round unlocked.');
-    }
+    approveAssessmentMutation.mutate(applicationId);
   };
 
   const handleRejectAssessment = (applicationId: string) => {
     const app = applications.find(a => a.id === applicationId);
     if (app) {
       const job = getJobById(app.jobId);
-      dispatch(updateApplication({ id: applicationId, updates: { status: 'rejected' } }));
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'assessment_rejected',
-        title: 'Assessment Update',
-        message: `Your assessment for ${job?.companyName} did not meet the required criteria.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/applications',
-      }));
-      toast.error('Assessment rejected');
+      const feedback = `Your assessment for ${job?.companyName} did not meet the required criteria.`;
+      rejectAssessmentMutation.mutate({ id: applicationId, feedback });
     }
   };
 
@@ -291,8 +372,11 @@ export default function AdminDashboard() {
       const nextStage = getNextInterviewStage(app.status);
       if (nextStage === 'manager') {
         // Auto-assign manager for next round
-        dispatch(assignProfessionalToStudent(applicationId, 'manager'));
-        toast.success('Manager assigned for Manager Interview round.');
+        assignProfessionalMutation.mutate({
+          applicationId,
+          professionalId: 'manager', // TODO: Get actual manager ID
+          round: 'manager'
+        });
       }
     }
   };
@@ -304,44 +388,17 @@ export default function AdminDashboard() {
       const nextStage = getNextInterviewStage(app.status);
       if (nextStage === 'hr') {
         // Auto-assign HR for final round
-        dispatch(assignProfessionalToStudent(applicationId, 'hr'));
-        toast.success('HR assigned for HR Interview round.');
+        assignProfessionalMutation.mutate({
+          applicationId,
+          professionalId: 'hr', // TODO: Get actual HR ID
+          round: 'hr'
+        });
       }
     }
   };
 
   const handleReleaseOffer = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      const student = getStudentById(app.studentId);
-
-      dispatch(updateApplication({
-        id: applicationId,
-        updates: {
-          status: 'offer_released',
-          offerDetails: {
-            jobTitle: job?.roleTitle || 'Software Engineer',
-            company: job?.companyName || 'Company',
-            package: job?.package || 'Competitive package',
-            joiningDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          }
-        }
-      }));
-
-      dispatch(addNotification({
-        id: `notif-${Date.now()}`,
-        userId: app.studentId,
-        type: 'offer_released',
-        title: 'Congratulations! Offer Letter Released',
-        message: `You have received an offer from ${job?.companyName} for ${job?.roleTitle} position.`,
-        read: false,
-        createdAt: new Date(),
-        actionUrl: '/student/offers',
-      }));
-
-      toast.success('Offer letter released successfully!');
-    }
+    releaseOfferMutation.mutate(applicationId);
   };
 
   const getStudentById = (id: string) => students.find(s => s.id === id);
@@ -475,23 +532,101 @@ export default function AdminDashboard() {
                   resumeReviewApps.map((app) => {
                     const student = getStudentById(app.studentId);
                     const job = getJobById(app.jobId);
+                    const atsScore = app.resumeScore || 0;
+
+                    // Calculate skill match
+                    const jobSkills = [...(job?.skills || []), ...(job?.requiredTechStack || [])];
+                    const matchingSkills = student?.skills.filter(s =>
+                      jobSkills.some(js => js.toLowerCase().includes(s.toLowerCase()))
+                    ) || [];
+                    const missingSkills = jobSkills.filter(js =>
+                      !student?.skills.some(s => s.toLowerCase().includes(js.toLowerCase()))
+                    );
+
+                    // Determine ATS score badge color
+                    const getScoreBadgeVariant = (score: number) => {
+                      if (score >= 75) return 'default';
+                      if (score >= 50) return 'secondary';
+                      return 'destructive';
+                    };
 
                     return (
                       <div key={app.id} className="p-4 border rounded-lg space-y-3">
                         <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium">{student?.name}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-medium">{student?.name}</p>
+                              {atsScore > 0 && (
+                                <Badge variant={getScoreBadgeVariant(atsScore)} className="gap-1">
+                                  ATS Score: {atsScore}%
+                                </Badge>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">{student?.college} • {student?.branch}</p>
                             <p className="text-sm text-muted-foreground">Applied for: {job?.companyName} - {job?.roleTitle}</p>
                             <p className="text-sm text-muted-foreground">CGPA: {student?.cgpa} • Grad Year: {student?.graduationYear}</p>
                           </div>
                         </div>
+
+                        {/* Skill Match Analysis */}
+                        {matchingSkills.length > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1.5">✅ Matching Skills ({matchingSkills.length}/{jobSkills.length}):</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {matchingSkills.map((skill) => (
+                                <Badge key={skill} variant="default" className="text-xs bg-green-600">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {missingSkills.length > 0 && missingSkills.length <= 10 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1.5">❌ Missing Required Skills:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {missingSkills.slice(0, 10).map((skill) => (
+                                <Badge key={skill} variant="outline" className="text-xs text-orange-600 border-orange-600">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex flex-wrap gap-1.5">
-                          <span className="text-xs text-muted-foreground">Skills:</span>
+                          <span className="text-xs text-muted-foreground">All Student Skills:</span>
                           {student?.skills.map((skill) => (
                             <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
                           ))}
                         </div>
+
+                        {/* ATS Score Indicator */}
+                        {atsScore > 0 && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Resume Compatibility</span>
+                              <span className="font-medium">{atsScore}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full transition-all ${
+                                  atsScore >= 75 ? 'bg-green-600' : 
+                                  atsScore >= 50 ? 'bg-yellow-600' : 
+                                  'bg-red-600'
+                                }`}
+                                style={{ width: `${atsScore}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {atsScore >= 75 ? '✅ Strong match - Recommended for approval' :
+                               atsScore >= 50 ? '⚠️ Moderate match - Review carefully' :
+                               '❌ Weak match - Consider rejection'}
+                            </p>
+                          </div>
+                        )}
+
                         {app.resumeUrl && (
                           <Button variant="outline" size="sm" asChild>
                             <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">
@@ -631,7 +766,7 @@ export default function AdminDashboard() {
                             variant="destructive"
                             size="sm"
                             onClick={() => {
-                              dispatch(updateApplication({ id: app.id, updates: { status: 'rejected' } }));
+                              updateApplicationMutation.mutate({ id: app.id, updates: { status: 'rejected' } });
                               toast.error('Application rejected');
                             }}
                           >
@@ -662,8 +797,9 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   offerReadyApps.map((app) => {
-                    const student = getStudentById(app.studentId);
-                    const job = getJobById(app.jobId);
+                    // jobId and studentId are already populated from backend
+                    const student = typeof app.studentId === 'object' ? app.studentId : getStudentById(app.studentId);
+                    const job = typeof app.jobId === 'object' ? app.jobId : getJobById(app.jobId);
 
                     return (
                       <div key={app.id} className="p-4 border rounded-lg space-y-3">
@@ -703,15 +839,81 @@ export default function AdminDashboard() {
                         </div>
 
                         {app.interviewFeedback && app.interviewFeedback.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium mb-2">Interview Summary:</p>
-                            <div className="flex flex-wrap gap-2">
-                              {app.interviewFeedback.map((feedback, idx) => (
-                                <Badge key={idx} variant="outline" className="capitalize">
-                                  {feedback.round}: {feedback.rating}/5 ⭐
-                                </Badge>
-                              ))}
-                            </div>
+                          <div className="space-y-3 mt-4 pt-4 border-t">
+                            <p className="text-sm font-semibold flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-primary" />
+                              Interview Feedback Summary
+                            </p>
+                            {app.interviewFeedback.map((feedback, idx) => (
+                              <div key={idx} className="border-l-4 border-primary rounded-lg p-4 bg-muted/30 space-y-2">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <Badge variant="outline" className="capitalize mb-2">
+                                      {feedback.round === 'professional' ? 'Technical Round' : 
+                                       feedback.round === 'manager' ? 'Manager Round' : 'HR Round'}
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground">
+                                      Interviewer: {feedback.professionalName}
+                                    </p>
+                                    {feedback.conductedAt && (
+                                      <p className="text-xs text-muted-foreground">
+                                        Conducted: {new Date(feedback.conductedAt).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-sm font-medium">Rating:</span>
+                                      <Badge variant={feedback.rating >= 4 ? 'default' : feedback.rating >= 3 ? 'secondary' : 'destructive'}>
+                                        {feedback.rating}/5 ⭐
+                                      </Badge>
+                                    </div>
+                                    <Badge variant={
+                                      feedback.recommendation === 'Strongly Recommend' || feedback.recommendation === 'Pass' ? 'default' : 
+                                      feedback.recommendation === 'Recommend' || feedback.recommendation === 'Maybe' ? 'secondary' : 
+                                      'destructive'
+                                    }>
+                                      {feedback.recommendation}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                
+                                {feedback.comments && (
+                                  <div className="bg-background/50 rounded p-2">
+                                    <p className="text-xs font-medium text-muted-foreground mb-1">Overall Comments:</p>
+                                    <p className="text-sm">{feedback.comments}</p>
+                                  </div>
+                                )}
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                  {feedback.strengths && (
+                                    <div className="bg-green-50 dark:bg-green-950/20 rounded p-2">
+                                      <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">✓ Strengths:</p>
+                                      <p className="text-sm text-green-600 dark:text-green-300">{feedback.strengths}</p>
+                                    </div>
+                                  )}
+                                  {feedback.weaknesses && (
+                                    <div className="bg-orange-50 dark:bg-orange-950/20 rounded p-2">
+                                      <p className="text-xs font-medium text-orange-700 dark:text-orange-400 mb-1">⚠ Areas for Improvement:</p>
+                                      <p className="text-sm text-orange-600 dark:text-orange-300">{feedback.weaknesses}</p>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {feedback.improvementAreas && feedback.improvementAreas.length > 0 && (
+                                  <div>
+                                    <p className="text-xs font-medium text-muted-foreground mb-2">Focus Areas:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {feedback.improvementAreas.map((area, i) => (
+                                        <Badge key={i} variant="outline" className="text-xs">
+                                          {area}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         )}
 
@@ -943,7 +1145,9 @@ export default function AdminDashboard() {
           <DialogHeader>
             <DialogTitle>Assign Professional for Technical Interview</DialogTitle>
             <DialogDescription>
-              Select a professional to conduct the technical round. Showing professionals matching job requirements.
+              {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0
+                ? "No approved professionals found. Please approve professionals in the Professional Approvals tab first."
+                : "Select a professional to conduct the technical round."}
             </DialogDescription>
           </DialogHeader>
 
@@ -962,8 +1166,12 @@ export default function AdminDashboard() {
               <TableBody>
                 {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                      No matching professionals found.
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2">
+                        <Users className="h-12 w-12 opacity-50" />
+                        <p className="font-medium">No approved professionals found</p>
+                        <p className="text-sm">Go to Professional Approvals tab to approve professionals first.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (

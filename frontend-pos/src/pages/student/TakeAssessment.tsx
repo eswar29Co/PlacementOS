@@ -8,23 +8,55 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { updateApplication } from '@/store/slices/applicationsSlice';
-import { addNotification } from '@/store/slices/notificationsSlice';
+import { useAppSelector } from '@/store/hooks';
 import { mockMCQQuestions, mockCodingQuestions } from '@/data/mockData';
 import { Clock, ChevronLeft, ChevronRight, Code2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { canTakeAssessment, getStatusAfterAssessmentSubmission } from '@/lib/flowHelpers';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
+import { jobService } from '@/services/jobService';
 
 export default function TakeAssessment() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { applications } = useAppSelector((state) => state.applications);
-  const { jobs } = useAppSelector((state) => state.jobs);
+  
+  // Fetch application from MongoDB
+  const { data: applicationData, isLoading } = useQuery({
+    queryKey: ['application', applicationId],
+    queryFn: () => applicationService.getApplicationById(applicationId!),
+    enabled: !!applicationId,
+  });
+  const application = applicationData?.data;
+
+  // Extract jobId - handle both populated object and string ID
+  const jobId = typeof application?.jobId === 'string' 
+    ? application.jobId 
+    : (application?.jobId as any)?._id || (application?.jobId as any)?.id;
+
+  // Fetch job details
+  const { data: jobData } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => jobService.getJobById(jobId as string),
+    enabled: !!jobId,
+  });
+  const job = jobData?.data;
+
   const { user } = useAppSelector((state) => state.auth);
-  const application = applications.find(a => a.id === applicationId);
+
+  // Mutation for submitting assessment
+  const submitMutation = useMutation({
+    mutationFn: (data: { applicationId: string; assessmentCode?: string; assessmentAnswers?: any[] }) =>
+      applicationService.submitAssessment(data),
+    onSuccess: () => {
+      toast.success('Assessment submitted! Your answers are now under review by the admin.');
+      navigate('/student/applications');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to submit assessment');
+    },
+  });
 
   // Check if student can access assessment
   useEffect(() => {
@@ -79,33 +111,14 @@ export default function TakeAssessment() {
   const handleSubmit = () => {
     if (!application) return;
 
-    const job = jobs.find(j => j.id === application.jobId);
-
-    // Store assessment answers and code
-    dispatch(updateApplication({
-      id: application.id,
-      updates: {
-        status: getStatusAfterAssessmentSubmission(),
-        assessmentCode: code,
-        assessmentAnswers: Object.entries(answers).map(([qId, ans]) => ({ questionId: qId, answer: ans })),
-        submittedAt: new Date()
-      }
-    }));
-
-    // Notify admin
-    dispatch(addNotification({
-      id: `notif-assess-${Date.now()}`,
-      userId: 'admin-1', // Default admin
-      type: 'application_update',
-      title: 'Assessment Submitted',
-      message: `${user?.name} has submitted the assessment for ${job?.roleTitle} at ${job?.companyName}. Please review.`,
-      read: false,
-      createdAt: new Date(),
-      actionUrl: '/admin/dashboard',
-    }));
-
-    toast.success('Assessment submitted! Your answers are now under review by the admin.');
-    navigate('/student/applications');
+    submitMutation.mutate({
+      applicationId: application._id || application.id,
+      assessmentCode: code,
+      assessmentAnswers: Object.entries(answers).map(([qId, ans]) => ({ 
+        questionId: qId, 
+        answer: ans 
+      })),
+    });
   };
 
   return (

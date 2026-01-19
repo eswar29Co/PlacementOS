@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,22 +6,36 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAppSelector } from '@/store/hooks';
+import { studentService, applicationService } from '@/services';
 import { Users, Search, GraduationCap, Briefcase, Mail, Phone, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 export default function StudentsManagement() {
-  const { students } = useAppSelector((state) => state.students);
-  const { applications } = useAppSelector((state) => state.applications);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredStudents = students.filter(student =>
+  // Fetch students from MongoDB
+  const { data: studentsData, isLoading } = useQuery({
+    queryKey: ['students'],
+    queryFn: () => studentService.getAllStudents(),
+  });
+  const studentsList = Array.isArray(studentsData?.data) ? studentsData.data : [];
+
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  const applicationsList = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+
+  const filteredStudents = studentsList.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.college.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStudentStats = (studentId: string) => {
-    const studentApps = applications.filter(a => a.studentId === studentId);
+    const studentApps = applicationsList.filter(a => a.studentId === studentId);
     return {
       total: studentApps.length,
       active: studentApps.filter(a => !['rejected', 'offer_released', 'offer_accepted'].includes(a.status)).length,
@@ -29,6 +43,19 @@ export default function StudentsManagement() {
       rejected: studentApps.filter(a => a.status === 'rejected').length,
     };
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Students Management" subtitle="View and manage all registered students">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-muted-foreground">Loading students...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Students Management" subtitle="View and manage all registered students">
@@ -42,7 +69,7 @@ export default function StudentsManagement() {
                   <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{students.length}</p>
+                  <p className="text-3xl font-bold">{studentsList.length}</p>
                   <p className="text-sm text-muted-foreground">Total Students</p>
                 </div>
               </div>
@@ -56,7 +83,7 @@ export default function StudentsManagement() {
                   <GraduationCap className="h-6 w-6 text-success" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{students.filter(s => s.graduationYear === 2025).length}</p>
+                  <p className="text-3xl font-bold">{studentsList.filter(s => s.graduationYear === 2025).length}</p>
                   <p className="text-sm text-muted-foreground">2025 Graduates</p>
                 </div>
               </div>
@@ -71,7 +98,7 @@ export default function StudentsManagement() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold">
-                    {students.reduce((sum, s) => sum + getStudentStats(s.id).active, 0)}
+                    {studentsList.reduce((sum, s) => sum + getStudentStats(s.id).active, 0)}
                   </p>
                   <p className="text-sm text-muted-foreground">Active Applications</p>
                 </div>
@@ -87,7 +114,7 @@ export default function StudentsManagement() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold">
-                    {students.filter(s => getStudentStats(s.id).offers > 0).length}
+                    {studentsList.filter(s => getStudentStats(s.id).offers > 0).length}
                   </p>
                   <p className="text-sm text-muted-foreground">Students with Offers</p>
                 </div>

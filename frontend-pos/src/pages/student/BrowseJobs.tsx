@@ -9,6 +9,8 @@ import { useAppSelector } from '@/store/hooks';
 import { Job, Student } from '@/types';
 import { Search, IndianRupee, Clock, Building2, Sparkles, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { jobService } from '@/services/jobService';
 
 function JobCard({ job, onApply, matchScore }: { job: Job; onApply: () => void; matchScore?: number }) {
   return (
@@ -68,7 +70,18 @@ function JobCard({ job, onApply, matchScore }: { job: Job; onApply: () => void; 
 export default function BrowseJobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const { jobs } = useAppSelector((state) => state.jobs);
+  
+  // Fetch jobs from MongoDB
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs({ isActive: true }),
+  });
+  const jobs = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
+  
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
 

@@ -5,11 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
 
 export default function ResumeShortlist() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
-  const applications = useAppSelector((state) => state.applications.applications);
+  
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: applicationService.getMyApplications,
+  });
+  const applications = applicationsData?.data || [];
   
   const myApplication = applications.find(
     (app) => app.studentId === user?.id && 

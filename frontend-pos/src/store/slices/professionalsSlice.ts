@@ -1,13 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Professional } from '@/types';
-import { mockProfessionals } from '@/data/mockData';
 
 interface ProfessionalsState {
   professionals: Professional[];
 }
 
 const initialState: ProfessionalsState = {
-  professionals: mockProfessionals,
+  professionals: [],
 };
 
 const professionalsSlice = createSlice({
@@ -48,8 +47,11 @@ const professionalsSlice = createSlice({
       }
     },
     setProfessionals: (state, action: PayloadAction<Professional[]>) => {
-      state.professionals = action.payload;
+      // Ensure payload is always an array
+      state.professionals = Array.isArray(action.payload) ? action.payload : [];
     },
+    //   state.professionals = action.payload;
+    // },
   },
 });
 

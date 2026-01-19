@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,18 +9,34 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { addJob, updateJob, deleteJob } from '@/store/slices/jobsSlice';
+import { jobService, applicationService } from '@/services';
 import { Briefcase, Plus, Search, Edit, Trash2, Calendar, Users, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Job, LocationType } from '@/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function JobsManagement() {
-  const dispatch = useAppDispatch();
-  const { jobs } = useAppSelector((state) => state.jobs);
-  const { applications } = useAppSelector((state) => state.applications);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  // Fetch jobs from MongoDB
+  const { data: jobsData, isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => jobService.getAllJobs(),
+  });
+  const jobsList = Array.isArray(jobsData?.data)
+    ? jobsData.data
+    : (jobsData?.data && 'jobs' in jobsData.data)
+    ? jobsData.data.jobs
+    : [];
+
+  // Fetch applications from MongoDB
+  const { data: applicationsData } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => applicationService.getAllApplications(),
+  });
+  const applicationsList = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
 
   // Form state
   const [formData, setFormData] = useState({
@@ -36,13 +52,63 @@ export default function JobsManagement() {
     deadline: '',
   });
 
-  const filteredJobs = jobs.filter(job =>
+  // Create job mutation
+  const createJobMutation = useMutation({
+    mutationFn: (data: any) => jobService.createJob(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast.success('Job created successfully!');
+      setIsCreateDialogOpen(false);
+      // Reset form
+      setFormData({
+        companyName: '',
+        roleTitle: '',
+        ctcBand: '',
+        package: '',
+        locationType: 'Onsite',
+        description: '',
+        requirements: '',
+        skills: '',
+        requiredTechStack: '',
+        deadline: '',
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to create job');
+    },
+  });
+
+  // Update job mutation
+  const updateJobMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => jobService.updateJob(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast.success('Job updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update job');
+    },
+  });
+
+  // Delete job mutation
+  const deleteJobMutation = useMutation({
+    mutationFn: (id: string) => jobService.deleteJob(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast.success('Job deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Cannot delete job with existing applications');
+    },
+  });
+
+  const filteredJobs = jobsList.filter(job =>
     job.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.roleTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getJobStats = (jobId: string) => {
-    const jobApps = applications.filter(a => a.jobId === jobId);
+    const jobApps = applicationsList.filter(a => a.jobId === jobId);
     return {
       total: jobApps.length,
       active: jobApps.filter(a => !['rejected', 'offer_released', 'offer_accepted'].includes(a.status)).length,
@@ -51,14 +117,13 @@ export default function JobsManagement() {
     };
   };
 
-  const handleCreateJob = () => {
+  const handleCreateJob = async () => {
     if (!formData.companyName || !formData.roleTitle || !formData.ctcBand) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const newJob: Job = {
-      id: `job-${Date.now()}`,
+    const jobData = {
       companyName: formData.companyName,
       roleTitle: formData.roleTitle,
       ctcBand: formData.ctcBand,
@@ -73,43 +138,38 @@ export default function JobsManagement() {
       selectionProcess: ['Resume Screening', 'Assessment', 'AI Interview', 'Technical Round', 'Manager Round', 'HR Round'],
     };
 
-    dispatch(addJob(newJob));
-    toast.success('Job created successfully!');
-    setIsCreateDialogOpen(false);
-    
-    // Reset form
-    setFormData({
-      companyName: '',
-      roleTitle: '',
-      ctcBand: '',
-      package: '',
-      locationType: 'Onsite',
-      description: '',
-      requirements: '',
-      skills: '',
-      requiredTechStack: '',
-      deadline: '',
-    });
+    createJobMutation.mutate(jobData);
   };
 
   const handleToggleJobStatus = (jobId: string, currentStatus: boolean) => {
-    dispatch(updateJob({ id: jobId, updates: { isActive: !currentStatus } }));
-    toast.success(`Job ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+    updateJobMutation.mutate({ id: jobId, data: { isActive: !currentStatus } });
   };
 
   const handleDeleteJob = (jobId: string) => {
-    const jobApps = applications.filter(a => a.jobId === jobId);
+    const jobApps = applicationsList.filter(a => a.jobId === jobId);
     if (jobApps.length > 0) {
       toast.error('Cannot delete job with existing applications');
       return;
     }
-    dispatch(deleteJob(jobId));
-    toast.success('Job deleted successfully');
+    deleteJobMutation.mutate(jobId);
   };
 
-  const activeJobsCount = jobs.filter(j => j.isActive).length;
-  const totalApplications = jobs.reduce((sum, j) => sum + getJobStats(j.id).total, 0);
-  const totalOffers = jobs.reduce((sum, j) => sum + getJobStats(j.id).offers, 0);
+  const activeJobsCount = jobsList.filter(j => j.isActive).length;
+  const totalApplications = jobsList.reduce((sum, j) => sum + getJobStats(j.id).total, 0);
+  const totalOffers = jobsList.reduce((sum, j) => sum + getJobStats(j.id).offers, 0);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Jobs Management" subtitle="Create and manage job postings">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading jobs...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Jobs Management" subtitle="Create and manage job postings">
@@ -123,7 +183,7 @@ export default function JobsManagement() {
                   <Briefcase className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{jobs.length}</p>
+                  <p className="text-3xl font-bold">{jobsList.length}</p>
                   <p className="text-sm text-muted-foreground">Total Jobs</p>
                 </div>
               </div>

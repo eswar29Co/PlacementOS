@@ -7,7 +7,7 @@ export const jobService = {
   async getAllJobs(params?: {
     isActive?: boolean;
     skills?: string[];
-  }): Promise<{ success: boolean; data: Job[] }> {
+  }): Promise<{ success: boolean; data: { jobs: Job[]; pagination: any } | Job[] }> {
     try {
       const response = await apiClient.get('/jobs', { params });
       return response.data;

@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertTriangle, TrendingUp, FileText } from 'lucide-react';
 import { useAppSelector } from '@/store/hooks';
 import { Application } from '@/types';
+import { useQuery } from '@tanstack/react-query';
+import { applicationService } from '@/services/applicationService';
 
 interface KeywordMatch {
   keyword: string;
@@ -45,11 +47,16 @@ interface ATSAnalysis {
 export default function ResumeATSAnalysis() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
-  const { applications } = useAppSelector((state) => state.applications);
   const [atsAnalysis, setATSAnalysis] = useState<ATSAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const application = applications.find(a => a.id === applicationId) as Application | undefined;
+  // Fetch application from MongoDB
+  const { data: applicationData } = useQuery({
+    queryKey: ['application', applicationId],
+    queryFn: () => applicationService.getApplicationById(applicationId!),
+    enabled: !!applicationId,
+  });
+  const application = applicationData?.data;
 
   useEffect(() => {
     // Simulate fetching ATS analysis

@@ -10,6 +10,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { addProfessional } from '@/store/slices/professionalsSlice';
 import { toast } from 'sonner';
 import { Professional } from '@/types';
+import { authService } from '@/services/authService';
 
 export default function ProfessionalSignup() {
   const navigate = useNavigate();
@@ -45,30 +46,33 @@ export default function ProfessionalSignup() {
     
     setLoading(true);
     
-    const newProfessional: Professional = {
-      id: `prof-${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: 'professional',
-      phone: formData.phone,
-      company: formData.company,
-      designation: formData.designation,
-      experience: parseInt(formData.experience),
-      techStack: techStack,
-      linkedinUrl: formData.linkedinUrl || undefined,
-      status: 'pending',
-      interviewsTaken: 0,
-      activeInterviewCount: 0,
-      rating: 0,
-      createdAt: new Date(),
-    };
-    
-    dispatch(addProfessional(newProfessional));
-    
-    setLoading(false);
-    setSubmitted(true);
-    toast.success('Application submitted for approval!');
+    try {
+      // Register professional via API
+      const response = await authService.register({
+        role: 'professional',
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        company: formData.company,
+        designation: formData.designation,
+        yearsOfExperience: parseInt(formData.experience),
+        experience: parseInt(formData.experience),
+        techStack: techStack,
+        expertise: techStack,
+        linkedinUrl: formData.linkedinUrl || undefined,
+      });
+      
+      if (response.success) {
+        setSubmitted(true);
+        toast.success('Application submitted for approval!');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast.error(error.message || 'Failed to submit application');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateField = (field: string, value: string) => {
