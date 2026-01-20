@@ -14,6 +14,7 @@ import { Upload, FileText, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide
 import { toast } from 'sonner';
 import { generateATSAnalysis } from '@/lib/atsUtils';
 import { applicationService } from '@/services/applicationService';
+import { uploadService } from '@/services/uploadService';
 import { useQuery } from '@tanstack/react-query';
 import { jobService } from '@/services/jobService';
 
@@ -132,8 +133,9 @@ export default function ApplyJob() {
     setUploading(true);
 
     try {
-      // Call the backend API to create the application
-      const resumeUrl = `/uploads/${resumeFile.name}`; // This should be updated to actual file upload later
+      // Upload resume file
+      const uploadResponse = await uploadService.uploadFile(resumeFile);
+      const resumeUrl = uploadResponse.data.url;
       
       const result = await applicationService.applyForJob({
         jobId,

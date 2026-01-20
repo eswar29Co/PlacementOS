@@ -1,4 +1,5 @@
 import express, { Application, Request, Response } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -17,6 +18,7 @@ import professionalRoutes from './routes/professionalRoutes';
 import studentRoutes from './routes/studentRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 
 const app: Application = express();
 
@@ -29,6 +31,7 @@ app.use(compression()); // Compress responses
 app.use(cors({ origin: config.cors.origin, credentials: true })); // CORS
 app.use(express.json({ limit: '10mb' })); // Parse JSON
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded
+app.use(express.static(path.join(process.cwd(), 'public'))); // Serve static files
 
 // Logging
 if (config.env === 'development') {
@@ -69,6 +72,7 @@ app.use(`${API_PREFIX}/professionals`, professionalRoutes);
 app.use(`${API_PREFIX}/students`, studentRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
+app.use(`${API_PREFIX}/upload`, uploadRoutes);
 
 // Welcome route
 app.get('/', (_: Request, res: Response) => {

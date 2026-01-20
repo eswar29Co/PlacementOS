@@ -59,7 +59,10 @@ export const applyForJob = async (req: AuthRequest, res: Response) => {
     try {
       // Check if resume file exists (only if it's a local file path)
       if (resumeUrl && !resumeUrl.startsWith('http')) {
-        const resumePath = path.join(process.cwd(), 'public', resumeUrl);
+        // Handle path that might be absolute or relative from public
+        // If it starts with /uploads, we want to strip the leading /
+        const relativePath = resumeUrl.startsWith('/') ? resumeUrl.slice(1) : resumeUrl;
+        const resumePath = path.join(process.cwd(), 'public', relativePath);
         
         // Check if file exists before trying to read
         try {
