@@ -10,21 +10,27 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/store/hooks';
 import { Student } from '@/types';
-import { Upload, FileText, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  Upload, FileText, ArrowLeft, CheckCircle2,
+  AlertTriangle, Zap, Sparkles, Target,
+  ShieldCheck, Search, ChevronRight, BarChart3,
+  Globe, Info
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { generateATSAnalysis } from '@/lib/atsUtils';
 import { applicationService } from '@/services/applicationService';
 import { useQuery } from '@tanstack/react-query';
 import { jobService } from '@/services/jobService';
+import { cn } from '@/lib/utils';
 
 export default function ApplyJob() {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
-  
-  // Fetch jobs from MongoDB
-  const { data: jobsData } = useQuery({
+
+  // Fetch jobs (Preserving logic)
+  const { data: jobsData, isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: () => jobService.getAllJobs(),
   });
@@ -35,18 +41,29 @@ export default function ApplyJob() {
     return [];
   })();
   const job = jobs.find(j => j.id === jobId);
+
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [atsAnalysis, setAtsAnalysis] = useState<any>(null);
   const [showAtsDetails, setShowAtsDetails] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
 
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Deployment Hub" subtitle="Awaiting simulation parameters...">
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (!job) {
     return (
-      <DashboardLayout title="Job Not Found">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">This job does not exist.</p>
-          <Button variant="link" onClick={() => navigate('/student/jobs')}>Back to Jobs</Button>
+      <DashboardLayout title="Protocol Error" subtitle="The simulation node you are trying to reach is offline.">
+        <div className="text-center py-24 space-y-6">
+          <Zap className="h-16 w-16 text-rose-500 mx-auto" />
+          <Button variant="link" className="font-black text-primary" onClick={() => navigate('/student/jobs')}>RETURN TO MARKETPLACE</Button>
         </div>
       </DashboardLayout>
     );
@@ -55,324 +72,201 @@ export default function ApplyJob() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setResumeFile(e.target.files[0]);
-      setAtsAnalysis(null); // Reset analysis when file changes
+      setAtsAnalysis(null);
+      toast.success('Dossier uploaded to buffer');
     }
   };
 
   const handleATSAnalysis = async () => {
-    if (!resumeFile) {
-      toast.error('Please upload your resume first');
-      return;
-    }
-
+    if (!resumeFile) return toast.error('Upload dossier first');
     setAnalyzing(true);
-    
-    try {
-      // Simulate resume content reading
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Create mock resume content with some variation
-      const mockResumeContent = `
-      Professional Resume
-      Contact: candidate@email.com | (555) 123-4567
-      
-      Professional Summary
-      Experienced software developer skilled in full-stack development.
-      Expertise in building scalable applications and cloud solutions.
-      
-      Experience
-      Senior Developer - Tech Company (2021-Present)
-      - Developed microservices using Spring Boot, Docker, and Kubernetes
-      - Built REST APIs and worked with PostgreSQL databases
-      - Implemented CI/CD pipelines using Jenkins and Maven
-      - Experience with cloud platforms including AWS
-      
-      Junior Developer - Startup (2019-2021)
-      - Developed web applications using React and JavaScript/TypeScript
-      - Worked with Git for version control
-      - Implemented unit testing with Jest and Selenium
-      
-      Education
-      Bachelor of Science in Computer Science (2019)
-      
-      Technical Skills
-      Languages: Java, JavaScript, TypeScript, Python, SQL
-      Frameworks: Spring Boot, React, Express.js
-      Tools: Docker, Git, Maven, Jenkins
-      Databases: PostgreSQL, MongoDB
-      Cloud: AWS, Azure
-      Other: REST APIs, Microservices, Agile Development
-    `;
-
-      // Generate ATS analysis with job description context
-      const jobDescription = `${job?.description} ${job?.requirements?.join(' ')} ${job?.skills?.join(' ')}`;
-      const analysisResult = generateATSAnalysis(mockResumeContent, jobDescription, job?.roleTitle);
-
-      setAtsAnalysis(analysisResult);
-      setAnalyzing(false);
-      toast.success('ATS analysis complete!');
-    } catch (error) {
-      console.error('ATS Analysis Error:', error);
-      setAnalyzing(false);
-      toast.error('Failed to analyze resume. Please try again.');
-    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    const jobDescription = `${job?.description} ${job?.requirements?.join(' ')} ${job?.skills?.join(' ')}`;
+    setAtsAnalysis(generateATSAnalysis(resumeFile.name, jobDescription, job?.roleTitle));
+    setAnalyzing(false);
+    toast.success('Neural sync complete!');
   };
 
   const handleSubmit = async () => {
-    if (!resumeFile) {
-      toast.error('Please upload your resume');
-      return;
-    }
-
-    if (!jobId) {
-      toast.error('Invalid job ID');
-      return;
-    }
-
+    if (!resumeFile || !jobId) return toast.error('Dossier required for deployment');
     setUploading(true);
-
     try {
-      // Call the backend API to create the application
-      const resumeUrl = `/uploads/${resumeFile.name}`; // This should be updated to actual file upload later
-      
-      const result = await applicationService.applyForJob({
-        jobId,
-        resumeUrl,
-      });
-
+      const resumeUrl = `/uploads/${resumeFile.name}`;
+      const result = await applicationService.applyForJob({ jobId, resumeUrl });
       if (result.success) {
-        toast.success('Application submitted successfully! Your resume is being reviewed.');
+        toast.success('Application deployed! Directing to Tactical Overview.');
         navigate('/student/applications');
       }
     } catch (error: any) {
-      console.error('Application error:', error);
-      toast.error(error.message || 'Failed to submit application. Please try again.');
+      toast.error(error.message || 'Deployment failed');
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <DashboardLayout title={`Apply to ${job.companyName}`} subtitle={job.roleTitle}>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Button variant="ghost" onClick={() => navigate(`/student/jobs/${jobId}`)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Job Details
+    <DashboardLayout title="Deployment Hub" subtitle={`Initializing application for ${job.companyName}`}>
+      <div className="max-w-[1000px] mx-auto space-y-10 pb-12">
+        <Button variant="ghost" className="rounded-xl font-black text-xs uppercase hover:bg-slate-50 transition-all group text-slate-400 border border-transparent hover:border-slate-100" onClick={() => navigate(`/student/jobs/${jobId}`)}>
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Abort Initialisation
         </Button>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Your Resume</CardTitle>
-            <CardDescription>
-              Your resume will be automatically screened by AI for this role
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleFileChange}
-                className="hidden"
-                id="resume-upload"
-              />
-              <label htmlFor="resume-upload" className="cursor-pointer">
-                {resumeFile ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <CheckCircle2 className="h-12 w-12 text-success" />
-                    <p className="font-medium">{resumeFile.name}</p>
-                    <p className="text-sm text-muted-foreground">Click to change file</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="h-12 w-12 text-muted-foreground" />
-                    <p className="font-medium">Click to upload resume</p>
-                    <p className="text-sm text-muted-foreground">PDF, DOC, DOCX (Max 5MB)</p>
-                  </div>
-                )}
-              </label>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
-            <div className="bg-muted/50 rounded-lg p-4">
-              <h4 className="font-medium mb-2">What happens next?</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">1.</span>
-                  Analyze your resume match for this role
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">2.</span>
-                  AI screens your resume for this role
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">3.</span>
-                  If shortlisted, assessment will be released (2 days to complete)
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">4.</span>
-                  Pass assessment to unlock interview rounds
-                </li>
-              </ul>
-            </div>
-
-            {resumeFile && !atsAnalysis && (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleATSAnalysis}
-                disabled={analyzing}
-              >
-                {analyzing ? 'Analyzing Resume...' : 'Analyze Resume for This Job'}
-              </Button>
-            )}
-
-            {atsAnalysis && (
-              <div className="space-y-4 border-t pt-4">
-                {!showAtsDetails ? (
-                  <>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm">ATS Match Score</h4>
-                        <span className="text-2xl font-bold text-blue-600">{atsAnalysis.atsScore}/100</span>
+          {/* Section 1: Dossier Upload */}
+          <div className="space-y-8">
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden group bg-white border">
+              <CardHeader className="p-8 border-b border-slate-100 bg-slate-50">
+                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-slate-900">
+                  <Upload className="h-6 w-6 text-primary" /> Dossier Upload
+                </CardTitle>
+                <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Submit your technical profile for neural screening</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="relative group/upload">
+                  <input type="file" id="resume-upload" className="hidden" onChange={handleFileChange} accept=".pdf,.doc,.docx" />
+                  <label htmlFor="resume-upload" className={cn(
+                    "block p-12 border-2 border-dashed rounded-[2rem] text-center transition-all cursor-pointer",
+                    resumeFile ? "border-emerald-500/50 bg-emerald-50" : "border-slate-200 hover:border-primary/50 bg-slate-50"
+                  )}>
+                    {resumeFile ? (
+                      <div className="space-y-4 animate-in zoom-in-95 duration-300">
+                        <div className="h-16 w-16 bg-emerald-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                          <CheckCircle2 className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <p className="font-black text-sm uppercase text-emerald-600 italic">{resumeFile.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Dossier Locked</p>
+                        </div>
                       </div>
-                      <Progress value={atsAnalysis.atsScore} className="h-2" />
-                    </div>
-
-                    <Alert className={atsAnalysis.passed ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
-                      <AlertDescription className="flex items-start gap-2 text-sm">
-                        {atsAnalysis.passed ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                        )}
-                        <span>{atsAnalysis.summary}</span>
-                      </AlertDescription>
-                    </Alert>
-
-                    {atsAnalysis.keywordMatches.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-semibold">Job Keywords Found</h5>
-                        <div className="flex flex-wrap gap-1">
-                          {atsAnalysis.keywordMatches.slice(0, 6).map((match: any, idx: number) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {match.keyword}
-                            </Badge>
-                          ))}
-                          {atsAnalysis.keywordMatches.length > 6 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{atsAnalysis.keywordMatches.length - 6} more
-                            </Badge>
-                          )}
+                    ) : (
+                      <div className="space-y-4">
+                        <FileText className="h-16 w-16 text-slate-300 mx-auto" />
+                        <div>
+                          <p className="font-black text-xs uppercase tracking-widest text-slate-400">Select Simulation File</p>
+                          <p className="text-[10px] font-bold text-slate-300 uppercase mt-1 italic">PDF / DOCX (MAX 5MB)</p>
                         </div>
                       </div>
                     )}
+                  </label>
+                </div>
 
-                    {atsAnalysis.missingKeywords.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-semibold text-amber-700">Missing Keywords</h5>
-                        <p className="text-xs text-muted-foreground">
-                          Consider adding: {atsAnalysis.missingKeywords.slice(0, 3).join(', ')}
-                        </p>
+                <div className="space-y-4 pt-4">
+                  <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-400">Tactical Protocols</h4>
+                  <div className="space-y-3">
+                    {[
+                      { step: "01", text: "Neural match calibration" },
+                      { step: "02", text: "AI spectrum screening" },
+                      { step: "03", text: "Assessment window release" }
+                    ].map(p => (
+                      <div key={p.step} className="flex items-center gap-4 text-xs font-bold text-slate-500 italic">
+                        <span className="text-primary font-black opacity-30">{p.step}</span>
+                        {p.text}
                       </div>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={() => setShowAtsDetails(true)}
-                    >
-                      View Detailed Analysis
-                    </Button>
-                  </>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold">Job Match Analysis</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowAtsDetails(false)}
-                      >
-                        ← Back
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <h5 className="font-semibold text-sm">Job Match Score</h5>
-                        <span className="text-3xl font-bold text-blue-600">{atsAnalysis.atsScore}/100</span>
-                      </div>
-                      <Progress value={atsAnalysis.atsScore} className="h-3" />
-                      <p className="text-xs text-blue-700">{atsAnalysis.summary}</p>
-                    </div>
-
-                    {atsAnalysis.strengths?.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-sm text-green-700">✓ Your Strengths</h5>
-                        <ul className="text-xs space-y-1.5">
-                          {atsAnalysis.strengths.map((item: string, idx: number) => (
-                            <li key={idx} className="flex gap-2 p-2 bg-green-50 rounded border border-green-200">
-                              <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                              <span className="text-muted-foreground">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {atsAnalysis.improvements?.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-sm text-amber-700">! Improvements Needed</h5>
-                        <ul className="text-xs space-y-1.5">
-                          {atsAnalysis.improvements.map((item: string, idx: number) => (
-                            <li key={idx} className="flex gap-2 p-2 bg-amber-50 rounded border border-amber-200">
-                              <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                              <span className="text-muted-foreground">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {atsAnalysis.keywordMatches?.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-sm">Keywords Detected ({atsAnalysis.keywordMatches.length})</h5>
-                        <div className="grid grid-cols-2 gap-2">
-                          {atsAnalysis.keywordMatches.map((match: any, idx: number) => (
-                            <div key={idx} className="text-xs p-2 bg-muted rounded border border-border">
-                              <p className="font-medium text-primary">{match.keyword}</p>
-                              <p className="text-muted-foreground text-xs">
-                                {match.category} <span className="ml-1">×{match.frequency}</span>
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      className="w-full text-xs"
-                      onClick={() => setShowAtsDetails(false)}
-                    >
-                      Close Analysis
-                    </Button>
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              </CardContent>
+            </Card>
 
             <Button
-              className="w-full"
-              size="lg"
+              className="w-full h-20 rounded-[2rem] font-black text-xl gap-3 shadow-2xl shadow-primary/20 group hover:translate-y-[-4px] transition-all"
               onClick={handleSubmit}
               disabled={!resumeFile || uploading}
             >
-              {uploading ? 'Submitting...' : 'Submit Application'}
+              {uploading ? 'DEPLOYING...' : 'INITIALIZE DEPLOYMENT'} <ChevronRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Section 2: Compatibility Analysis */}
+          <div className="space-y-8">
+            {!atsAnalysis ? (
+              <Card className="border-none shadow-lg rounded-[2.5rem] bg-indigo-600 text-white p-10 overflow-hidden relative min-h-[400px] flex flex-col justify-center text-center">
+                <Sparkles className="absolute -right-8 -top-8 h-40 w-40 opacity-10 animate-pulse" />
+                <div className="relative z-10 space-y-6">
+                  <h3 className="text-3xl font-black uppercase leading-tight italic tracking-tighter">Neural Sync Ready</h3>
+                  <p className="text-white/70 font-bold text-sm leading-relaxed mx-auto max-w-xs italic">Scan your dossier against the simulation parameters to optimize for deployment.</p>
+                  <Button
+                    className="bg-white text-indigo-700 font-black rounded-2xl h-14 px-10 shadow-xl hover:bg-slate-50 w-full"
+                    onClick={handleATSAnalysis}
+                    disabled={!resumeFile || analyzing}
+                  >
+                    {analyzing ? 'SYNCHRONIZING...' : 'SCAN SIMULATION MATCH'}
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden bg-white border animate-in slide-in-from-right-8 duration-500">
+                <CardHeader className="p-8 border-b border-slate-100 bg-slate-50">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-slate-900">
+                      <BarChart3 className="h-6 w-6 text-primary" /> Sync Result
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" className="font-black text-[10px] uppercase text-slate-400 hover:text-primary" onClick={() => setAtsAnalysis(null)}>Reset Scan</Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8 space-y-8">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Compatibility Index</p>
+                      <p className="text-4xl font-black text-primary italic leading-none">{atsAnalysis.atsScore}<span className="text-sm opacity-30">/100</span></p>
+                    </div>
+                    <Progress value={atsAnalysis.atsScore} className="h-4 rounded-full bg-slate-100 shadow-none border border-slate-200" />
+                  </div>
+
+                  <Alert className={cn(
+                    "border-none rounded-[1.5rem] p-6 shadow-none",
+                    atsAnalysis.passed ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                  )}>
+                    <AlertDescription className="flex items-start gap-4 font-bold text-xs leading-relaxed italic">
+                      {atsAnalysis.passed ? <ShieldCheck className="h-5 w-5 shrink-0" /> : <AlertTriangle className="h-5 w-5 shrink-0" />}
+                      {atsAnalysis.summary}
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-4">
+                    <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">High-Fidelity Matches</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {atsAnalysis.keywordMatches.slice(0, 8).map((m: any, i: number) => (
+                        <Badge key={i} className="bg-slate-50 border border-slate-100 shadow-none text-slate-600 font-black uppercase text-[9px] px-3 py-1 rounded-lg italic">
+                          {m.keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-amber-50 rounded-3xl border border-dashed border-amber-200">
+                    <h5 className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3 flex items-center gap-2">
+                      <Zap className="h-3 w-3 fill-current" /> Suggested Optimization
+                    </h5>
+                    <ul className="space-y-2">
+                      {atsAnalysis.missingKeywords.slice(0, 3).map((k: string, i: number) => (
+                        <li key={i} className="text-xs font-bold text-amber-700/70 flex items-center gap-2 italic">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Integrate "{k}" into core experience
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <Button variant="ghost" className="w-full rounded-2xl font-black text-[10px] uppercase text-primary hover:bg-primary/5 h-12">View Neural Breakdown</Button>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] p-8 border bg-white">
+              <div className="flex gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+                  <Info className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-black text-sm uppercase tracking-tight text-slate-900">Post-Sync Protocol</h4>
+                  <p className="text-xs font-bold text-slate-400 leading-relaxed italic">Upon successful deployment, your technical assessment window will activate within 24 hours.</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );

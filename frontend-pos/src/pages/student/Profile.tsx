@@ -8,11 +8,21 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateUser } from '@/store/slices/authSlice';
 import { Student } from '@/types';
-import { Upload, Github, Linkedin, FileText, Save, CheckCircle2, AlertTriangle, Zap } from 'lucide-react';
+import {
+  Upload, Github, Linkedin, FileText, Save,
+  CheckCircle2, AlertTriangle, Zap, User,
+  Briefcase, GraduationCap, MapPin, Mail,
+  Phone, Globe, Sparkles, Target, BarChart3,
+  ExternalLink, DownloadCloud, Terminal,
+  Cpu, Activity, ShieldCheck, Fingerprint
+} from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { generateATSAnalysis } from '@/lib/atsUtils';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Profile() {
   const dispatch = useAppDispatch();
@@ -22,474 +32,306 @@ export default function Profile() {
   const [resumeName, setResumeName] = useState<string>(student?.resumeUrl ? 'resume.pdf' : '');
   const [atsAnalysis, setAtsAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setResumeFile(file);
       setResumeName(file.name);
-      toast.success('Resume selected: ' + file.name);
+      toast.success('Dossier selected: ' + file.name);
     }
-  };
-
-  const handleResumeUpload = async () => {
-    if (!resumeFile) {
-      toast.error('Please select a resume file');
-      return;
-    }
-
-    // Simulate file upload
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success('Resume uploaded successfully!');
   };
 
   const handleATSAnalysis = async () => {
-    if (!resumeFile && !student?.resumeUrl) {
-      toast.error('Please upload a resume first');
-      return;
-    }
-
+    if (!resumeFile && !student?.resumeUrl) return toast.error('Dossier required for scan');
     setAnalyzing(true);
-    
-    try {
-      // Simulate reading resume file content
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Generate mock resume text for analysis (varies based on file name)
-      const resumeFileText = resumeFile?.name || 'resume.pdf';
-      const mockResumeContent = `
-      ${resumeFileText}
-      
-      Contact: john.doe@example.com | (555) 123-4567
-      
-      Professional Summary
-      Experienced software developer with passion for building scalable applications.
-      Skilled in Java, Spring Boot, React, and cloud technologies.
-      
-      Experience
-      Senior Developer - Tech Company (2021-Present)
-      - Developed microservices using Spring Boot and Docker
-      - Implemented REST APIs with Spring Framework
-      - Managed databases using PostgreSQL and MongoDB
-      - Collaborated with teams using Git and CI/CD pipelines
-      - Improved application performance using Redis caching
-      
-      Developer - Startup (2019-2021)
-      - Built web applications using React and JavaScript
-      - Worked with AWS for cloud deployments
-      - Implemented testing strategies using Jest
-      
-      Education
-      Bachelor of Science in Computer Science
-      University of Technology (2019)
-      
-      Skills
-      Languages: Java, JavaScript, TypeScript, Python, SQL
-      Frameworks: Spring Boot, React, Express.js
-      Tools: Docker, Kubernetes, Git, Jenkins, Maven
-      Databases: PostgreSQL, MongoDB, MySQL
-      Cloud: AWS, Azure
-      Concepts: REST APIs, Microservices, CI/CD, Agile, DevOps, Testing
-    `;
-
-      // Generate dynamic ATS analysis based on content
-      const analysisResult = generateATSAnalysis(mockResumeContent);
-      
-      setAtsAnalysis(analysisResult);
-      setAnalyzing(false);
-      toast.success('ATS analysis complete!');
-    } catch (error) {
-      console.error('ATS Analysis Error:', error);
-      setAnalyzing(false);
-      toast.error('Failed to analyze resume. Please try again.');
-    }
-  };
-
-  const handleSave = () => {
-    // dispatch(updateUser({...updated values}));
-    toast.success('Profile updated successfully!');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setAtsAnalysis(generateATSAnalysis(resumeFile?.name || 'resume.pdf'));
+    setAnalyzing(false);
+    toast.success('Dossier synchronization complete!');
   };
 
   return (
-    <DashboardLayout title="Profile" subtitle="Manage your profile and resume">
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input defaultValue={student?.name} />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input defaultValue={student?.email} type="email" />
-              </div>
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input defaultValue={student?.phone} />
-              </div>
-              <div className="space-y-2">
-                <Label>College</Label>
-                <Input defaultValue={student?.college} />
-              </div>
-              <div className="space-y-2">
-                <Label>Branch</Label>
-                <Input defaultValue={student?.branch} />
-              </div>
-              <div className="space-y-2">
-                <Label>CGPA</Label>
-                <Input defaultValue={student?.cgpa?.toString()} type="number" step="0.1" />
-              </div>
-              <div className="space-y-2">
-                <Label>Graduation Year</Label>
-                <Input defaultValue={student?.graduationYear?.toString()} />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label>Skills</Label>
-                <Input defaultValue={student?.skills?.join(', ')} />
+    <DashboardLayout title="Identity Dossier" subtitle="Strategic management of candidate telemetry and mission calibration">
+      <div className="max-w-[1500px] mx-auto pb-20 space-y-12 relative">
+
+        {/* Cinematic Background Decor */}
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[160px] -z-10" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50/5 rounded-full blur-[140px] -z-10" />
+
+        {/* Profile Hero Section (Tactical Command Header) */}
+        <div className="relative group/hero">
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/5 via-primary/5 to-indigo-500/5 rounded-[3.5rem] blur-xl opacity-50 group-hover/hero:opacity-80 transition duration-1000"></div>
+          <Card className="relative border-slate-200 shadow-sm rounded-[3rem] bg-white border overflow-hidden">
+            <CardContent className="p-10 lg:p-14 relative overflow-hidden">
+              {/* Animated Background Pulse */}
+              <div className="absolute top-0 right-0 h-96 w-96 bg-primary/5 rounded-full blur-[100px] animate-pulse-slow" />
+
+              <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 relative z-10">
+                <div className="relative shrink-0">
+                  <div className="relative p-1 rounded-[3.5rem] bg-slate-100">
+                    <Avatar className="h-44 w-44 rounded-[3.2rem] bg-slate-50 flex items-center justify-center border-4 border-white shadow-xl text-slate-300 text-6xl font-black transition-all duration-500 group-hover/hero:scale-[1.02]">
+                      <AvatarFallback className="bg-transparent italic tracking-tighter">
+                        {student?.name?.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                      <AvatarImage src={student?.avatar} />
+                    </Avatar>
+                    {/* Active Status Ring */}
+                    <div className="absolute inset-[-8px] rounded-[4rem] border border-emerald-500/10 animate-pulse-slow" />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-3 rounded-2xl shadow-lg border-4 border-white transform rotate-12 transition-transform group-hover/hero:rotate-0 flex items-center justify-center">
+                    <ShieldCheck className="h-8 w-8" />
+                  </div>
+                </div>
+
+                <div className="flex-1 text-center lg:text-left space-y-6">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                      <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">
+                        {student?.name?.split(' ')[0]}<span className="text-primary">{student?.name?.split(' ')[1] || ''}</span>
+                      </h2>
+                      <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-[0.3em] inline-flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        VERIFIED CANDIDATE
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-center lg:justify-start gap-3">
+                      <div className="h-px w-12 bg-slate-200" />
+                      <p className="text-slate-400 font-bold flex items-center gap-3 uppercase tracking-[0.4em] text-[10px] italic">
+                        <GraduationCap className="h-4 w-4 text-primary" /> {student?.branch} <span className="text-slate-200">•</span> {student?.college}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+                    <MetricBadge icon={Target} label="CGPA" value={student?.cgpa || '9.0'} color="text-emerald-600" />
+                    <MetricBadge icon={Zap} label="BATCH" value={student?.graduationYear || '2024'} color="text-amber-600" />
+                    <MetricBadge icon={MapPin} label="LOCATION" value="Remote Node" color="text-indigo-600" />
+                  </div>
+                </div>
+
+                <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col gap-4">
+                  <Button className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 gap-3 group/btn uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95">
+                    <Save className="h-5 w-5 group-hover/btn:rotate-12 transition-transform" /> FLUSH CHANGES
+                  </Button>
+                  <Button variant="outline" className="h-16 px-10 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black gap-3 uppercase tracking-widest text-xs transition-all">
+                    <Globe className="h-5 w-5 opacity-50" /> PUBLIC IDENTITY
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Social Links</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Linkedin className="h-4 w-4" /> LinkedIn
-                </Label>
-                <Input defaultValue={student?.linkedinUrl} />
-              </div>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Github className="h-4 w-4" /> GitHub
-                </Label>
-                <Input defaultValue={student?.githubUrl} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Button onClick={handleSave}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </Button>
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Resume</CardTitle>
-              <CardDescription>Upload and scan your resume</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors">
-                <input
-                  type="file"
-                  id="resume-upload"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleResumeChange}
-                  className="hidden"
-                />
-                <label htmlFor="resume-upload" className="cursor-pointer block">
-                  <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {resumeName ? `Selected: ${resumeName}` : 'Upload your resume (PDF, DOC, DOCX)'}
-                  </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <span>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Choose File
-                    </span>
-                  </Button>
-                </label>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-              {resumeName && (
-                <Button onClick={handleResumeUpload} className="w-full">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Save Resume
-                </Button>
-              )}
+          {/* Primary Identity Column */}
+          <div className="lg:col-span-8 space-y-10">
+            <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
+              <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="space-y-2">
+                    <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
+                      <Terminal className="h-8 w-8 text-primary" /> IDENTITY HUB
+                    </CardTitle>
+                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">MAINTAIN YOUR CORE PERSONAL AND ACADEMIC PARAMETERS</CardDescription>
+                  </div>
+                  <Cpu className="h-10 w-10 text-primary animate-pulse opacity-20" />
+                </div>
+              </CardHeader>
+              <CardContent className="p-12 space-y-12">
+                <div className="grid gap-12 md:grid-cols-2">
+                  <FormInput label="Full Identity" icon={User} defaultValue={student?.name} />
+                  <FormInput label="Communication Channel" icon={Mail} defaultValue={student?.email} readOnly />
+                  <FormInput label="Tactical Contact" icon={Phone} defaultValue={student?.phone || '1234567890'} />
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">SOCIAL ARCHITECTURE (LINKEDIN)</Label>
+                    <div className="flex gap-4">
+                      <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm group/link transition-all hover:bg-indigo-100/50">
+                        <Linkedin className="h-6 w-6 text-indigo-600" />
+                      </div>
+                      <Input defaultValue={student?.linkedinUrl} placeholder="linkedin.com/in/..." className="h-14 bg-white border-slate-200 rounded-2xl font-black text-slate-900 shadow-sm focus-visible:ring-indigo-500/20" />
+                    </div>
+                  </div>
+                </div>
 
-              {(student?.resumeUrl || resumeName) && (
+                <div className="space-y-8 pt-10 border-t border-slate-100 relative">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">COMPETENCY MATRIX (ACTIVE SPECIALIZATIONS)</Label>
+                    <Sparkles className="h-5 w-5 text-primary opacity-30" />
+                  </div>
+                  <div className="flex flex-wrap gap-4 p-12 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 min-h-[160px] relative overflow-hidden group/matrix">
+                    <div className="absolute bottom-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover/matrix:scale-150 transition-transform duration-1000" />
+                    {student?.skills?.map(skill => (
+                      <Badge key={skill} className="h-14 px-8 rounded-2xl bg-white text-slate-900 border border-slate-200 hover:border-primary/50 hover:bg-slate-50 transition-all font-black uppercase text-[11px] tracking-[0.2em] shadow-sm italic cursor-default">
+                        {skill}
+                      </Badge>
+                    ))}
+                    <Button variant="ghost" className="h-14 px-8 rounded-2xl bg-primary/5 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all font-black uppercase text-[10px] tracking-[0.2em]">
+                      + SYNC NEW SPEC
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="relative group/portfolio">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-600/10 rounded-[3.5rem] blur opacity-30 group-hover/portfolio:opacity-50 transition duration-700 mx-1" />
+              <Card className="relative border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border text-slate-900">
+                <CardContent className="p-14 flex flex-col md:flex-row items-center justify-between gap-12 relative">
+                  <div className="absolute top-0 right-0 h-64 w-64 bg-primary/5 rounded-full blur-[100px] -z-10" />
+                  <div className="space-y-8 relative z-10 text-center md:text-left">
+                    <div className="space-y-2">
+                      <h3 className="text-4xl font-black uppercase italic tracking-tighter leading-none">PROFESSIONAL <span className="text-primary italic">PORTFOLIO</span></h3>
+                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">HYPER-DYNAMICS AGENTIC WEB PRESENCE</p>
+                    </div>
+                    <p className="text-slate-500 font-bold text-sm leading-relaxed max-w-sm italic">
+                      Instantiate your high-performance web presence using system telemetry to maximize recruiter visibility across the global grid.
+                    </p>
+                    <Button className="h-16 px-12 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-[0.2em] text-xs transition-all hover:scale-105">GENERATE WEB PRESENCE</Button>
+                  </div>
+                  <div className="h-56 w-56 bg-slate-50 rounded-[3rem] flex items-center justify-center border border-slate-100 rotate-6 group-hover/portfolio:rotate-0 transition-all duration-700 shadow-sm">
+                    <Fingerprint className="h-32 w-32 text-primary opacity-20 animate-pulse-slow" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Asset & Analysis Column */}
+          <div className="lg:col-span-4 space-y-10">
+            <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
+              <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
+                <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
+                  <Briefcase className="h-6 w-6 text-primary" /> TACTICAL DOSSIER
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-12 space-y-12">
+                <div className="group relative">
+                  <input type="file" id="resume-upload" className="hidden" onChange={handleResumeChange} />
+                  <label htmlFor="resume-upload" className="block p-14 border-2 border-dashed border-slate-200 rounded-[3rem] text-center hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50 hover:bg-slate-50 shadow-sm group/upload overflow-hidden relative">
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Upload className="h-14 w-14 text-slate-300 mx-auto mb-6 group-hover:scale-110 group-hover:text-primary transition-all duration-500" />
+                    <p className="font-black text-[11px] uppercase tracking-[0.4em] text-slate-400 italic relative z-10 group-hover:text-slate-600">
+                      {resumeName ? `LOADED: ${resumeName}` : 'DEPLOY NEW DOSSIER'}
+                    </p>
+                  </label>
+                </div>
+
+                {(student?.resumeUrl || resumeName) && (
+                  <div className="space-y-4">
+                    <div className="relative group/scan">
+                      <div className="absolute -inset-1 bg-primary rounded-2xl blur opacity-0 group-hover/scan:opacity-20 transition" />
+                      <Button
+                        className="w-full h-16 rounded-2xl font-black gap-3 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white text-xs uppercase tracking-[0.2em] transition-all hover:translate-y-[-2px]"
+                        onClick={handleATSAnalysis}
+                        disabled={analyzing}
+                      >
+                        <Zap className="h-5 w-5 fill-current" /> {analyzing ? 'SCANNING HUB...' : 'RUN COMPATIBILITY SCAN'}
+                      </Button>
+                    </div>
+                    {student?.resumeUrl && (
+                      <Button variant="outline" className="w-full h-16 rounded-2xl border-slate-200 bg-white font-black gap-3 text-xs uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all" asChild>
+                        <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-5 w-5" /> INITIAL DOSSIER
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {atsAnalysis && (
+                  <div className="space-y-10 pt-10 border-t border-slate-100 animate-in fade-in slide-in-from-top-6 duration-700">
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-end">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">COMPATIBILITY INDEX</p>
+                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic animate-pulse">Neural Synchronization Optimal</p>
+                        </div>
+                        <p className="text-5xl font-black text-primary italic leading-none">{atsAnalysis.atsScore}<span className="text-xs opacity-30 not-italic ml-1 font-bold">/100</span></p>
+                      </div>
+                      <div className="relative h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1">
+                        <div className="h-full bg-primary rounded-full transition-all duration-1500 ease-out shadow-[0_0_15px_rgba(20,184,166,0.3)]" style={{ width: `${atsAnalysis.atsScore}%` }}>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 relative overflow-hidden group/feedback">
+                      <Sparkles className="absolute -right-6 -top-6 h-24 w-24 text-primary opacity-5 rotate-12 transition-transform group-hover/feedback:scale-125" />
+                      <p className="text-xs font-bold leading-relaxed text-slate-500 italic relative z-10">{atsAnalysis.summary}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group/metric">
+                        <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-full blur-2xl" />
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">LEXICON SYNC</p>
+                        <p className="text-3xl font-black text-slate-900 italic leading-none">{atsAnalysis.keywordMatches.length}</p>
+                      </div>
+                      <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group/metric">
+                        <div className="absolute top-0 right-0 h-16 w-16 bg-blue-500/5 rounded-full blur-2xl" />
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">WORD QUANTUM</p>
+                        <p className="text-3xl font-black text-slate-900 italic leading-none">{atsAnalysis.readability.wordCount}</p>
+                      </div>
+                    </div>
+
+                    <Button variant="ghost" className="w-full rounded-2xl font-black text-[10px] uppercase text-primary hover:bg-primary/5 h-16 tracking-[0.4em] transition-all">VIEW DETAILED TELEMETRY <ChevronRight className="ml-2 h-4 w-4" /></Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="p-10 rounded-[3rem] bg-amber-50 rounded-[3rem] border border-amber-100 group/security">
+              <div className="flex gap-8 items-start">
+                <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shrink-0 border border-amber-200 shadow-sm group-hover/security:rotate-12 transition-transform">
+                  <Activity className="h-8 w-8 text-amber-500" />
+                </div>
                 <div className="space-y-3">
-                  <Button
-                    onClick={handleATSAnalysis}
-                    disabled={analyzing}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Zap className="mr-2 h-4 w-4" />
-                    {analyzing ? 'Analyzing...' : 'Run ATS Analysis'}
-                  </Button>
-
-                  {resumeName && (
-                    <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <span className="text-sm">{resumeName}</span>
-                    </div>
-                  )}
-
-                  {student?.resumeUrl && !resumeName && (
-                    <div className="p-3 bg-muted rounded-lg flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <span className="text-sm">resume.pdf</span>
-                    </div>
-                  )}
+                  <h4 className="font-black text-[11px] uppercase tracking-[0.3em] text-amber-600 italic">SECURITY UPLINK ACTIVE</h4>
+                  <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">
+                    Candidate telemetry encrypted via AES-256 tactical protocols. End-to-end synchronization verified.
+                  </p>
                 </div>
-              )}
-
-              {/* ATS Analysis Results */}
-              {atsAnalysis && (
-                <div className="space-y-4 border-t pt-4">
-                  {!showDetailedAnalysis ? (
-                    <>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-semibold text-sm">ATS Score</h4>
-                          <span className="text-2xl font-bold text-blue-600">{atsAnalysis.atsScore}/100</span>
-                        </div>
-                        <Progress value={atsAnalysis.atsScore} className="h-2" />
-                      </div>
-
-                      <Alert className={atsAnalysis.passed ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
-                        <AlertDescription className="flex items-start gap-2 text-sm">
-                          {atsAnalysis.passed ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                          )}
-                          <span>{atsAnalysis.summary}</span>
-                        </AlertDescription>
-                      </Alert>
-
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-semibold text-muted-foreground">Key Metrics</h5>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="bg-muted p-2 rounded">
-                            <p className="text-muted-foreground">Words</p>
-                            <p className="font-semibold">{atsAnalysis.readability.wordCount}</p>
-                          </div>
-                          <div className="bg-muted p-2 rounded">
-                            <p className="text-muted-foreground">Keywords</p>
-                            <p className="font-semibold">{atsAnalysis.keywordMatches.length}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {atsAnalysis.improvements.length > 0 && (
-                        <div className="space-y-2">
-                          <h5 className="text-xs font-semibold text-amber-600">Improvements Needed</h5>
-                          <ul className="text-xs space-y-1">
-                            {atsAnalysis.improvements.slice(0, 2).map((item: string, idx: number) => (
-                              <li key={idx} className="flex gap-2">
-                                <span className="text-amber-600">•</span>
-                                <span className="text-muted-foreground">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full text-xs"
-                        onClick={() => setShowDetailedAnalysis(true)}
-                      >
-                        View Detailed Analysis
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold">Detailed ATS Analysis</h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowDetailedAnalysis(false)}
-                        >
-                          ← Back
-                        </Button>
-                      </div>
-
-                      {/* Score Section */}
-                      <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-center justify-between">
-                          <h5 className="font-semibold text-sm">ATS Compatibility Score</h5>
-                          <span className="text-3xl font-bold text-blue-600">{atsAnalysis.atsScore}/100</span>
-                        </div>
-                        <Progress value={atsAnalysis.atsScore} className="h-3" />
-                        <p className="text-xs text-blue-700">{atsAnalysis.summary}</p>
-                      </div>
-
-                      {/* Strengths */}
-                      {atsAnalysis.strengths?.length > 0 && (
-                        <div className="space-y-2">
-                          <h5 className="font-semibold text-sm text-green-700">✓ Strengths</h5>
-                          <ul className="text-xs space-y-1.5">
-                            {atsAnalysis.strengths.map((item: string, idx: number) => (
-                              <li key={idx} className="flex gap-2 p-2 bg-green-50 rounded border border-green-200">
-                                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Improvements */}
-                      {atsAnalysis.improvements?.length > 0 && (
-                        <div className="space-y-2">
-                          <h5 className="font-semibold text-sm text-amber-700">! Improvements Needed</h5>
-                          <ul className="text-xs space-y-1.5">
-                            {atsAnalysis.improvements.map((item: string, idx: number) => (
-                              <li key={idx} className="flex gap-2 p-2 bg-amber-50 rounded border border-amber-200">
-                                <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Keywords Found */}
-                      {atsAnalysis.keywordMatches?.length > 0 && (
-                        <div className="space-y-2">
-                          <h5 className="font-semibold text-sm">Keywords Detected ({atsAnalysis.keywordMatches.length})</h5>
-                          <div className="grid grid-cols-2 gap-2">
-                            {atsAnalysis.keywordMatches.map((match: any, idx: number) => (
-                              <div key={idx} className="text-xs p-2 bg-muted rounded border border-border">
-                                <p className="font-medium text-primary">{match.keyword}</p>
-                                <p className="text-muted-foreground text-xs">
-                                  {match.category} <span className="ml-1">×{match.frequency}</span>
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Missing Keywords */}
-                      {atsAnalysis.missingKeywords?.length > 0 && (
-                        <div className="space-y-2">
-                          <h5 className="font-semibold text-sm text-red-700">Missing Keywords ({atsAnalysis.missingKeywords.length})</h5>
-                          <div className="flex flex-wrap gap-2">
-                            {atsAnalysis.missingKeywords.map((keyword: string, idx: number) => (
-                              <Badge key={idx} variant="destructive" className="text-xs">
-                                {keyword}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Readability Metrics */}
-                      {atsAnalysis.readability && (
-                        <div className="space-y-2">
-                          <h5 className="font-semibold text-sm">Readability Metrics</h5>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="p-2 bg-muted rounded border border-border">
-                              <p className="text-xs text-muted-foreground">Character Count</p>
-                              <p className="font-semibold text-sm">{atsAnalysis.readability.charCount}</p>
-                            </div>
-                            <div className="p-2 bg-muted rounded border border-border">
-                              <p className="text-xs text-muted-foreground">Word Count</p>
-                              <p className="font-semibold text-sm">{atsAnalysis.readability.wordCount}</p>
-                            </div>
-                            <div className="p-2 bg-muted rounded border border-border">
-                              <p className="text-xs text-muted-foreground">Sentences</p>
-                              <p className="font-semibold text-sm">{atsAnalysis.readability.sentenceCount}</p>
-                            </div>
-                            <div className="p-2 bg-muted rounded border border-border">
-                              <p className="text-xs text-muted-foreground">Avg Words/Sentence</p>
-                              <p className="font-semibold text-sm">{atsAnalysis.readability.avgWordsPerSentence.toFixed(1)}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Formatting Analysis */}
-                      {atsAnalysis.formatting && (
-                        <div className="space-y-2">
-                          <h5 className="font-semibold text-sm">Formatting & Structure</h5>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between p-2 bg-muted rounded border border-border text-xs">
-                              <span>Proper Structure</span>
-                              {atsAnalysis.formatting.hasProperStructure ? (
-                                <Badge className="bg-green-600 text-xs">✓ Good</Badge>
-                              ) : (
-                                <Badge variant="destructive" className="text-xs">✗ Missing</Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between p-2 bg-muted rounded border border-border text-xs">
-                              <span>Contact Information</span>
-                              {atsAnalysis.formatting.hasContactInfo ? (
-                                <Badge className="bg-green-600 text-xs">✓ Present</Badge>
-                              ) : (
-                                <Badge variant="destructive" className="text-xs">✗ Missing</Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between p-2 bg-muted rounded border border-border text-xs">
-                              <span>Clear Sections</span>
-                              {atsAnalysis.formatting.hasClearSections ? (
-                                <Badge className="bg-green-600 text-xs">✓ Good</Badge>
-                              ) : (
-                                <Badge variant="destructive" className="text-xs">✗ Needs Work</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Recommendation */}
-                      <Alert className={atsAnalysis.passed ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}>
-                        <AlertDescription className="text-xs">
-                          {atsAnalysis.passed ? (
-                            <p className="text-green-700">
-                              <strong>Great!</strong> Your resume is ATS-compatible and ready for submissions. Focus on the suggested improvements to increase your chances further.
-                            </p>
-                          ) : (
-                            <p className="text-amber-700">
-                              <strong>Action Needed:</strong> Address the highlighted improvements to improve your resume's ATS compatibility before submitting applications.
-                            </p>
-                          )}
-                        </AlertDescription>
-                      </Alert>
-
-                      <Button 
-                        variant="outline"
-                        className="w-full text-xs"
-                        onClick={() => setShowDetailedAnalysis(false)}
-                      >
-                        Close Detailed View
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Skills</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {student?.skills?.map((skill) => (
-                  <Badge key={skill} variant="secondary">{skill}</Badge>
-                ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>
   );
+}
+
+function MetricBadge({ icon: Icon, label, value, color }: any) {
+  return (
+    <div className="flex items-center gap-4 bg-slate-50 px-8 py-3 rounded-2xl border border-slate-200 shadow-sm transition-all hover:border-primary/20">
+      <Icon className={cn("h-4.5 w-4.5", color)} />
+      <div className="flex items-baseline gap-2">
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</span>
+        <span className="text-sm font-black text-slate-900 italic">{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function FormInput({ label, icon: Icon, defaultValue, readOnly = false }: any) {
+  return (
+    <div className="space-y-4 group">
+      <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1 transition-colors group-focus-within:text-primary">{label}</Label>
+      <div className="relative">
+        <Icon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
+        <Input
+          defaultValue={defaultValue}
+          readOnly={readOnly}
+          className={cn(
+            "h-16 pl-14 bg-white border-slate-200 rounded-2xl font-black text-slate-900 shadow-sm transition-all focus-visible:ring-primary/20 hover:bg-slate-50 focus-visible:bg-slate-50 placeholder:opacity-20",
+            readOnly && "opacity-50 cursor-not-allowed group-hover:bg-white"
+          )}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ChevronRight({ className }: { className?: string }) {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6" /></svg>;
 }

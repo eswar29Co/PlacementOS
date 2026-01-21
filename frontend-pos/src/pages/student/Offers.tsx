@@ -6,164 +6,195 @@ import { useAppSelector } from '@/store/hooks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationService, jobService } from '@/services';
 import { Student } from '@/types';
-import { Award, Download, Calendar, IndianRupee, CheckCircle2, XCircle } from 'lucide-react';
+import {
+  Award, Download, Calendar, IndianRupee,
+  CheckCircle2, XCircle, Sparkles, Trophy,
+  Target, Briefcase, Zap, ShieldCheck,
+  DownloadCloud, MapPin, Building2, ChevronRight
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function Offers() {
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
   const queryClient = useQueryClient();
-  
+
   const acceptOfferMutation = useMutation({
-    mutationFn: (applicationId: string) => 
+    mutationFn: (applicationId: string) =>
       applicationService.acceptOffer(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
-      toast.success('Congratulations! You have accepted the offer!');
+      toast.success('Congratulations! You are officially part of the elite guild!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to accept offer');
-    },
+    onError: (error: any) => toast.error(error.message || 'Verification link failed'),
   });
-  
-  const { data: applicationsData } = useQuery({
+
+  const { data: applicationsData, isLoading } = useQuery({
     queryKey: ['my-applications'],
     queryFn: () => applicationService.getMyApplications(),
   });
-  
+
   const { data: jobsData } = useQuery({
     queryKey: ['jobs'],
     queryFn: () => jobService.getAllJobs(),
   });
-  
-  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
-  const jobs = Array.isArray(jobsData?.data)
-    ? jobsData.data
-    : (jobsData?.data && 'jobs' in jobsData.data)
-    ? jobsData.data.jobs
-    : [];
-  
-  const offers = applications.filter(a => a.studentId === student?.id && a.status === 'offer_released');
 
-  const handleAcceptOffer = (applicationId: string) => {
-    acceptOfferMutation.mutate(applicationId);
-  };
+  const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  const jobs = Array.isArray(jobsData?.data) ? jobsData.data : (jobsData?.data && 'jobs' in jobsData.data ? jobsData.data.jobs : []);
+
+  const offers = applications.filter(a => a.studentId === student?.id && (a.status === 'offer_released' || a.status === 'offer_accepted'));
 
   const handleDownloadOffer = (offer: any) => {
-    const job = typeof offer.jobId === 'object' ? offer.jobId : jobs.find(j => j.id === offer.jobId);
+    const job = typeof offer.jobId === 'object' ? offer.jobId : jobs.find((j: any) => j.id === offer.jobId);
     const offerDetails = offer.offerDetails || {};
     const ctc = offerDetails.package || job?.package || job?.ctcBand || 'Not specified';
     const joiningDate = offerDetails.joiningDate ? new Date(offerDetails.joiningDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    // Generate offer letter content
     const offerLetterContent = `
-OFFER LETTER
+OFFICIAL SELECTION DECREE
 
 Date: ${format(new Date(), 'dd MMMM yyyy')}
 
-Dear ${student.name},
+Candidate: ${student.name}
+Role Title: ${job?.roleTitle || 'Strategic Specialist'}
+Organization: ${job?.companyName || 'Global Enterprise'}
 
-We are pleased to offer you the position of ${job?.roleTitle || 'Position'} at ${job?.companyName || 'Company'}.
+COMPENSATION ARCHITECTURE:
+- Base Package: ${ctc}
+- Deployment Date: ${format(joiningDate, 'dd MMMM yyyy')}
+- Operating Locale: ${job?.locationType || 'Distributed'}
 
-Position Details:
-- Role: ${job?.roleTitle || 'Position'}
-- Company: ${job?.companyName || 'Company'}
-- CTC Package: ${ctc}
-- Joining Date: ${format(joiningDate, 'dd MMMM yyyy')}
-- Location: ${job?.locationType || 'To be confirmed'}
-
-We are confident that your skills and experience will be valuable assets to our team.
-
-Please confirm your acceptance of this offer at your earliest convenience.
-
-Congratulations on your new role!
+Congratulations on navigating the evaluation protocols.
 
 Best regards,
-${job?.companyName || 'Company'} HR Team
+${job?.companyName || 'Corporate'} Global Talent Acquisition
     `.trim();
 
-    // Create a blob and download
     const blob = new Blob([offerLetterContent], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Offer_Letter_${job?.companyName}_${student.name}.txt`;
+    a.download = `SELECTION_DECREE_${job?.companyName}_${student.name}.txt`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    toast.success('Offer letter downloaded!');
+    toast.success('Certification dossier downloaded!');
   };
 
-  return (
-    <DashboardLayout title="Offers" subtitle="Your offer letters">
-      <div className="space-y-6">
-        {offers.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Award className="mx-auto h-16 w-16 text-muted-foreground/50" />
-            <h3 className="mt-4 text-xl font-medium">No Offers Yet</h3>
-            <p className="mt-2 text-muted-foreground">
-              Complete your placement simulations to receive offers
-            </p>
-          </Card>
-        ) : (
-          offers.map((offer) => {
-            const job = typeof offer.jobId === 'object' ? offer.jobId : jobs.find(j => j.id === offer.jobId);
-            const offerDetails = offer.offerDetails || {};
-            const ctc = offerDetails.package || job?.package || job?.ctcBand || 'Not specified';
-            const joiningDate = offerDetails.joiningDate ? new Date(offerDetails.joiningDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-            
-            return (
-            <Card key={offer.id} className="border-success/30">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10 text-success">
-                      <Award className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <CardTitle>{job?.companyName || 'Company'}</CardTitle>
-                      <CardDescription>{job?.roleTitle || 'Position'}</CardDescription>
-                    </div>
-                  </div>
-                  <Badge variant="success">Offer</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex items-center gap-2">
-                    <IndianRupee className="h-4 w-4 text-muted-foreground" />
-                    <span>CTC: <strong>{ctc}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Joining: <strong>{format(joiningDate, 'dd MMM yyyy')}</strong></span>
-                  </div>
-                </div>
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Selection Bureau" subtitle="Scanning for finalized contracts...">
+        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+          <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+          <p className="font-bold text-slate-400 animate-pulse uppercase tracking-widest text-[10px]">Filtering Success Matrix...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-                <div className="flex gap-2">
-                  <Button 
-                    className="flex-1"
-                    onClick={() => handleAcceptOffer(offer.id)}
-                    disabled={acceptOfferMutation.isPending}
-                  >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    {acceptOfferMutation.isPending ? 'Accepting...' : 'Accept Offer'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleDownloadOffer(offer)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Letter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-          })
+  return (
+    <DashboardLayout title="Selection Bureau" subtitle="Official selection decrees and contractual certifications">
+      <div className="max-w-[1400px] mx-auto pb-12">
+        {offers.length === 0 ? (
+          <div className="py-32 flex flex-col items-center text-center space-y-6 bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-200">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-primary/5 rounded-full blur-2xl animate-pulse" />
+              <Trophy className="relative h-24 w-24 text-slate-200" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-black text-slate-900 leading-none">Victories Pending</h3>
+              <p className="text-slate-400 max-w-sm font-medium">Navigate the simulation protocols to unlock official selection decrees here.</p>
+            </div>
+            <Button variant="outline" className="rounded-2xl border-slate-200 bg-white hover:bg-slate-50 font-black h-12 px-8 shadow-sm text-slate-600">View Active Tracks</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {offers.map((offer) => {
+              const job = typeof offer.jobId === 'object' ? offer.jobId : jobs.find((j: any) => j.id === offer.jobId);
+              const isAccepted = offer.status === 'offer_accepted';
+              const offerDetails = offer.offerDetails || {};
+              const ctc = offerDetails.package || job?.package || job?.ctcBand || 'N/A';
+              const joiningDate = offerDetails.joiningDate ? new Date(offerDetails.joiningDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+              return (
+                <Card key={offer.id} className={cn(
+                  "border-slate-200 shadow-sm rounded-[3rem] overflow-hidden group hover:scale-[1.01] transition-all duration-500 bg-white border",
+                  isAccepted ? "ring-2 ring-emerald-500/20" : "ring-2 ring-primary/20"
+                )}>
+                  <div className={cn("h-3 w-full", isAccepted ? "bg-emerald-500" : "bg-primary")} />
+                  <CardContent className="p-10 space-y-8">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-6">
+                        <div className={cn(
+                          "h-20 w-20 rounded-3xl flex items-center justify-center shadow-sm transition-transform group-hover:rotate-6 duration-700 border",
+                          isAccepted ? "bg-emerald-500 text-white border-emerald-400" : "bg-primary text-white border-primary/20"
+                        )}>
+                          <Trophy className="h-10 w-10" />
+                        </div>
+                        <div className="space-y-1">
+                          <Badge className={cn("border-none font-black text-[10px] uppercase py-1 px-3 shadow-none", isAccepted ? "bg-emerald-50 text-emerald-600" : "bg-primary/5 text-primary")}>
+                            {isAccepted ? 'Contract Initialized' : 'Draft Ready'}
+                          </Badge>
+                          <h4 className="font-black text-3xl leading-tight uppercase tracking-tight text-slate-900">{job?.roleTitle || 'Strategic Lead'}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Building2 className="h-3 w-3 text-primary/50" /> {job?.companyName || 'Corporate Entity'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Sparkles className={cn("h-8 w-8", isAccepted ? "text-emerald-500" : "text-primary animate-pulse")} />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><IndianRupee className="h-3 w-3" /> Total Package</p>
+                        <p className="text-lg font-black text-emerald-600">{ctc}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Target Deployment</p>
+                        <p className="text-lg font-black text-slate-900">{format(joiningDate, 'dd MMM yyyy')}</p>
+                      </div>
+                      <div className="space-y-1 sm:col-span-2 mt-2 pt-2 border-t border-slate-200">
+                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Assignment Locale</p>
+                        <p className="text-sm font-bold text-slate-700">{job?.locationType || 'Distributed Operations'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
+                      {!isAccepted ? (
+                        <Button
+                          className="w-full h-16 rounded-[1.5rem] font-black text-lg gap-2 shadow-lg shadow-primary/20 group-hover:translate-y-[-2px] transition-transform"
+                          onClick={() => acceptOfferMutation.mutate(offer.id)}
+                          disabled={acceptOfferMutation.isPending}
+                        >
+                          <CheckCircle2 className="h-6 w-6" />
+                          {acceptOfferMutation.isPending ? 'AUTHENTICATING...' : 'INITIALIZE CONTRACT'}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          className="w-full h-16 rounded-[1.5rem] font-black text-lg gap-2 border-slate-200 text-emerald-600 bg-emerald-50 cursor-default"
+                        >
+                          <ShieldCheck className="h-6 w-6" /> ENGAGEMENT SECURED
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        className="w-full h-16 rounded-[1.5rem] font-black text-slate-400 hover:bg-slate-50 gap-2 border border-slate-200"
+                        onClick={() => handleDownloadOffer(offer)}
+                      >
+                        <DownloadCloud className="h-6 w-6" /> ARCHIVE DECREE
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
     </DashboardLayout>

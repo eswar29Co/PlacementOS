@@ -8,12 +8,13 @@ import professionalsReducer from './slices/professionalsSlice';
 import applicationsReducer from './slices/applicationsSlice';
 import jobsReducer from './slices/jobsSlice';
 import notificationsReducer from './slices/notificationsSlice';
+import uiReducer from './slices/uiSlice';
 
 const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  whitelist: ['auth', 'students', 'professionals', 'applications', 'jobs', 'notifications'],
+  whitelist: ['auth', 'students', 'professionals', 'applications', 'jobs', 'notifications', 'ui'],
 };
 
 const rootReducer = combineReducers({
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   applications: applicationsReducer,
   jobs: jobsReducer,
   notifications: notificationsReducer,
+  ui: uiReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

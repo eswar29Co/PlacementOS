@@ -18,6 +18,8 @@ import studentRoutes from './routes/studentRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 
+import adminRoutes from './routes/adminRoutes';
+
 const app: Application = express();
 
 // Connect to database
@@ -26,7 +28,13 @@ connectDB();
 // Middleware
 app.use(helmet()); // Security headers
 app.use(compression()); // Compress responses
-app.use(cors({ origin: config.cors.origin, credentials: true })); // CORS
+// CORS Configuration
+if (config.env === 'development') {
+  app.use(cors({ origin: true, credentials: true }));
+  console.log('Development mode: CORS allowing all origins with credentials');
+} else {
+  app.use(cors({ origin: config.cors.origin, credentials: true }));
+}
 app.use(express.json({ limit: '10mb' })); // Parse JSON
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded
 
@@ -40,7 +48,7 @@ if (config.env === 'development') {
 // Rate limiting
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.maxRequests,
+  max: config.env === 'development' ? 10000 : config.rateLimit.maxRequests,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -69,6 +77,7 @@ app.use(`${API_PREFIX}/professionals`, professionalRoutes);
 app.use(`${API_PREFIX}/students`, studentRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
+app.use(`${API_PREFIX}/admin`, adminRoutes);
 
 // Welcome route
 app.get('/', (_: Request, res: Response) => {

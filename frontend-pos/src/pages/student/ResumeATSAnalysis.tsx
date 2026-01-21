@@ -11,6 +11,7 @@ import { useAppSelector } from '@/store/hooks';
 import { Application } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '@/services/applicationService';
+import { cn } from '@/lib/utils';
 
 interface KeywordMatch {
   keyword: string;
@@ -106,11 +107,12 @@ export default function ResumeATSAnalysis() {
 
   if (!application) {
     return (
-      <DashboardLayout title="Application Not Found">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">This application does not exist.</p>
-          <Button variant="link" onClick={() => navigate('/student/applications')}>
-            Back to Applications
+      <DashboardLayout title="Application Not Found" subtitle="Requested node is currently unavailable.">
+        <div className="text-center py-24 space-y-6">
+          <AlertTriangle className="h-16 w-16 text-rose-500 mx-auto" />
+          <p className="text-slate-400 font-bold italic">This application does not exist or has been archived.</p>
+          <Button variant="link" className="font-black text-primary uppercase text-xs tracking-widest" onClick={() => navigate('/student/applications')}>
+            Back to Tactical Overview
           </Button>
         </div>
       </DashboardLayout>
@@ -124,40 +126,41 @@ export default function ResumeATSAnalysis() {
     >
       <div className="max-w-4xl mx-auto space-y-6">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center space-y-4">
-              <div className="animate-spin">
-                <FileText className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground">Analyzing your resume...</p>
+          <div className="flex flex-col items-center justify-center py-32 space-y-6">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-primary rounded-full blur opacity-10 animate-pulse" />
+              <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-lg" />
             </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse italic">Analyzing Neural Patterns...</p>
           </div>
         ) : atsAnalysis ? (
           <>
             {/* ATS Score Card */}
-            <Card className="border-2">
-              <CardHeader>
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden bg-white group hover:shadow-md transition-all duration-500">
+              <CardHeader className="p-10 border-b border-slate-100 bg-slate-50/50">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>ATS Compatibility Score</CardTitle>
-                    <CardDescription>Based on industry standards and role requirements</CardDescription>
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900 italic">ATS Compatibility Index</CardTitle>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Based on industry standards and role requirements</CardDescription>
                   </div>
                   <div className="text-right">
-                    <div className="text-4xl font-bold text-primary">
-                      {atsAnalysis.atsScore.toFixed(1)}
+                    <div className="text-4xl font-black text-primary italic tracking-tighter">
+                      {atsAnalysis.atsScore.toFixed(0)}<span className="text-xs opacity-30 not-italic ml-1">/100</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">out of 100</p>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Progress value={atsAnalysis.atsScore} className="h-3" />
-                <Alert className={atsAnalysis.passed ? "border-green-200 bg-green-50" : "border-destructive bg-destructive/5"}>
-                  <AlertDescription className="flex items-start gap-2">
+              <CardContent className="p-10 space-y-6">
+                <Progress value={atsAnalysis.atsScore} className="h-4 bg-slate-100 rounded-full border border-slate-200" />
+                <Alert className={cn(
+                  "border-none rounded-2xl p-6 shadow-sm",
+                  atsAnalysis.passed ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                )}>
+                  <AlertDescription className="flex items-start gap-4 font-bold text-xs italic leading-relaxed">
                     {atsAnalysis.passed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                     ) : (
-                      <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                      <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0" />
                     )}
                     <span>{atsAnalysis.summary}</span>
                   </AlertDescription>
@@ -166,19 +169,21 @@ export default function ResumeATSAnalysis() {
             </Card>
 
             {/* Strengths */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  Strengths
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
+              <CardHeader className="p-10 pb-6">
+                <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight text-slate-900 italic">
+                  <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  System Strengths
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
+              <CardContent className="px-10 pb-10">
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {atsAnalysis.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="text-green-600 font-bold text-lg leading-none">✓</span>
-                      <span className="text-sm text-muted-foreground">{strength}</span>
+                    <li key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 group/item hover:bg-emerald-50 hover:border-emerald-100 transition-all">
+                      <span className="text-emerald-500 font-black text-xs mt-0.5">✓</span>
+                      <span className="text-xs font-bold text-slate-500 group-hover/item:text-emerald-700 italic leading-relaxed">{strength}</span>
                     </li>
                   ))}
                 </ul>
@@ -186,19 +191,21 @@ export default function ResumeATSAnalysis() {
             </Card>
 
             {/* Improvements */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-amber-600" />
-                  Areas for Improvement
+            <Card className="border-amber-100 shadow-sm rounded-[2.5rem] bg-amber-50/30 overflow-hidden group hover:shadow-md transition-all duration-500">
+              <CardHeader className="p-10 pb-6 border-b border-amber-100/50">
+                <CardTitle className="flex items-center gap-3 text-lg font-black uppercase tracking-tight text-amber-900 italic">
+                  <div className="h-10 w-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 border border-amber-200">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
+                  Neutral Optimizations
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
+              <CardContent className="p-10">
+                <ul className="space-y-4">
                   {atsAnalysis.improvements.map((improvement, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="text-amber-600 font-bold text-lg leading-none">!</span>
-                      <span className="text-sm text-amber-900">{improvement}</span>
+                    <li key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-white/50 border border-amber-100 group/item hover:bg-amber-100/50 transition-all translate-x-0 hover:translate-x-2">
+                      <div className="h-2 w-2 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                      <span className="text-sm font-bold text-amber-900/70 italic leading-relaxed">{improvement}</span>
                     </li>
                   ))}
                 </ul>
@@ -206,26 +213,28 @@ export default function ResumeATSAnalysis() {
             </Card>
 
             {/* Keyword Analysis */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Keyword Analysis</CardTitle>
-                <CardDescription>Technical keywords found in your resume</CardDescription>
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
+              <CardHeader className="p-10 border-b border-slate-100 bg-slate-50/50">
+                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Keyword Spectrum Analysis</CardTitle>
+                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Technical keywords identified in your submission</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-10 space-y-10">
                 <div>
-                  <h4 className="font-semibold text-sm mb-3">Detected Keywords ({atsAnalysis.keywordMatches.length})</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" /> Detected Keywords ({atsAnalysis.keywordMatches.length})
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {atsAnalysis.keywordMatches.map((match, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2 bg-muted/50 rounded border border-border"
+                        className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 hover:bg-white transition-all group/key"
                       >
-                        <span className="text-sm font-medium">{match.keyword}</span>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
+                        <span className="text-sm font-black text-slate-600 uppercase tracking-tight italic group-hover/key:text-primary transition-colors">{match.keyword}</span>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-white border-slate-200 text-slate-400 italic px-3 py-1 rounded-lg">
                             {match.category}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">×{match.frequency}</span>
+                          <span className="text-xs font-black text-slate-300 italic">×{match.frequency}</span>
                         </div>
                       </div>
                     ))}
@@ -234,12 +243,14 @@ export default function ResumeATSAnalysis() {
 
                 {atsAnalysis.missingKeywords.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-sm mb-3">Missing Keywords ({atsAnalysis.missingKeywords.length})</h4>
-                    <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 mb-6 flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Missing Spectral Patterns ({atsAnalysis.missingKeywords.length})
+                    </h4>
+                    <div className="flex flex-wrap gap-3">
                       {atsAnalysis.missingKeywords.map((keyword, idx) => (
-                        <div key={idx} className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-200">
-                          <span className="text-red-600">×</span>
-                          <span className="text-sm text-red-700">{keyword}</span>
+                        <div key={idx} className="flex items-center gap-2 px-4 py-2 bg-rose-50 rounded-xl border border-rose-100 hover:bg-rose-100 transition-all cursor-default group/missing">
+                          <AlertTriangle className="h-3 w-3 text-rose-500 opacity-50 group-hover/missing:opacity-100 transition-opacity" />
+                          <span className="text-[11px] font-black text-rose-700/70 uppercase tracking-tight italic">{keyword}</span>
                         </div>
                       ))}
                     </div>
@@ -249,99 +260,96 @@ export default function ResumeATSAnalysis() {
             </Card>
 
             {/* Readability Metrics */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Readability Metrics</CardTitle>
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
+              <CardHeader className="p-10 pb-6">
+                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Structural Readability</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <p className="text-xs text-muted-foreground mb-1">Character Count</p>
-                    <p className="text-xl font-bold">{atsAnalysis.readability.charCount}</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <p className="text-xs text-muted-foreground mb-1">Word Count</p>
-                    <p className="text-xl font-bold">{atsAnalysis.readability.wordCount}</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <p className="text-xs text-muted-foreground mb-1">Sentences</p>
-                    <p className="text-xl font-bold">{atsAnalysis.readability.sentenceCount}</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <p className="text-xs text-muted-foreground mb-1">Avg Words/Sentence</p>
-                    <p className="text-xl font-bold">{atsAnalysis.readability.avgWordsPerSentence.toFixed(1)}</p>
-                  </div>
+              <CardContent className="px-10 pb-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[
+                    { label: "Character Count", value: atsAnalysis.readability.charCount },
+                    { label: "Word Count", value: atsAnalysis.readability.wordCount },
+                    { label: "Sentences", value: atsAnalysis.readability.sentenceCount },
+                    { label: "Avg Words/Sentence", value: atsAnalysis.readability.avgWordsPerSentence.toFixed(1) }
+                  ].map((stat, i) => (
+                    <div key={i} className="text-center p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group/stat hover:bg-white hover:border-primary/20 transition-all">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 italic">{stat.label}</p>
+                      <p className="text-2xl font-black text-slate-900 italic tracking-tighter group-hover/stat:text-primary transition-colors">{stat.value}</p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
 
             {/* Formatting Analysis */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Formatting & Structure</CardTitle>
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
+              <CardHeader className="p-10 pb-6">
+                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Dossier Integrity</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded border">
-                    <span className="text-sm font-medium">Proper Structure</span>
-                    {atsAnalysis.formatting.hasProperStructure ? (
-                      <Badge className="bg-green-600">Passed</Badge>
-                    ) : (
-                      <Badge variant="destructive">Missing</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded border">
-                    <span className="text-sm font-medium">Contact Information</span>
-                    {atsAnalysis.formatting.hasContactInfo ? (
-                      <Badge className="bg-green-600">Present</Badge>
-                    ) : (
-                      <Badge variant="destructive">Missing</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded border">
-                    <span className="text-sm font-medium">Clear Sections</span>
-                    {atsAnalysis.formatting.hasClearSections ? (
-                      <Badge className="bg-green-600">Good</Badge>
-                    ) : (
-                      <Badge variant="destructive">Needs Work</Badge>
-                    )}
-                  </div>
+              <CardContent className="px-10 pb-10">
+                <div className="space-y-4">
+                  {[
+                    { label: "Proper Protocol Structure", passed: atsAnalysis.formatting.hasProperStructure, label_passed: "Verified", label_failed: "Error" },
+                    { label: "Neural Contact Info", passed: atsAnalysis.formatting.hasContactInfo, label_passed: "Present", label_failed: "Missing" },
+                    { label: "Clear Segment Definition", passed: atsAnalysis.formatting.hasClearSections, label_passed: "Compliant", label_failed: "Incomplete" }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-slate-200 transition-all">
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-tight italic">{item.label}</span>
+                      {item.passed ? (
+                        <Badge className="bg-emerald-500 text-white font-black uppercase text-[10px] tracking-widest px-4 py-1.5 rounded-lg italic shadow-lg shadow-emerald-500/10">
+                          {item.label_passed}
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive" className="font-black uppercase text-[10px] tracking-widest px-4 py-1.5 rounded-lg italic">
+                          {item.label_failed}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
 
             {/* Next Steps */}
-            <Card className="border-primary bg-primary/5">
-              <CardHeader>
-                <CardTitle className="text-primary">Next Steps</CardTitle>
+            <Card className="border-primary/20 shadow-sm rounded-[2.5rem] bg-primary/5 overflow-hidden">
+              <CardHeader className="p-10 pb-6 border-b border-primary/10">
+                <CardTitle className="text-primary font-black uppercase italic tracking-tighter">Strategic Next Steps</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Based on this analysis, consider the following actions to improve your resume's ATS compatibility:
+              <CardContent className="p-10 space-y-6">
+                <p className="text-sm font-bold text-slate-500 italic leading-relaxed">
+                  Based on this neural analysis, consider the following actions to optimize your technical profile:
                 </p>
-                <ol className="space-y-2 text-sm list-decimal list-inside">
-                  <li className="text-muted-foreground">Incorporate the missing keywords naturally throughout your resume</li>
-                  <li className="text-muted-foreground">Implement the improvement suggestions</li>
-                  <li className="text-muted-foreground">Add quantifiable metrics and results for each role</li>
-                  <li className="text-muted-foreground">Use action verbs to start bullet points</li>
-                  <li className="text-muted-foreground">Keep your formatting clean and ATS-friendly</li>
+                <ol className="space-y-4">
+                  {[
+                    "Incorporate the missing keywords naturally throughout your experience descriptions.",
+                    "Implement the suggested quantitative metrics to demonstrate impact.",
+                    "Strengthen achievements using industry-standard action verbs.",
+                    "Maintain the current structural integrity while adding missing spectral patterns."
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white/50 border border-primary/5 group/step hover:bg-white transition-all">
+                      <div className="h-6 w-6 rounded-lg bg-primary text-white flex items-center justify-center font-black text-[10px] shrink-0 italic shadow-md shadow-primary/20">0{i + 1}</div>
+                      <span className="text-xs font-bold text-slate-500 italic group-hover/step:text-slate-900 transition-colors leading-relaxed">{step}</span>
+                    </li>
+                  ))}
                 </ol>
               </CardContent>
             </Card>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex items-center justify-between pt-10 pb-20">
               <Button
-                variant="outline"
+                variant="ghost"
+                className="h-14 px-10 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3 italic border border-transparent hover:border-slate-100"
                 onClick={() => navigate('/student/applications')}
               >
-                Back to Applications
+                Back to Tactical Overview
               </Button>
               {atsAnalysis.passed && (
                 <Button
-                  onClick={() => navigate(`/student/applications/${applicationId}/assessment`)}
-                  className="ml-auto"
+                  onClick={() => navigate(`/student/assessment/${applicationId}`)}
+                  className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all flex items-center gap-4 group/btn"
                 >
-                  Proceed to Assessment
+                  Proceed to Neural Assessment
+                  <CheckCircle2 className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                 </Button>
               )}
             </div>

@@ -8,329 +8,288 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { professionalService, applicationService } from '@/services';
-import { UserCheck, Search, Star, Briefcase, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import {
+  UserCheck, Search, Star, Briefcase, Clock,
+  CheckCircle2, XCircle, Award, Target, Zap,
+  MapPin, ExternalLink, Linkedin, ShieldCheck,
+  TrendingUp, Users, Activity, Sparkles, Fingerprint,
+  Command, Cpu, Globe
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function ProfessionalsManagement() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch professionals from MongoDB
+  // Fetch professionals (Sanitized casting)
   const { data: professionalsData, isLoading } = useQuery({
     queryKey: ['professionals'],
     queryFn: () => professionalService.getAllProfessionals(),
   });
 
-  // Fetch applications from MongoDB
+  // Fetch applications (Sanitized casting)
   const { data: applicationsData } = useQuery({
     queryKey: ['applications'],
     queryFn: () => applicationService.getAllApplications(),
   });
 
-  // Normalize arrays
-  const professionalsList = Array.isArray(professionalsData?.data?.professionals) 
-    ? professionalsData.data.professionals 
-    : Array.isArray(professionalsData?.data) 
-    ? professionalsData.data 
-    : [];
-  const applicationsList = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  const professionalsList = Array.isArray((professionalsData?.data as any)?.professionals)
+    ? (professionalsData?.data as any).professionals
+    : Array.isArray(professionalsData?.data)
+      ? professionalsData.data
+      : [];
 
-  const filteredProfessionals = professionalsList.filter(prof =>
+  const applicationsList = Array.isArray((applicationsData?.data as any)?.applications)
+    ? (applicationsData?.data as any).applications
+    : Array.isArray(applicationsData?.data)
+      ? applicationsData.data
+      : [];
+
+  const filteredProfessionals = professionalsList.filter((prof: any) =>
     prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prof.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prof.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prof.designation.toLowerCase().includes(searchTerm.toLowerCase())
+    prof.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    prof.designation?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getProfessionalStats = (profId: string) => {
-    const profApps = applicationsList.filter(a => 
-      a.assignedProfessionalId === profId || 
-      a.assignedManagerId === profId || 
-      a.assignedHRId === profId
-    );
-    
-    const feedbackCount = applicationsList.reduce((count, app) => {
+    const feedbackCount = applicationsList.reduce((count: number, app: any) => {
       if (app.interviewFeedback) {
-        return count + app.interviewFeedback.filter(f => f.professionalId === profId).length;
+        return count + app.interviewFeedback.filter((f: any) => f.professionalId === profId).length;
       }
       return count;
     }, 0);
 
-    const avgRating = applicationsList.reduce((sum, app) => {
-      if (app.interviewFeedback) {
-        const profFeedback = app.interviewFeedback.filter(f => f.professionalId === profId);
-        const ratings = profFeedback.map(f => f.rating || 0);
-        return sum + ratings.reduce((a, b) => a + b, 0);
-      }
-      return sum;
-    }, 0) / (feedbackCount || 1);
+    const ratings = applicationsList.flatMap((app: any) =>
+      app.interviewFeedback ? app.interviewFeedback.filter((f: any) => f.professionalId === profId).map((f: any) => f.rating || 0) : []
+    );
+
+    const avgRating = ratings.length > 0 ? (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length).toFixed(1) : '5.0';
 
     return {
       total: feedbackCount,
-      active: profApps.filter(a => ['professional_round_pending', 'manager_round_pending', 'hr_round_pending', 'professional_round_scheduled', 'manager_round_scheduled', 'hr_round_scheduled'].includes(a.status)).length,
-      avgRating: avgRating.toFixed(1),
+      avgRating: avgRating,
     };
   };
 
-  // Mutation for approving professional
+  // Mutations
   const approveMutation = useMutation({
-    mutationFn: (profId: string) => 
+    mutationFn: (profId: string) =>
       professionalService.updateProfessionalStatus(profId, { status: 'approved' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['professionals'] });
-      toast.success('Professional approved!');
+      toast.success('Expert credential verified! Guild access granted.');
     },
-    onError: (error: any) => {
-      console.error('Failed to approve professional:', error);
-      toast.error(error.message || 'Failed to approve professional');
-    },
+    onError: (error: any) => toast.error(error.message || 'Verification failed'),
   });
 
-  // Mutation for rejecting professional
   const rejectMutation = useMutation({
-    mutationFn: (profId: string) => 
+    mutationFn: (profId: string) =>
       professionalService.updateProfessionalStatus(profId, { status: 'rejected' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['professionals'] });
-      toast.success('Professional rejected!');
+      toast.error('Registration declined. Identity purged.');
     },
-    onError: (error: any) => {
-      console.error('Failed to reject professional:', error);
-      toast.error(error.message || 'Failed to reject professional');
-    },
+    onError: (error: any) => toast.error(error.message || 'Rejection failed'),
   });
 
-  const handleApproveProfessional = (profId: string) => {
-    approveMutation.mutate(profId);
-  };
+  const pendingCount = professionalsList.filter((p: any) => p.status === 'pending').length;
+  const approvedCount = professionalsList.filter((p: any) => p.status === 'approved').length;
 
-  const handleRejectProfessional = (profId: string) => {
-    rejectMutation.mutate(profId);
-  };
-
-  const pendingCount = professionalsList.filter(p => p.status === 'pending').length;
-  const approvedCount = professionalsList.filter(p => p.status === 'approved').length;
-  const activeInterviewsCount = professionalsList.reduce((sum, p) => sum + (p.activeInterviewCount || 0), 0);
-  const avgExperience = professionalsList.length > 0 
-    ? (professionalsList.reduce((sum, p) => sum + p.yearsOfExperience, 0) / professionalsList.length).toFixed(1)
-    : '0';
+  const headerStats = [
+    { label: 'Global Experts', value: professionalsList.length, icon: Users, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Verified Guild', value: approvedCount, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
+    { label: 'Pending Audit', value: pendingCount, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50/5' },
+    { label: 'Guild Mastery', value: 'Lv. 8', icon: Award, color: 'text-blue-600', bg: 'bg-blue-50/5' },
+  ];
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Professionals Management" subtitle="Manage professional interviewers">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading professionals...</p>
-          </div>
+      <DashboardLayout title="Expert Management" subtitle="Credential verification and performance tracking">
+        <div className="flex flex-col items-center justify-center h-[60vh] space-y-6">
+          <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-2xl shadow-2xl shadow-primary/20" />
+          <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.4em] text-[10px]">Authenticating Expert Guild...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Professionals Management" subtitle="View and manage all registered professionals">
-      <div className="space-y-6">
-        {/* Header Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="rounded-xl bg-primary/10 p-3">
-                  <UserCheck className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{professionalsList.length}</p>
-                  <p className="text-sm text-muted-foreground">Total Professionals</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <DashboardLayout title="Expert Management" subtitle="Credential verification and performance tracking for professional curators">
+      <div className="space-y-10 max-w-[1600px] mx-auto pb-20 relative">
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="rounded-xl bg-success/10 p-3">
-                  <CheckCircle2 className="h-6 w-6 text-success" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{approvedCount}</p>
-                  <p className="text-sm text-muted-foreground">Approved</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Cinematic Backdrop */}
+        <div className="absolute top-0 right-0 h-96 w-96 bg-primary/5 rounded-full blur-[140px] -z-10" />
+        <div className="absolute bottom-0 left-0 h-64 w-64 bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="rounded-xl bg-warning/10 p-3">
-                  <Clock className="h-6 w-6 text-warning" />
+        {/* Stats Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {headerStats.map((stat) => (
+            <Card key={stat.label} className="border-slate-200 shadow-sm rounded-[2rem] bg-white border group hover:bg-slate-50 transition-all duration-500">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between">
+                  <div className={cn("rounded-2xl p-5 transition-transform group-hover:rotate-12 duration-500 border border-slate-100 shadow-sm", stat.bg, stat.color)}>
+                    <stat.icon className="h-7 w-7" />
+                  </div>
+                  <div className="text-right">
+                    <p className={cn("text-4xl font-black tracking-tighter italic leading-none", stat.color)}>{stat.value}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 opacity-80">{stat.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-3xl font-bold">{pendingCount}</p>
-                  <p className="text-sm text-muted-foreground">Pending Approval</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="rounded-xl bg-info/10 p-3">
-                  <Briefcase className="h-6 w-6 text-info" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{activeInterviewsCount}</p>
-                  <p className="text-sm text-muted-foreground">Active Interviews</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Search and Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>All Professionals</CardTitle>
-                <CardDescription>Comprehensive list of registered professionals</CardDescription>
+        {/* Professional Registry */}
+        <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
+          <CardHeader className="bg-slate-50 p-12 border-b border-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
+              <div className="space-y-2">
+                <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                  <ShieldCheck className="h-8 w-8 text-primary" />
+                  Professional Registry
+                </CardTitle>
+                <CardDescription className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">Master override for industry specialists and interview curators</CardDescription>
               </div>
-              <div className="relative w-80">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <div className="relative group">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                 <Input
-                  placeholder="Search by name, company, or role..."
-                  className="pl-10"
+                  placeholder="Identify expert by name, firm or specialty..."
+                  className="pl-16 h-16 w-full md:w-[450px] bg-white border-slate-200 rounded-2xl shadow-sm font-bold text-slate-900 focus-visible:ring-primary/20 placeholder:text-slate-400"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Professional</TableHead>
-                    <TableHead>Role & Experience</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Tech Stack</TableHead>
-                    <TableHead>Interviews</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                <TableHeader className="bg-slate-50 h-20">
+                  <TableRow className="hover:bg-transparent border-slate-100">
+                    <TableHead className="px-12 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Expert Identity</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Operational Focus</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-center">Platform Impact</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Credential Status</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-right px-12">Audit Protocol</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredProfessionals.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        No professionals found
+                    <TableRow className="border-none hover:bg-transparent">
+                      <TableCell colSpan={5} className="py-48 text-center">
+                        <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700">
+                          <div className="h-24 w-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm">
+                            <Award className="h-12 w-12 text-slate-200" />
+                          </div>
+                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Expert Signatures Detected</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredProfessionals.map((prof) => {
-                      const stats = getProfessionalStats(prof.id);
+                    filteredProfessionals.map((prof: any) => {
+                      const stats = getProfessionalStats(prof._id || prof.id);
                       return (
-                        <TableRow key={prof.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                  {prof.name.split(' ').map(n => n[0]).join('')}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{prof.name}</p>
-                                <p className="text-xs text-muted-foreground">{prof.email}</p>
+                        <TableRow key={prof._id || prof.id} className="group hover:bg-slate-50/50 transition-all duration-300 border-slate-100">
+                          <TableCell className="px-12 py-10">
+                            <div className="flex items-center gap-8">
+                              <div className="relative">
+                                <Avatar className="h-16 w-16 rounded-[1.5rem] border-2 border-slate-100 shadow-sm transition-transform group-hover:scale-110 duration-500">
+                                  <AvatarFallback className="bg-slate-100 text-primary font-black text-xl">
+                                    {prof.name.split(' ').map((n: string) => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm" />
+                              </div>
+                              <div className="space-y-2">
+                                <p className="font-black text-xl leading-none italic uppercase tracking-tighter text-slate-900">{prof.name}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{prof.email}</p>
+                                <div className="flex items-center gap-2 mt-4">
+                                  <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-[8px] font-black uppercase tracking-widest px-3 shadow-none">{prof.company}</Badge>
+                                </div>
                               </div>
                             </div>
                           </TableCell>
+
                           <TableCell>
-                            <div>
-                              {prof.professionalRole && (
-                                <Badge variant="outline" className="mb-1">
-                                  {prof.professionalRole}
-                                </Badge>
-                              )}
-                              <p className="text-sm font-medium">{prof.designation}</p>
-                              <p className="text-xs text-muted-foreground">{prof.yearsOfExperience} years exp</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <p className="font-medium text-sm">{prof.company}</p>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                              {prof.techStack?.slice(0, 3).map((tech) => (
-                                <Badge key={tech} variant="secondary" className="text-xs">
-                                  {tech}
-                                </Badge>
-                              ))}
-                              {prof.techStack && prof.techStack.length > 3 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  +{prof.techStack.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium">{stats.total}</span>
-                                <span className="text-muted-foreground">total</span>
+                            <div className="space-y-4">
+                              <div className="flex flex-wrap gap-2">
+                                {prof.professionalRole && <Badge className="bg-primary/5 text-primary border border-primary/10 font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-full shadow-none">{prof.professionalRole} Expert</Badge>}
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 italic"> <Clock className="h-3.5 w-3.5" /> {prof.yearsOfExperience}Y Experience</span>
                               </div>
-                              <Badge variant="default" className="text-xs">
-                                {prof.activeInterviewCount || 0} active
-                              </Badge>
+                              <p className="text-sm font-black text-slate-700 uppercase tracking-tight italic leading-tight">{prof.designation}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {prof.techStack?.slice(0, 3).map((tech: string) => <Badge key={tech} className="bg-slate-50 text-slate-500 border border-slate-100 text-[8px] font-black uppercase tracking-widest px-2 shadow-none">{tech}</Badge>)}
+                              </div>
                             </div>
                           </TableCell>
+
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-warning text-warning" />
-                              <span className="font-medium">{stats.avgRating}</span>
+                            <div className="flex flex-col items-center justify-center space-y-4">
+                              <div className="flex items-center gap-3">
+                                <Star className="h-4.5 w-4.5 fill-amber-500 text-amber-500" />
+                                <span className="text-2xl font-black text-slate-900 italic leading-none">{stats.avgRating}</span>
+                              </div>
+                              <div className="flex items-center gap-6">
+                                <div className="text-center group-hover:scale-110 transition-transform">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1">MISSIONS</p>
+                                  <p className="text-sm font-black text-slate-800">{stats.total}</p>
+                                </div>
+                                <div className="text-center group-hover:scale-110 transition-transform">
+                                  <p className="text-[8px] font-black text-primary uppercase mb-1">ACTIVE</p>
+                                  <p className="text-sm font-black text-primary">{prof.activeInterviewCount || 0}</p>
+                                </div>
+                              </div>
                             </div>
                           </TableCell>
+
                           <TableCell>
                             {prof.status === 'approved' ? (
-                              <Badge className="bg-success">Approved</Badge>
+                              <div className="flex items-center gap-3 bg-emerald-50 text-emerald-600 border border-emerald-100 px-4 py-2 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] shadow-sm">
+                                <CheckCircle2 className="h-4 w-4" /> VERIFIED
+                              </div>
                             ) : prof.status === 'pending' ? (
-                              <Badge variant="warning">Pending</Badge>
+                              <div className="flex items-center gap-3 bg-amber-50 text-amber-600 border border-amber-100 px-4 py-2 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] animate-pulse shadow-sm">
+                                <Activity className="h-4 w-4" /> AUDIT REQUIRED
+                              </div>
                             ) : (
-                              <Badge variant="destructive">Rejected</Badge>
+                              <div className="flex items-center gap-3 bg-rose-50 text-rose-600 border border-rose-100 px-4 py-2 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] shadow-sm">
+                                <XCircle className="h-4 w-4" /> REJECTED
+                              </div>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+
+                          <TableCell className="px-12 text-right">
+                            <div className="flex justify-end gap-3 items-center">
                               {prof.status === 'pending' && (
-                                <>
+                                <div className="flex items-center p-2 rounded-2xl bg-slate-50 border border-slate-100 gap-2 shadow-inner">
                                   <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => handleApproveProfessional(prof.id)}
+                                    className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase shadow-md shadow-primary/10"
+                                    onClick={() => approveMutation.mutate(prof._id || prof.id)}
                                   >
-                                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                                    Approve
+                                    AUTHORIZE
                                   </Button>
                                   <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleRejectProfessional(prof.id)}
+                                    variant="ghost"
+                                    className="h-10 w-10 p-0 text-rose-400 hover:text-white hover:bg-rose-500 transition-all rounded-xl"
+                                    onClick={() => rejectMutation.mutate(prof._id || prof.id)}
                                   >
-                                    <XCircle className="h-4 w-4" />
+                                    <XCircle className="h-5 w-5" />
                                   </Button>
-                                </>
+                                </div>
                               )}
-                              {prof.linkedinUrl && (
-                                <Button variant="ghost" size="sm" asChild>
-                                  <a href={prof.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                                    LinkedIn
-                                  </a>
+                              <div className="flex items-center gap-3">
+                                {prof.linkedinUrl && (
+                                  <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-500 border border-slate-200 shadow-sm" asChild>
+                                    <a href={prof.linkedinUrl} target="_blank" rel="noopener noreferrer"><Linkedin className="h-5 w-5" /></a>
+                                  </Button>
+                                )}
+                                <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 border border-slate-200 shadow-sm">
+                                  <ExternalLink className="h-5 w-5" />
                                 </Button>
-                              )}
+                              </div>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -343,6 +302,6 @@ export default function ProfessionalsManagement() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

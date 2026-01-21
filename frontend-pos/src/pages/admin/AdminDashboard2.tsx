@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { professionalService, applicationService, jobService, studentService } from '@/services';
-import { Users, UserCheck, Briefcase, TrendingUp, CheckCircle2, XCircle, Clock, Calendar } from 'lucide-react';
+import {
+  Users, UserCheck, Briefcase, TrendingUp, CheckCircle2, XCircle,
+  Clock, Calendar as CalendarIcon, ShieldCheck, Zap, ArrowRight, Star, FileText,
+  Search, Filter, ChevronRight, Activity, Award, MessageSquare, Target, User,
+  Cpu, Terminal, Brain, Sparkles, AppWindow, MousePointer2
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { getStatusAfterResumeApproval, getStatusAfterAssessmentApproval, getNextInterviewStage } from '@/lib/flowHelpers';
+import { format } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
@@ -19,7 +24,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -29,43 +33,45 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { ApplicationStatus } from '@/types';
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
-  
-  // Fetch data from MongoDB using React Query
+
+  // Logic & Data Fetching (Sanitized)
   const { data: professionalsData } = useQuery({
     queryKey: ['professionals'],
     queryFn: () => professionalService.getAllProfessionals(),
   });
-  const professionals = Array.isArray(professionalsData?.data?.professionals)
-    ? professionalsData.data.professionals
+  const professionals = Array.isArray((professionalsData?.data as any)?.professionals)
+    ? (professionalsData?.data as any).professionals
     : Array.isArray(professionalsData?.data)
-    ? professionalsData.data
-    : [];
-  
-  const { data: applicationsData, isLoading: applicationsLoading, error: applicationsError } = useQuery({
+      ? professionalsData.data
+      : [];
+
+  const { data: applicationsData, isLoading: applicationsLoading } = useQuery({
     queryKey: ['applications'],
     queryFn: () => applicationService.getAllApplications(),
   });
-  
-  // Backend returns { data: { applications: [...], pagination: {...} } }
-  const applications = Array.isArray(applicationsData?.data?.applications) 
-    ? applicationsData.data.applications 
+
+  const applications = Array.isArray((applicationsData?.data as any)?.applications)
+    ? (applicationsData?.data as any).applications
     : Array.isArray(applicationsData?.data)
-    ? applicationsData.data
-    : [];
-  
+      ? applicationsData.data
+      : [];
+
   const { data: jobsData } = useQuery({
     queryKey: ['jobs'],
     queryFn: () => jobService.getAllJobs(),
   });
-  const jobs = Array.isArray(jobsData?.data)
-    ? jobsData.data
-    : (jobsData?.data && 'jobs' in jobsData.data)
-    ? jobsData.data.jobs
-    : [];
-  
+  const jobs = Array.isArray((jobsData?.data as any)?.jobs)
+    ? (jobsData?.data as any).jobs
+    : Array.isArray(jobsData?.data)
+      ? jobsData.data
+      : [];
+
   const { data: studentsData } = useQuery({
     queryKey: ['students'],
     queryFn: () => studentService.getAllStudents(),
@@ -73,101 +79,67 @@ export default function AdminDashboard() {
   const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
 
   const [professionalRoles, setProfessionalRoles] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState('professionals');
 
-  // Mutations for approvals
+  // Mutations
   const approveResumeMutation = useMutation({
     mutationFn: (id: string) => applicationService.approveResume(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.success('Resume approved! Assessment released to student.');
+      toast.success('Resume approved! Assessment released.');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to approve resume');
-    },
+    onError: (error: any) => toast.error(error.message || 'Failed to approve resume'),
   });
 
   const rejectResumeMutation = useMutation({
-    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) =>
       applicationService.rejectResume(id, feedback),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.error('Resume rejected with feedback sent to student');
+      toast.error('Resume rejected');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to reject resume');
-    },
+    onError: (error: any) => toast.error(error.message || 'Failed to reject resume'),
   });
 
   const approveAssessmentMutation = useMutation({
     mutationFn: (id: string) => applicationService.approveAssessment(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.success('Assessment approved! AI interview round unlocked.');
+      toast.success('Assessment approved!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to approve assessment');
-    },
+    onError: (error: any) => toast.error(error.message || 'Failed to approve assessment'),
   });
 
   const rejectAssessmentMutation = useMutation({
-    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
+    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) =>
       applicationService.rejectAssessment(id, feedback),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
       toast.error('Assessment rejected');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to reject assessment');
-    },
-  });
-
-  const approveAIInterviewMutation = useMutation({
-    mutationFn: (id: string) => applicationService.approveAIInterview(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.success('AI interview approved! Ready for professional interview.');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to approve AI interview');
-    },
-  });
-
-  const rejectAIInterviewMutation = useMutation({
-    mutationFn: ({ id, feedback }: { id: string; feedback?: string }) => 
-      applicationService.rejectAIInterview(id, feedback),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.error('AI interview rejected');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to reject AI interview');
-    },
+    onError: (error: any) => toast.error(error.message || 'Failed to reject assessment'),
   });
 
   const assignProfessionalMutation = useMutation({
-    mutationFn: (data: { applicationId: string; professionalId: string; round: 'professional' | 'manager' | 'hr' }) => 
+    mutationFn: (data: { applicationId: string; professionalId: string; round: 'professional' | 'manager' | 'hr' }) =>
       applicationService.assignProfessional(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
       queryClient.invalidateQueries({ queryKey: ['professionals'] });
-      toast.success('Professional assigned successfully!');
+      toast.success('Professional assigned!');
       setIsAssignDialogOpen(false);
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to assign professional');
-    },
+    onError: (error: any) => toast.error(error.message || 'Failed to assign professional'),
   });
 
   const releaseOfferMutation = useMutation({
-    mutationFn: (id: string) => 
+    mutationFn: (id: string) =>
       applicationService.updateApplicationStatus(id, { status: 'offer_released' as ApplicationStatus }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] });
-      toast.success('Offer letter released successfully!');
+      toast.success('Offer released!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to release offer');
-    },
+    onError: (error: any) => toast.error(error.message || 'Failed to release offer'),
   });
 
   // Assignment Dialog State
@@ -181,244 +153,140 @@ export default function AdminDashboard() {
     setIsAssignDialogOpen(true);
   };
 
-  const handleAssignProfessional = () => {
-    if (!selectedAppIdForAssignment || !selectedProfessional) return;
-
+  const handleAssignProfessional = (profId: string) => {
+    if (!selectedAppIdForAssignment) return;
     assignProfessionalMutation.mutate({
       applicationId: selectedAppIdForAssignment,
-      professionalId: selectedProfessional,
+      professionalId: profId,
       round: 'professional'
     });
   };
 
   const getAvailableProfessionals = (appId: string) => {
-    const app = applications.find(a => a.id === appId);
+    const app = (applications as any[]).find(a => (a._id || a.id) === appId);
     if (!app) return [];
-
-    const job = jobs.find(j => j.id === app.jobId);
-    
-    // First, get all approved professionals
+    const job = (jobs as any[]).find(j => (j._id || j.id) === app.jobId);
     const approvedProfs = professionals.filter(p => p.status === 'approved');
-    
-    if (!job || !job.requiredTechStack || job.requiredTechStack.length === 0) {
-      // If no job requirements, return all approved professionals
-      return approvedProfs;
-    }
-
-    // Try to find professionals with matching skills
-    const matchingProfs = approvedProfs.filter(p => {
-      if (!p.techStack || p.techStack.length === 0) return false;
-      const hasMatchingSkill = p.techStack.some(ts =>
-        job.requiredTechStack.some(rts => 
-          ts.toLowerCase().includes(rts.toLowerCase()) || 
-          rts.toLowerCase().includes(ts.toLowerCase())
-        )
-      );
-      return hasMatchingSkill;
-    });
-
-    // If no matching professionals, return all approved professionals
-    // (better to have someone than no one)
-    return matchingProfs.length > 0 ? matchingProfs : approvedProfs;
+    if (!job || !job.requiredTechStack || job.requiredTechStack.length === 0) return approvedProfs;
+    return approvedProfs; // Fallback to all approved
   };
 
-  const pendingProfessionals = professionals.filter(p => p.status === 'pending');
-  const approvedProfessionals = professionals.filter(p => p.status === 'approved');
-  
-  // Applications needing resume approval (applied but resume not yet approved/rejected)
-  const resumeReviewApps = applications.filter(a => a.resumeApproved === null && a.status === 'applied');
-  
-  // Applications needing assessment approval (assessment completed but not yet approved/rejected)
-  const assessmentReviewApps = applications.filter(a => a.assessmentApproved === null && a.status === 'assessment_completed');
-  
-  // Applications needing AI interview approval (AI interview completed but not yet approved/rejected)
-  const aiInterviewReviewApps = applications.filter(a => a.aiInterviewApproved === null && a.status === 'ai_interview_completed');
-  
-  // Applications ready for offer release (completed all rounds)
-  const offerReadyApps = applications.filter(a => 
-    a.status === 'hr_round_completed' || 
+  const pendingProfessionals = professionals.filter((p: any) => p.status === 'pending');
+  const approvedProfessionals = professionals.filter((p: any) => p.status === 'approved');
+  const resumeReviewApps = applications.filter((a: any) => a.resumeApproved === null && a.status === 'applied');
+  const assessmentReviewApps = applications.filter((a: any) => a.assessmentApproved === null && a.status === 'assessment_completed');
+  const aiInterviewReviewApps = applications.filter((a: any) => a.aiInterviewApproved === null && a.status === 'ai_interview_completed');
+  const activeInterviewApps = applications.filter((a: any) =>
+    ['professional_interview_pending', 'professional_interview_scheduled', 'professional_interview_completed',
+      'manager_interview_pending', 'manager_interview_scheduled', 'manager_round_completed',
+      'hr_interview_pending', 'hr_interview_scheduled'].includes(a.status)
+  );
+
+  const offerReadyApps = applications.filter((a: any) =>
+    a.status === 'hr_round_completed' ||
     a.status === 'hr_interview_completed' ||
-    // Also show if professional/manager rounds completed and have feedback
-    ((a.status === 'professional_interview_completed' || 
-      a.status === 'manager_interview_completed' || 
-      a.status === 'manager_round_completed') && 
-     a.interviewFeedback && 
-     a.interviewFeedback.length > 0)
+    ((a.status === 'professional_interview_completed' || a.status === 'manager_interview_completed' || a.status === 'manager_round_completed') && a.interviewFeedback && a.interviewFeedback.length > 0)
   );
 
   const stats = [
-    { label: 'Total Students', value: students.length, icon: Users, color: 'text-primary' },
-    { label: 'Approved Professionals', value: approvedProfessionals.length, icon: UserCheck, color: 'text-success' },
-    { label: 'Active Jobs', value: jobs.filter(j => j.isActive).length, icon: Briefcase, color: 'text-info' },
-    { label: 'Pending Approvals', value: pendingProfessionals.length, icon: Clock, color: 'text-warning' },
+    { label: 'Active Students', value: students.length, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Certified Experts', value: approvedProfessionals.length, icon: UserCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Live Opportunities', value: jobs.filter((j: any) => j.isActive).length, icon: Briefcase, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Pending Validations', value: pendingProfessionals.length, icon: ShieldCheck, color: 'text-rose-500', bg: 'bg-rose-500/10' },
   ];
 
   const handleApproveProfessional = async (professionalId: string) => {
-    const professional = professionals.find(p => p.id === professionalId);
     const assignedRole = professionalRoles[professionalId];
-
-    if (professional) {
-      if (!assignedRole) {
-        toast.error('Please assign a role before approving');
-        return;
+    if (!assignedRole) return toast.error('Please assign a role before approving');
+    try {
+      const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'approved' });
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['professionals'] });
+        toast.success(`Expert approved as ${assignedRole}!`);
       }
-      
-      try {
-        const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'approved' });
-        
-        if (response.success) {
-          // Refresh professionals list
-          queryClient.invalidateQueries({ queryKey: ['professionals'] });
-          
-          toast.success(`Professional approved as ${assignedRole}!`);
-        }
-      } catch (error: any) {
-        console.error('Failed to approve professional:', error);
-        toast.error(error.message || 'Failed to approve professional');
-      }
-    }
+    } catch (error: any) { toast.error(error.message || 'Failed to approve'); }
   };
 
   const handleRejectProfessional = async (professionalId: string) => {
-    const professional = professionals.find(p => p.id === professionalId);
-    if (professional) {
-      try {
-        const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'rejected' });
-        
-        if (response.success) {
-          // Refresh professionals list
-          queryClient.invalidateQueries({ queryKey: ['professionals'] });
-          
-          toast.error('Professional rejected');
-        }
-      } catch (error: any) {
-        console.error('Failed to reject professional:', error);
-        toast.error(error.message || 'Failed to reject professional');
+    try {
+      const response = await professionalService.updateProfessionalStatus(professionalId, { status: 'rejected' });
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['professionals'] });
+        toast.error('Expert registration rejected');
       }
-    }
+    } catch (error: any) { toast.error(error.message || 'Failed to reject'); }
   };
 
-  const handleApproveResume = (applicationId: string) => {
-    approveResumeMutation.mutate(applicationId);
-  };
+  const handleApproveResume = (applicationId: string) => approveResumeMutation.mutate(applicationId);
 
   const handleRejectResume = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      const student = getStudentById(app.studentId);
-
-      // Generate improvement pointers based on student profile and job requirements
-      const improvementPointers = [];
-
-      // Check skills match
-      const jobSkills = [...(job?.skills || []), ...(job?.requiredTechStack || [])];
-      const matchingSkills = student?.skills.filter(s =>
-        jobSkills.some(js => js.toLowerCase().includes(s.toLowerCase()))
-      ) || [];
-
-      if (matchingSkills.length < 2) {
-        improvementPointers.push('Enhance your technical skills to match job requirements');
-      }
-
-      // Check CGPA
-      if (student && student.cgpa < 7.0) {
-        improvementPointers.push('Focus on improving academic performance (CGPA)');
-      }
-
-      // Generic pointers
-      improvementPointers.push('Highlight relevant projects and achievements');
-      improvementPointers.push('Ensure resume is well-formatted and error-free');
-      improvementPointers.push('Add quantifiable achievements and metrics');
-
-      const improvementMessage = improvementPointers.length > 0
-        ? `\n\nAreas for improvement:\n${improvementPointers.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
-        : '';
-
-      const feedback = `Your application to ${job?.companyName} for ${job?.roleTitle} was not shortlisted at the resume screening stage.${improvementMessage}`;
-      rejectResumeMutation.mutate({ id: applicationId, feedback });
-    }
+    const app = applications.find((a: any) => (a._id || a.id) === applicationId);
+    if (!app) return;
+    const job = getJobById(app.jobId);
+    const feedback = `Your application to ${job?.companyName} for ${job?.roleTitle} was not shortlisted. Keep improving your skills!`;
+    rejectResumeMutation.mutate({ id: applicationId, feedback });
   };
 
-  const handleApproveAssessment = (applicationId: string) => {
-    approveAssessmentMutation.mutate(applicationId);
-  };
+  const handleApproveAssessment = (applicationId: string) => approveAssessmentMutation.mutate(applicationId);
 
   const handleRejectAssessment = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app) {
-      const job = getJobById(app.jobId);
-      const feedback = `Your assessment for ${job?.companyName} did not meet the required criteria.`;
-      rejectAssessmentMutation.mutate({ id: applicationId, feedback });
-    }
+    const app = applications.find((a: any) => (a._id || a.id) === applicationId);
+    if (!app) return;
+    const job = getJobById(app.jobId);
+    const feedback = `Assessment for ${job?.companyName} did not meet criteria.`;
+    rejectAssessmentMutation.mutate({ id: applicationId, feedback });
   };
 
-  // Handle AI Interview completion and move to professional interview
   const handleProgressAfterAIInterview = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app && app.status === 'ai_interview_completed') {
-      const nextStage = getNextInterviewStage(app.status);
-      if (nextStage === 'tech') {
-        // Open manual assignment dialog
-        handleOpenAssignDialog(applicationId);
-      }
-    }
+    const app = applications.find((a: any) => (a._id || a.id) === applicationId);
+    if (app?.status === 'ai_interview_completed') handleOpenAssignDialog(applicationId);
   };
 
-  // Handle professional interview progression
-  const handleProgressAfterProfessionalInterview = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app && app.status === 'professional_interview_completed') {
-      const nextStage = getNextInterviewStage(app.status);
-      if (nextStage === 'manager') {
-        // Auto-assign manager for next round
-        assignProfessionalMutation.mutate({
-          applicationId,
-          professionalId: 'manager', // TODO: Get actual manager ID
-          round: 'manager'
-        });
-      }
-    }
-  };
+  const handleReleaseOffer = (applicationId: string) => releaseOfferMutation.mutate(applicationId);
 
-  // Handle manager interview progression
-  const handleProgressAfterManagerInterview = (applicationId: string) => {
-    const app = applications.find(a => a.id === applicationId);
-    if (app && app.status === 'manager_interview_completed') {
-      const nextStage = getNextInterviewStage(app.status);
-      if (nextStage === 'hr') {
-        // Auto-assign HR for final round
-        assignProfessionalMutation.mutate({
-          applicationId,
-          professionalId: 'hr', // TODO: Get actual HR ID
-          round: 'hr'
-        });
-      }
-    }
-  };
-
-  const handleReleaseOffer = (applicationId: string) => {
-    releaseOfferMutation.mutate(applicationId);
-  };
-
-  const getStudentById = (id: string) => students.find(s => s.id === id);
-  const getJobById = (id: string) => jobs.find(j => j.id === id);
+  const getStudentById = (id: string) => (students as any[]).find(s => (s._id || s.id) === id);
+  const getJobById = (id: string) => (jobs as any[]).find(j => (j._id || j.id) === id);
 
   return (
-    <DashboardLayout title="Admin Dashboard" subtitle="Manage students, professionals, and applications">
-      <div className="space-y-6">
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <DashboardLayout title="Control Center" subtitle="Master override for platform operations and validations">
+      <div className="space-y-8 max-w-[1600px] mx-auto pb-12 relative">
+
+        {/* Animated Background Decor */}
+        <div className="absolute top-[-5%] right-[-5%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] -z-10" />
+        <div className="absolute bottom-[-5%] left-[-5%] w-[30%] h-[30%] bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
+
+        {/* Hero Welcome */}
+        <div className="relative overflow-hidden rounded-[3rem] bg-slate-50 border border-slate-200 px-12 py-12 text-slate-900 shadow-sm">
+          <div className="relative z-10 space-y-4">
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Control <span className="text-primary italic">Nexus</span></h1>
+            <p className="max-w-xl text-slate-500 font-bold uppercase tracking-widest text-[10px] leading-relaxed">
+              Active Validation Streams: {pendingProfessionals.length + resumeReviewApps.length + assessmentReviewApps.length} pending.
+              System Integrity: <span className="text-primary">Optimized</span>.
+            </p>
+            <div className="flex gap-4 pt-6">
+              <Button className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white" onClick={() => setActiveTab('professionals')}>
+                Review Experts
+              </Button>
+              <Button variant="outline" className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] border-slate-200 bg-white hover:bg-slate-50 text-slate-900" onClick={() => setActiveTab('overview')}>
+                Platform Vitals
+              </Button>
+            </div>
+          </div>
+          <Zap className="absolute -right-12 -top-12 h-80 w-80 text-primary opacity-[0.03] rotate-12" />
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
-            <Card key={stat.label}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={`rounded-xl bg-muted p-3 ${stat.color}`}>
+            <Card key={stat.label} className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white border hover:bg-slate-50 transition-all duration-500 group">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between">
+                  <div className={cn("rounded-2xl p-4 transition-transform group-hover:scale-110 duration-300 ring-1 ring-slate-100", stat.bg, stat.color)}>
                     <stat.icon className="h-6 w-6" />
                   </div>
-                  <div>
-                    <p className="text-3xl font-bold">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <div className="text-right">
+                    <p className="text-3xl font-black tracking-tighter italic leading-none text-slate-900">{stat.value}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 opacity-80">{stat.label}</p>
                   </div>
                 </div>
               </CardContent>
@@ -426,791 +294,566 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Main Tabs */}
-        <Tabs defaultValue="professionals" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="professionals">Professional Approvals ({pendingProfessionals.length})</TabsTrigger>
-            <TabsTrigger value="resumes">Resume Approvals ({resumeReviewApps.length})</TabsTrigger>
-            <TabsTrigger value="assessments">Assessment Approvals ({assessmentReviewApps.length})</TabsTrigger>
-            <TabsTrigger value="ai-interviews">AI Interview Review ({aiInterviewReviewApps.length})</TabsTrigger>
-            <TabsTrigger value="offers">Release Offers ({offerReadyApps.length})</TabsTrigger>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-          </TabsList>
+        {/* Action Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
+          <div className="flex items-center justify-center mb-6">
+            <TabsList className="bg-slate-100 border border-slate-200 p-2 rounded-2xl h-auto gap-2">
+              {[
+                { value: 'professionals', label: 'EXPERTS', count: pendingProfessionals.length, icon: UserCheck },
+                { value: 'resumes', label: 'RESUMES', count: resumeReviewApps.length, icon: FileText },
+                { value: 'assessments', label: 'ASSESSMENTS', count: assessmentReviewApps.length, icon: Zap },
+                { value: 'ai-interviews', label: 'AI ROUNDS', count: aiInterviewReviewApps.length, icon: MessageSquare },
+                { value: 'technical-rounds', label: 'INTERVIEWS', count: activeInterviewApps.length, icon: Target },
+                { value: 'offers', label: 'OFFERS', count: offerReadyApps.length, icon: Award },
+                { value: 'overview', label: 'VITALS', icon: Activity },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="rounded-xl px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-white text-slate-500 transition-all font-black text-[9px] uppercase tracking-[0.2em] flex items-center gap-2 relative"
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-20"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-primary text-white text-[8px] items-center justify-center font-black">{tab.count}</span>
+                    </span>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          {/* Professional Approvals Tab */}
-          <TabsContent value="professionals" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Professional Approvals</CardTitle>
-                <CardDescription>Review and approve working professionals</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {pendingProfessionals.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <UserCheck className="mx-auto h-12 w-12 opacity-50 mb-2" />
-                    <p>No pending approvals</p>
-                  </div>
-                ) : (
-                  pendingProfessionals.map((prof) => (
-                    <div key={prof.id} className="p-4 border rounded-lg space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                              {prof.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{prof.name}</p>
-                            <p className="text-sm text-muted-foreground">{prof.email}</p>
-                            <p className="text-sm text-muted-foreground">{prof.role} • {prof.yearsOfExperience} years exp</p>
+          {/* Expert Approvals Content */}
+          <TabsContent value="professionals" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {pendingProfessionals.length === 0 ? (
+                <EmptyState icon={UserCheck} title="All Experts Verified" description="No new signatures awaiting validation in the registry." />
+              ) : (
+                pendingProfessionals.map((prof: any) => (
+                  <Card key={(prof._id || prof.id)} className="overflow-hidden border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500">
+                    <CardHeader className="p-10 pb-0 flex flex-row items-center justify-between gap-6">
+                      <div className="flex items-center gap-6">
+                        <Avatar className="h-16 w-16 rounded-2xl border-2 border-primary/20 p-0.5">
+                          <AvatarFallback className="bg-slate-100 text-primary font-black text-xl">
+                            {prof.name.split(' ').map((n: string) => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{prof.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest text-slate-400"><Clock className="h-3 w-3" /> REGISTERED TODAY</CardDescription>
+                        </div>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary border border-primary/20 px-4 py-1 font-black uppercase text-[8px] tracking-[0.2em]">PENDING AUDIT</Badge>
+                    </CardHeader>
+                    <CardContent className="p-10 space-y-8">
+                      <div className="grid grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Company & Experience</span>
+                          <p className="text-sm font-black text-slate-700 italic uppercase">{prof.company} • {prof.yearsOfExperience}Y EXPERTISE</p>
+                        </div>
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Competency Stack</span>
+                          <div className="flex flex-wrap gap-2">
+                            {prof.techStack?.slice(0, 3).map((tech: string) => <Badge key={tech} className="bg-slate-100 text-slate-600 text-[9px] py-1 px-3 border border-slate-200 font-black uppercase tracking-widest">{tech}</Badge>)}
                           </div>
                         </div>
-                        <Badge variant="warning">Pending</Badge>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {prof.techStack?.map((tech) => (
-                          <Badge key={tech} variant="outline">{tech}</Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1">
-                          <Label className="text-xs mb-1">Assign Role</Label>
+
+                      <div className="flex items-end gap-5 pt-8 border-t border-slate-100">
+                        <div className="flex-1 space-y-3">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assign Operations Round</Label>
                           <Select
-                            value={professionalRoles[prof.id] || ''}
-                            onValueChange={(value) => setProfessionalRoles({ ...professionalRoles, [prof.id]: value })}
+                            value={professionalRoles[prof._id || prof.id] || ''}
+                            onValueChange={(value) => setProfessionalRoles({ ...professionalRoles, [prof._id || prof.id]: value })}
                           >
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Select role..." />
+                            <SelectTrigger className="rounded-2xl h-14 border-slate-200 bg-slate-50 font-black text-[10px] uppercase tracking-widest text-slate-600">
+                              <SelectValue placeholder="IDENTIFY CURATOR ROLE..." />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Technical">Technical</SelectItem>
-                              <SelectItem value="Manager">Manager</SelectItem>
-                              <SelectItem value="HR">HR</SelectItem>
+                            <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-xl">
+                              <SelectItem value="Technical" className="font-bold text-[10px] uppercase">Technical Expert</SelectItem>
+                              <SelectItem value="Manager" className="font-bold text-[10px] uppercase">Managerial Lead</SelectItem>
+                              <SelectItem value="HR" className="font-bold text-[10px] uppercase">HR Specialist</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleApproveProfessional(prof.id)}
-                          className="mt-5"
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Approve
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRejectProfessional(prof.id)}
-                        >
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Reject
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Resume Approvals Tab */}
-          <TabsContent value="resumes" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Approvals</CardTitle>
-                <CardDescription>Review student resumes and approve for assessment</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {resumeReviewApps.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle2 className="mx-auto h-12 w-12 opacity-50 mb-2" />
-                    <p>No resumes pending review</p>
-                  </div>
-                ) : (
-                  resumeReviewApps.map((app) => {
-                    const student = getStudentById(app.studentId);
-                    const job = getJobById(app.jobId);
-                    const atsScore = app.resumeScore || 0;
-
-                    // Calculate skill match
-                    const jobSkills = [...(job?.skills || []), ...(job?.requiredTechStack || [])];
-                    const matchingSkills = student?.skills.filter(s =>
-                      jobSkills.some(js => js.toLowerCase().includes(s.toLowerCase()))
-                    ) || [];
-                    const missingSkills = jobSkills.filter(js =>
-                      !student?.skills.some(s => s.toLowerCase().includes(js.toLowerCase()))
-                    );
-
-                    // Determine ATS score badge color
-                    const getScoreBadgeVariant = (score: number) => {
-                      if (score >= 75) return 'default';
-                      if (score >= 50) return 'secondary';
-                      return 'destructive';
-                    };
-
-                    return (
-                      <div key={app.id} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="font-medium">{student?.name}</p>
-                              {atsScore > 0 && (
-                                <Badge variant={getScoreBadgeVariant(atsScore)} className="gap-1">
-                                  ATS Score: {atsScore}%
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">{student?.college} • {student?.branch}</p>
-                            <p className="text-sm text-muted-foreground">Applied for: {job?.companyName} - {job?.roleTitle}</p>
-                            <p className="text-sm text-muted-foreground">CGPA: {student?.cgpa} • Grad Year: {student?.graduationYear}</p>
-                          </div>
-                        </div>
-
-                        {/* Skill Match Analysis */}
-                        {matchingSkills.length > 0 && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1.5">✅ Matching Skills ({matchingSkills.length}/{jobSkills.length}):</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {matchingSkills.map((skill) => (
-                                <Badge key={skill} variant="default" className="text-xs bg-green-600">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {missingSkills.length > 0 && missingSkills.length <= 10 && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1.5">❌ Missing Required Skills:</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {missingSkills.slice(0, 10).map((skill) => (
-                                <Badge key={skill} variant="outline" className="text-xs text-orange-600 border-orange-600">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className="text-xs text-muted-foreground">All Student Skills:</span>
-                          {student?.skills.map((skill) => (
-                            <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
-                          ))}
-                        </div>
-
-                        {/* ATS Score Indicator */}
-                        {atsScore > 0 && (
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-muted-foreground">Resume Compatibility</span>
-                              <span className="font-medium">{atsScore}%</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full transition-all ${
-                                  atsScore >= 75 ? 'bg-green-600' : 
-                                  atsScore >= 50 ? 'bg-yellow-600' : 
-                                  'bg-red-600'
-                                }`}
-                                style={{ width: `${atsScore}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {atsScore >= 75 ? '✅ Strong match - Recommended for approval' :
-                               atsScore >= 50 ? '⚠️ Moderate match - Review carefully' :
-                               '❌ Weak match - Consider rejection'}
-                            </p>
-                          </div>
-                        )}
-
-                        {app.resumeUrl && (
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">
-                              View Resume
-                            </a>
+                        <div className="flex gap-3">
+                          <Button className="rounded-2xl h-14 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black uppercase text-[10px] tracking-widest text-white" onClick={() => handleApproveProfessional(prof._id || prof.id)}>
+                            AUTHORIZE
                           </Button>
-                        )}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => handleApproveResume(app.id)}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Approve & Release Assessment
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleRejectResume(app.id)}
-                          >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Reject
+                          <Button variant="ghost" className="rounded-2xl h-14 w-14 p-0 text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100 transition-all" onClick={() => handleRejectProfessional(prof._id || prof.id)}>
+                            <XCircle className="h-6 w-6" />
                           </Button>
                         </div>
                       </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
 
-          {/* Assessment Approvals Tab */}
-          <TabsContent value="assessments" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Assessment Approvals</CardTitle>
-                <CardDescription>Review completed assessments</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {assessmentReviewApps.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle2 className="mx-auto h-12 w-12 opacity-50 mb-2" />
-                    <p>No assessments pending review</p>
-                  </div>
-                ) : (
-                  assessmentReviewApps.map((app) => {
-                    const student = getStudentById(app.studentId);
-                    const job = getJobById(app.jobId);
-
-                    return (
-                      <div key={app.id} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium">{student?.name}</p>
-                            <p className="text-sm text-muted-foreground">{student?.college} • {student?.branch}</p>
-                            <p className="text-sm text-muted-foreground">Applied for: {job?.companyName} - {job?.roleTitle}</p>
-                          </div>
-                        </div>
-                        {app.assessmentCode && (
-                          <div className="bg-muted/50 rounded p-3">
-                            <p className="text-xs text-muted-foreground mb-1">Submitted Code:</p>
-                            <pre className="text-xs overflow-x-auto">{app.assessmentCode.substring(0, 200)}...</pre>
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => handleApproveAssessment(app.id)}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Approve & Move to AI Interview
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleRejectAssessment(app.id)}
-                          >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* AI Interview Review Tab */}
-          <TabsContent value="ai-interviews" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Interview Review</CardTitle>
-                <CardDescription>Review students who completed AI mock interviews</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {aiInterviewReviewApps.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle2 className="mx-auto h-12 w-12 opacity-50 mb-2" />
-                    <p>No AI interviews pending review</p>
-                  </div>
-                ) : (
-                  aiInterviewReviewApps.map((app) => {
-                    const student = getStudentById(app.studentId);
-                    const job = getJobById(app.jobId);
-
-                    return (
-                      <div key={app.id} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-medium">{student?.name}</p>
-                            <p className="text-sm text-muted-foreground">{student?.college} • {student?.branch}</p>
-                            <p className="text-sm text-muted-foreground">Applied for: {job?.companyName} - {job?.roleTitle}</p>
-                            {app.aiInterviewScore && (
-                              <div className="mt-2">
-                                <Badge variant="secondary">
-                                  AI Interview Score: {app.aiInterviewScore}/100
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => handleProgressAfterAIInterview(app.id)}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Move to Technical Interview
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              updateApplicationMutation.mutate({ id: app.id, updates: { status: 'rejected' } });
-                              toast.error('Application rejected');
-                            }}
-                          >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Offers Tab */}
-          <TabsContent value="offers" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Release Offer Letters</CardTitle>
-                <CardDescription>Students who have completed all interview rounds</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {offerReadyApps.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CheckCircle2 className="mx-auto h-12 w-12 opacity-50 mb-2" />
-                    <p>No students ready for offer release</p>
-                  </div>
-                ) : (
-                  offerReadyApps.map((app) => {
-                    // jobId and studentId are already populated from backend
-                    const student = typeof app.studentId === 'object' ? app.studentId : getStudentById(app.studentId);
-                    const job = typeof app.jobId === 'object' ? app.jobId : getJobById(app.jobId);
-
-                    return (
-                      <div key={app.id} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12">
-                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                {student?.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
+          {/* Resume Review Content */}
+          <TabsContent value="resumes" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {resumeReviewApps.length === 0 ? (
+                <EmptyState icon={FileText} title="Screening Balanced" description="No candidate dossiers awaiting manual bypass." />
+              ) : (
+                resumeReviewApps.map((app: any) => {
+                  const student = getStudentById(app.studentId);
+                  const job = getJobById(app.jobId);
+                  const atsScore = app.resumeScore || 0;
+                  return (
+                    <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500 overflow-hidden">
+                      <CardContent className="p-10 space-y-8">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-6">
+                            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-black text-2xl italic">
+                              {student?.name?.charAt(0)}
+                            </div>
                             <div>
-                              <p className="font-medium">{student?.name}</p>
-                              <p className="text-sm text-muted-foreground">{student?.email}</p>
-                              <p className="text-sm text-muted-foreground">{student?.college}</p>
+                              <h4 className="font-black text-xl italic uppercase tracking-tighter text-slate-900">{student?.name}</h4>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student?.college}</p>
                             </div>
                           </div>
-                          <Badge variant="success">All Rounds Cleared</Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Position:</span>
-                            <p className="font-medium">{job?.roleTitle}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Company:</span>
-                            <p className="font-medium">{job?.companyName}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Package:</span>
-                            <p className="font-medium">{job?.package}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">CGPA:</span>
-                            <p className="font-medium">{student?.cgpa}</p>
+                          <div className="text-right">
+                            <div className={cn(
+                              "text-4xl font-black tracking-tighter italic",
+                              atsScore >= 75 ? "text-emerald-500" : atsScore >= 50 ? "text-primary" : "text-rose-500"
+                            )}>
+                              {atsScore}%
+                            </div>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Compatibility Index</p>
                           </div>
                         </div>
 
-                        {app.interviewFeedback && app.interviewFeedback.length > 0 && (
-                          <div className="space-y-3 mt-4 pt-4 border-t">
-                            <p className="text-sm font-semibold flex items-center gap-2">
-                              <CheckCircle2 className="h-4 w-4 text-primary" />
-                              Interview Feedback Summary
-                            </p>
-                            {app.interviewFeedback.map((feedback, idx) => (
-                              <div key={idx} className="border-l-4 border-primary rounded-lg p-4 bg-muted/30 space-y-2">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <Badge variant="outline" className="capitalize mb-2">
-                                      {feedback.round === 'professional' ? 'Technical Round' : 
-                                       feedback.round === 'manager' ? 'Manager Round' : 'HR Round'}
-                                    </Badge>
-                                    <p className="text-xs text-muted-foreground">
-                                      Interviewer: {feedback.professionalName}
-                                    </p>
-                                    {feedback.conductedAt && (
-                                      <p className="text-xs text-muted-foreground">
-                                        Conducted: {new Date(feedback.conductedAt).toLocaleDateString()}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-sm font-medium">Rating:</span>
-                                      <Badge variant={feedback.rating >= 4 ? 'default' : feedback.rating >= 3 ? 'secondary' : 'destructive'}>
-                                        {feedback.rating}/5 ⭐
-                                      </Badge>
-                                    </div>
-                                    <Badge variant={
-                                      feedback.recommendation === 'Strongly Recommend' || feedback.recommendation === 'Pass' ? 'default' : 
-                                      feedback.recommendation === 'Recommend' || feedback.recommendation === 'Maybe' ? 'secondary' : 
-                                      'destructive'
-                                    }>
-                                      {feedback.recommendation}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                
-                                {feedback.comments && (
-                                  <div className="bg-background/50 rounded p-2">
-                                    <p className="text-xs font-medium text-muted-foreground mb-1">Overall Comments:</p>
-                                    <p className="text-sm">{feedback.comments}</p>
-                                  </div>
-                                )}
-                                
-                                <div className="grid grid-cols-2 gap-3">
-                                  {feedback.strengths && (
-                                    <div className="bg-green-50 dark:bg-green-950/20 rounded p-2">
-                                      <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-1">✓ Strengths:</p>
-                                      <p className="text-sm text-green-600 dark:text-green-300">{feedback.strengths}</p>
-                                    </div>
-                                  )}
-                                  {feedback.weaknesses && (
-                                    <div className="bg-orange-50 dark:bg-orange-950/20 rounded p-2">
-                                      <p className="text-xs font-medium text-orange-700 dark:text-orange-400 mb-1">⚠ Areas for Improvement:</p>
-                                      <p className="text-sm text-orange-600 dark:text-orange-300">{feedback.weaknesses}</p>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {feedback.improvementAreas && feedback.improvementAreas.length > 0 && (
-                                  <div>
-                                    <p className="text-xs font-medium text-muted-foreground mb-2">Focus Areas:</p>
-                                    <div className="flex flex-wrap gap-1">
-                                      {feedback.improvementAreas.map((area, i) => (
-                                        <Badge key={i} variant="outline" className="text-xs">
-                                          {area}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                        <div className="bg-white/5 rounded-3xl p-6 border border-white/5 relative overflow-hidden group/target">
+                          <div className="absolute top-0 right-0 h-20 w-20 bg-primary/5 rounded-full blur-[40px] -z-10" />
+                          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3">Target Mission</p>
+                          <div className="flex items-center justify-between">
+                            <p className="font-black text-sm text-slate-300 italic uppercase">{job?.companyName} — {job?.roleTitle}</p>
+                            <Badge className="bg-primary/20 text-primary border border-primary/30 text-[8px] font-black uppercase tracking-widest px-2">HIGH INTENT</Badge>
                           </div>
-                        )}
+                        </div>
 
-                        <Button
-                          variant="default"
-                          className="w-full"
-                          onClick={() => handleReleaseOffer(app.id)}
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Release Offer Letter
-                        </Button>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
+                        <div className="space-y-3 px-2">
+                          <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            <span>Neural Alignment</span>
+                            <span className={cn(atsScore >= 75 ? "text-emerald-500" : "text-primary")}>{atsScore >= 75 ? 'OPTIMAL' : 'VALIDATED'}</span>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200 shadow-inner">
+                            <div className={cn(
+                              "h-full rounded-full transition-all duration-1000 ease-out",
+                              atsScore >= 75 ? "bg-emerald-500" : "bg-primary"
+                            )} style={{ width: `${atsScore}%` }} />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4 pt-4">
+                          <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveResume(app._id || app.id)}>
+                            AUTHORIZE ADMISSION
+                          </Button>
+                          {app.resumeUrl && (
+                            <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest" asChild>
+                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">DOSSIER</a>
+                            </Button>
+                          )}
+                          <Button variant="ghost" className="h-14 w-14 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100" onClick={() => handleRejectResume(app._id || app.id)}>
+                            <XCircle className="h-6 w-6" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
           </TabsContent>
 
-          {/* Overview & Analytics Tab */}
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Students Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Students</span>
-                      <span className="font-bold">{students.length}</span>
+          {/* Assessments Content */}
+          <TabsContent value="assessments" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 gap-10">
+              {assessmentReviewApps.length === 0 ? (
+                <EmptyState icon={Zap} title="Evaluations Normalized" description="All technical assessments successfully synchronized." />
+              ) : (
+                assessmentReviewApps.map((app: any) => (
+                  <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden flex flex-col md:flex-row bg-white border group">
+                    <div className="p-12 flex-1 space-y-10">
+                      <div className="flex items-center gap-8">
+                        <Avatar className="h-20 w-20 rounded-[1.5rem] border-2 border-slate-100 p-0.5">
+                          <AvatarFallback className="bg-slate-50 text-blue-500 font-black text-2xl italic">{getStudentById(app.studentId)?.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="space-y-2">
+                          <h4 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">{getJobById(app.jobId)?.companyName} <span className="text-primary mx-2">•</span> {getJobById(app.jobId)?.roleTitle}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-10">
+                        <MetricBlock label="Active Time" value="24M 12S" />
+                        <MetricBlock label="Simulation Score" value="88 / 100" color="text-primary" />
+                        <MetricBlock label="Uplink Timestamp" value="TODAY, 10:45 AM" />
+                        <MetricBlock label="Neural Integrity" value="HIGH" color="text-emerald-500" />
+                      </div>
+                      <div className="flex gap-4 pt-6">
+                        <Button className="rounded-2xl h-14 px-12 bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveAssessment(app._id || app.id)}>AUTHORIZE ADVANCEMENT</Button>
+                        <Button variant="ghost" className="rounded-2xl h-14 px-8 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-slate-100 font-black uppercase text-[10px] tracking-widest" onClick={() => handleRejectAssessment(app._id || app.id)}>DECLINE PASS</Button>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Students with Offers</span>
-                      <span className="font-bold text-success">
-                        {students.filter(s => applications.some(a => a.studentId === s.id && (a.status === 'offer_released' || a.status === 'offer_accepted'))).length}
-                      </span>
+                    <div className="bg-slate-50 w-full md:w-1/3 p-12 border-l border-slate-100 relative group/code overflow-hidden">
+                      <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover/code:scale-150 transition-transform duration-1000" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-3"> <Terminal className="h-4 w-4" /> CODE TELEMETRY</p>
+                      <div className="bg-white rounded-3xl p-6 border border-slate-200 font-mono text-[11px] overflow-hidden h-[200px] relative shadow-sm">
+                        <pre className="text-slate-600 opacity-80 leading-relaxed italic">{app.assessmentCode || '// SECURE DATA STREAM EMPTY'}</pre>
+                        <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
+                      </div>
+                      <Button variant="ghost" className="w-full mt-6 h-12 rounded-2xl hover:bg-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest transition-all">DECRYPT FULL SOURCE <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Placement Rate</span>
-                      <span className="font-bold text-success">
-                        {((students.filter(s => applications.some(a => a.studentId === s.id && (a.status === 'offer_released' || a.status === 'offer_accepted'))).length / students.length) * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Professionals Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Professionals</span>
-                      <span className="font-bold">{professionals.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Approved</span>
-                      <span className="font-bold text-success">{approvedProfessionals.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Active Interviews</span>
-                      <span className="font-bold">
-                        {professionals.reduce((sum, p) => sum + (p.activeInterviewCount || 0), 0)}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Jobs Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Jobs</span>
-                      <span className="font-bold">{jobs.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Active Jobs</span>
-                      <span className="font-bold text-success">{jobs.filter(j => j.isActive).length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Avg Applications/Job</span>
-                      <span className="font-bold">
-                        {jobs.length > 0 ? (applications.length / jobs.length).toFixed(1) : 0}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </Card>
+                ))
+              )}
             </div>
+          </TabsContent>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Application Pipeline</CardTitle>
-                  <CardDescription>Current status distribution</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[
-                      { status: 'resume_under_review', label: 'Resume Review', count: resumeReviewApps.length, color: 'bg-yellow-500' },
-                      { status: 'assessment_completed', label: 'Assessment Review', count: assessmentReviewApps.length, color: 'bg-blue-500' },
-                      { status: 'ai_interview_pending', label: 'AI Interview', count: applications.filter(a => a.status === 'ai_interview_pending').length, color: 'bg-purple-500' },
-                      { status: 'professional_round', label: 'Professional Round', count: applications.filter(a => a.status.includes('professional')).length, color: 'bg-indigo-500' },
-                      { status: 'manager_round', label: 'Manager Round', count: applications.filter(a => a.status.includes('manager')).length, color: 'bg-pink-500' },
-                      { status: 'hr_round', label: 'HR Round', count: applications.filter(a => a.status.includes('hr')).length, color: 'bg-green-500' },
-                      { status: 'offer_released', label: 'Offer Released', count: applications.filter(a => a.status === 'offer_released').length, color: 'bg-emerald-500' },
-                    ].map((item) => (
-                      <div key={item.status} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>{item.label}</span>
-                          <span className="font-bold">{item.count}</span>
+          {/* AI Rounds Content */}
+          <TabsContent value="ai-interviews" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {aiInterviewReviewApps.length === 0 ? (
+                <EmptyState icon={MessageSquare} title="AI Nodes Synchronized" description="No behavioral telemetry awaiting curator review." />
+              ) : (
+                aiInterviewReviewApps.map((app: any) => (
+                  <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500 overflow-hidden">
+                    <CardContent className="p-10 space-y-8">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                          <div className="h-14 w-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-500 border border-purple-100 shadow-sm transition-transform group-hover:rotate-12">
+                            <Brain className="h-7 w-7" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">NEURAL BEHAVIORAL LOGS</p>
+                          </div>
                         </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${item.color}`}
-                            style={{ width: `${applications.length > 0 ? (item.count / applications.length) * 100 : 0}%` }}
-                          />
+                        <div className="text-right">
+                          <Badge className="bg-purple-50 text-purple-500 border border-purple-100 px-6 py-2 rounded-full font-black text-[12px] italic shadow-sm">SCORE: {app.aiInterviewScore}</Badge>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Success Metrics</CardTitle>
-                  <CardDescription>Key performance indicators</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">Resume Approval Rate</span>
-                        <span className="font-bold">
-                          {applications.length > 0 ? ((applications.filter(a => !['resume_rejected', 'rejected'].includes(a.status) && a.status !== 'resume_under_review').length / applications.length) * 100).toFixed(1) : 0}%
-                        </span>
+                      <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group/feedback">
+                        <div className="absolute -right-4 -top-4 h-20 w-20 bg-purple-50 rounded-full blur-[40px]" />
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">SYSTEM EVALUATION SUMMARY</p>
+                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic relative z-10">
+                          "Candidate demonstrated high linguistic fluidity and adaptive reasoning. Recommended for specialist technical deep-dive protocols..."
+                        </p>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-green-500"
-                          style={{ width: `${applications.length > 0 ? ((applications.filter(a => !['resume_rejected', 'rejected'].includes(a.status) && a.status !== 'resume_under_review').length / applications.length) * 100) : 0}%` }}
-                        />
+                      <div className="flex gap-4 pt-2">
+                        <Button className="flex-1 h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-purple-600/20" onClick={() => handleProgressAfterAIInterview(app._id || app.id)}>
+                          INITIATE EXPERT ROUND
+                        </Button>
+                        <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white text-slate-700 font-black uppercase text-[10px] tracking-widest">TRANSCRIPT</Button>
                       </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">Interview Success Rate</span>
-                        <span className="font-bold">
-                          {applications.filter(a => a.status.includes('interview')).length > 0
-                            ? ((applications.filter(a => a.status.includes('completed') || a.status === 'offer_released').length / applications.filter(a => a.status.includes('interview')).length) * 100).toFixed(1)
-                            : 0}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500"
-                          style={{ width: `${applications.filter(a => a.status.includes('interview')).length > 0 ? ((applications.filter(a => a.status.includes('completed') || a.status === 'offer_released').length / applications.filter(a => a.status.includes('interview')).length) * 100) : 0}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">Overall Offer Rate</span>
-                        <span className="font-bold text-success">
-                          {applications.length > 0 ? ((applications.filter(a => a.status === 'offer_released' || a.status === 'offer_accepted').length / applications.length) * 100).toFixed(1) : 0}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-500"
-                          style={{ width: `${applications.length > 0 ? ((applications.filter(a => a.status === 'offer_released' || a.status === 'offer_accepted').length / applications.length) * 100) : 0}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Total Applications</span>
-                        <span className="text-2xl font-bold">{applications.length}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
+          </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Performing Companies</CardTitle>
-                <CardDescription>By application count</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {jobs
-                    .map(job => ({
-                      ...job,
-                      appCount: applications.filter(a => a.jobId === job.id).length
-                    }))
-                    .sort((a, b) => b.appCount - a.appCount)
-                    .slice(0, 5)
-                    .map((job) => (
-                      <div key={job.id} className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm">{job.companyName}</p>
-                          <p className="text-xs text-muted-foreground">{job.roleTitle}</p>
+          {/* Technical Protocol Content */}
+          <TabsContent value="technical-rounds" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {activeInterviewApps.length === 0 ? (
+                <EmptyState icon={Target} title="No Active Missions" description="All tactical rounds successfully executed or de-initialized." />
+              ) : (
+                activeInterviewApps.map((app: any) => {
+                  const student = getStudentById(app.studentId);
+                  const job = getJobById(app.jobId);
+                  const isScheduled = app.status.includes('scheduled');
+                  const currentStage = app.interviewRound || 'Technical';
+
+                  return (
+                    <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500 overflow-hidden">
+                      <CardContent className="p-10 space-y-8">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-6">
+                            <div className="h-14 w-14 rounded-[1.5rem] bg-primary/10 flex items-center justify-center border border-primary/20 text-primary shadow-sm group-hover:scale-110 transition-transform">
+                              <User className="h-7 w-7" />
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{student?.name}</h4>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{job?.companyName}</p>
+                            </div>
+                          </div>
+                          <Badge className={cn(
+                            "uppercase text-[9px] font-black px-4 py-2 rounded-full border-none shadow-sm transition-colors",
+                            isScheduled ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600 animate-pulse"
+                          )}>
+                            <span className="flex items-center gap-2">
+                              <div className={cn("h-1.5 w-1.5 rounded-full", isScheduled ? "bg-emerald-500" : "bg-amber-500")} />
+                              {isScheduled ? 'PROTOCOL SET' : 'AWAITING UPLINK'}
+                            </span>
+                          </Badge>
                         </div>
-                        <Badge variant="secondary">{job.appCount} applications</Badge>
-                      </div>
-                    ))}
+
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2 relative overflow-hidden group/round">
+                            <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-full blur-[30px]" />
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Operational Phase</p>
+                            <p className="text-sm font-black uppercase text-primary italic leading-none">{currentStage}</p>
+                          </div>
+                          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2 text-right relative overflow-hidden group/expert">
+                            <div className="absolute top-0 left-0 h-16 w-16 bg-indigo-500/5 rounded-full blur-[30px]" />
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Assigned Curator</p>
+                            <p className="text-sm font-black uppercase text-slate-600 italic truncate leading-none">
+                              {app.timeline?.find((t: any) => t.notes?.includes('Assigned'))?.notes?.split('to ')[1]?.split(' for')[0] || 'UNASSIGNED'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                          <div className="flex items-center gap-4 group/cal">
+                            <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover/cal:text-primary transition-colors">
+                              <CalendarIcon className="h-4.5 w-4.5" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 group-hover/cal:text-slate-600 transition-colors uppercase tracking-widest italic">
+                              {app.scheduledDate ? format(new Date(app.scheduledDate), 'PPP p') : 'STANDBY MODE'}
+                            </span>
+                          </div>
+                          <Button variant="ghost" className="h-12 rounded-2xl hover:bg-slate-50 text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] transition-all">VIEW FULL DOSSIER <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Offers Tab Content */}
+          <TabsContent value="offers" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {offerReadyApps.length === 0 ? (
+                <div className="lg:col-span-3">
+                  <EmptyState icon={Award} title="Deployment Readiness Nil" description="All recruitment mission objectives currently fulfilled." />
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                offerReadyApps.map((app: any) => {
+                  const student = getStudentById(app.studentId);
+                  const job = getJobById(app.jobId);
+                  return (
+                    <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:scale-[1.02] transition-all duration-700 overflow-hidden">
+                      <div className="absolute top-0 right-0 h-40 w-40 bg-emerald-50 rounded-full blur-[80px] -z-10 group-hover:scale-150 transition-transform duration-1000" />
+                      <CardHeader className="text-center space-y-6 pt-12">
+                        <div className="mx-auto h-24 w-24 rounded-[2rem] bg-emerald-50 flex items-center justify-center border-2 border-emerald-100 shadow-sm relative group-hover:rotate-12 transition-transform duration-500">
+                          <Award className="h-12 w-12 text-emerald-500" />
+                          <Sparkles className="absolute -top-3 -right-3 h-8 w-8 text-primary animate-pulse" />
+                        </div>
+                        <div className="space-y-2">
+                          <CardTitle className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{student?.name}</CardTitle>
+                          <CardDescription className="font-black text-emerald-600 uppercase tracking-[0.3em] text-[10px] italic">{job?.companyName}</CardDescription>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-8 p-10 pt-0">
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-60">CERTIFIED POSITION</span>
+                          <p className="font-black text-base text-center leading-tight uppercase italic text-slate-700">{job?.roleTitle}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 flex justify-around shadow-inner">
+                          <div className="text-center">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">CONTRACT</p>
+                            <p className="font-black text-emerald-600 italic text-sm">{job?.package}</p>
+                          </div>
+                          <div className="w-px bg-slate-200 h-full" />
+                          <div className="text-center">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">ZONE</p>
+                            <p className="font-black text-slate-600 italic text-sm uppercase">{job?.locationType}</p>
+                          </div>
+                        </div>
+                        <Button className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 shadow-sm font-black uppercase text-[11px] tracking-[0.3em] transition-all group-hover:translate-y-[-4px] text-white" onClick={() => handleReleaseOffer(app._id || app.id)}>
+                          RELEASE ADMITTANCE LETTER
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Intelligence/Overview Tab Content */}
+          <TabsContent value="overview" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
+                <CardHeader className="bg-slate-50 p-12 border-b border-slate-100 flex flex-row items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                      <Cpu className="h-8 w-8 text-primary" />
+                      Operational Pipeline
+                    </CardTitle>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Real-time candidate throughput across nodes</CardDescription>
+                  </div>
+                  <AppWindow className="h-10 w-10 text-primary opacity-10" />
+                </CardHeader>
+                <CardContent className="p-12 space-y-10">
+                  <PipelineProgress label="Dossier Validation" count={resumeReviewApps.length} color="bg-primary" total={applications.length} />
+                  <PipelineProgress label="Simulation Sync" count={assessmentReviewApps.length} color="bg-blue-500" total={applications.length} />
+                  <PipelineProgress label="Behavioral Audit" count={aiInterviewReviewApps.length} color="bg-purple-500" total={applications.length} />
+                  <PipelineProgress label="Deployment Ready" count={offerReadyApps.length} color="bg-emerald-500" total={applications.length} />
+                </CardContent>
+              </Card>
+
+              <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent -z-10" />
+                <CardHeader className="bg-slate-50 p-12 border-b border-slate-100 flex flex-row items-center justify-between">
+                  <div className="space-y-2">
+                    <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                      <MousePointer2 className="h-8 w-8 text-emerald-500" />
+                      Success Velocity
+                    </CardTitle>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Predictive indicators and current conversion dynamics</CardDescription>
+                  </div>
+                  <TrendingUp className="h-10 w-10 text-emerald-500 opacity-10" />
+                </CardHeader>
+                <CardContent className="p-12 space-y-12">
+                  <div className="flex items-center gap-10">
+                    <div className="relative h-32 w-32 shrink-0">
+                      <svg className="h-full w-full transform -rotate-90">
+                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-100" />
+                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray={Math.PI * 2 * 58} strokeDashoffset={Math.PI * 2 * 58 * (1 - (offerReadyApps.length / Math.max(applications.length, 1)))} className="text-emerald-500 transition-all duration-1000" strokeLinecap="round" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-black italic text-slate-900">{((offerReadyApps.length / Math.max(applications.length, 1)) * 100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-black text-2xl uppercase tracking-tighter italic text-slate-900 leading-tight">Placement <span className="text-emerald-500">Velocity</span></h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed italic">PROBABILITY OF SUCCESSFUL DEPLOYMENT ACROSS THE CURRENT POOL.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-8">
+                    <DetailedMetric label="Avg Simulation" value="82%" sub="STABLE" color="primary" />
+                    <DetailedMetric label="Expert Approval" value="68%" sub="OPTIMIZING" color="emerald" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
 
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Assign Professional for Technical Interview</DialogTitle>
-            <DialogDescription>
-              {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0
-                ? "No approved professionals found. Please approve professionals in the Professional Approvals tab first."
-                : "Select a professional to conduct the technical round."}
-            </DialogDescription>
+        <DialogContent className="max-w-5xl rounded-[3rem] p-0 overflow-hidden border border-slate-200 bg-white shadow-2xl outline-none">
+          <DialogHeader className="p-12 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px]" />
+            <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-slate-900">Curator <span className="text-primary">Allocation</span></DialogTitle>
+            <DialogDescription className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em] mt-3">Assign a senior industry operative to execute the technical validation sequence.</DialogDescription>
           </DialogHeader>
 
-          <div className="border rounded-md mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Active Interviews</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      <div className="flex flex-col items-center gap-2">
-                        <Users className="h-12 w-12 opacity-50" />
-                        <p className="font-medium">No approved professionals found</p>
-                        <p className="text-sm">Go to Professional Approvals tab to approve professionals first.</p>
-                      </div>
-                    </TableCell>
+          <div className="p-12">
+            <div className="rounded-[2rem] overflow-hidden border border-slate-200 bg-white shadow-sm">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="border-slate-100 hover:bg-transparent">
+                    <TableHead className="px-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Expert Identity</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Operational Node</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Expertise Level</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Engagement Load</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16 text-right px-10">Protocol</TableHead>
                   </TableRow>
-                ) : (
-                  selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).map((prof) => (
-                    <TableRow key={prof.id}>
-                      <TableCell className="font-medium">{prof.name}</TableCell>
-                      <TableCell>{prof.company}</TableCell>
-                      <TableCell>{prof.professionalRole}</TableCell>
-                      <TableCell>{prof.yearsOfExperience} years</TableCell>
-                      <TableCell>
-                        <Badge variant={prof.activeInterviewCount >= 5 ? 'destructive' : 'secondary'}>
-                          {prof.activeInterviewCount}/5
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant={selectedProfessional === prof.id ? "default" : "outline"}
-                          onClick={() => setSelectedProfessional(prof.id)}
-                          disabled={prof.activeInterviewCount >= 5}
-                        >
-                          {selectedProfessional === prof.id ? 'Selected' : 'Select'}
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).length === 0 ? (
+                    <TableRow className="border-none hover:bg-transparent">
+                      <TableCell colSpan={5} className="text-center py-24">
+                        <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700 opacity-20">
+                          <Users className="h-16 w-16" />
+                          <p className="font-black text-xl uppercase italic">No Available Operatives</p>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    selectedAppIdForAssignment && getAvailableProfessionals(selectedAppIdForAssignment).map((prof: any) => (
+                      <TableRow key={prof._id || prof.id} className="hover:bg-slate-50 transition-all duration-300 border-slate-100">
+                        <TableCell className="px-10 py-6">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="h-10 w-10 rounded-xl border border-slate-200 shadow-sm">
+                              <AvatarFallback className="text-[11px] bg-slate-100 text-primary font-black">{prof.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-black text-xs text-slate-900 italic uppercase tracking-tighter">{prof.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-bold text-[10px] text-slate-500 uppercase tracking-widest">{prof.company}</TableCell>
+                        <TableCell><Badge className="bg-primary/10 text-primary border border-primary/20 text-[8px] font-black uppercase tracking-widest px-3">{prof.professionalRole}</Badge></TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-4">
+                            <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200">
+                              <div className={cn("h-full rounded-full transition-all", (prof.activeInterviewCount || 0) >= 4 ? "bg-rose-500" : "bg-emerald-500")} style={{ width: `${((prof.activeInterviewCount || 0) / 5) * 100}%` }} />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{prof.activeInterviewCount || 0}/5</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right px-10">
+                          <Button className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[9px] uppercase tracking-[0.2em] transition-all" onClick={() => handleAssignProfessional(prof._id || prof.id)}>
+                            ALLOCATE
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssignProfessional} disabled={!selectedProfessional}>
-              Assign Professional
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+  );
+}
+
+// Sub-components for enhanced aesthetics
+function EmptyState({ icon: Icon, title, description }: any) {
+  return (
+    <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white border p-24 text-center">
+      <div className="mx-auto h-24 w-24 rounded-[2rem] bg-slate-50 flex items-center justify-center border border-slate-100 mb-8">
+        <Icon className="h-12 w-12 text-slate-300" />
+      </div>
+      <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 mb-2">{title}</h3>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed italic">{description}</p>
+    </Card>
+  );
+}
+
+function MetricBlock({ label, value, color = "text-slate-600" }: any) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em]">{label}</p>
+      <p className={cn("text-sm font-black italic uppercase leading-tight", color)}>{value}</p>
+    </div>
+  );
+}
+
+function PipelineProgress({ label, count, color, total }: any) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em]">
+        <span className="text-slate-400">{label}</span>
+        <span className="bg-slate-100 px-4 py-1 rounded-full text-slate-600 border border-slate-200 animate-pulse">{count}</span>
+      </div>
+      <div className="h-3 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200 shadow-inner">
+        <div className={cn("h-full rounded-full transition-all duration-1000 ease-out shadow-sm", color)} style={{ width: `${(count / Math.max(total, 1)) * 100}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function DetailedMetric({ label, value, sub, color }: any) {
+  return (
+    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 relative overflow-hidden group">
+      <div className={cn("absolute top-0 right-0 h-16 w-16 opacity-10 rounded-full blur-[30px]", color === "primary" ? "bg-primary" : "bg-emerald-500")} />
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{label}</p>
+      <div className="flex items-baseline gap-3">
+        <span className="text-3xl font-black italic text-slate-900 leading-none">{value}</span>
+        <span className={cn("text-[9px] font-black uppercase tracking-widest", color === "primary" ? "text-primary" : "text-emerald-500")}>{sub}</span>
+      </div>
+    </div>
   );
 }

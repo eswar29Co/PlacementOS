@@ -55,7 +55,7 @@ export const professionalService = {
   // Get my profile (professional only)
   async getMyProfile(): Promise<{ success: boolean; data: Professional }> {
     try {
-      const response = await apiClient.get('/auth/me');
+      const response = await apiClient.get('/auth/profile');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

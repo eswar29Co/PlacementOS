@@ -2,137 +2,190 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '@/services';
-import { Clock, FileCheck, AlertCircle, TrendingUp } from 'lucide-react';
+import {
+  Clock, FileCheck, AlertCircle, TrendingUp,
+  Target, Sparkles, CheckCircle2, ChevronRight,
+  Info, ShieldCheck, BrainCircuit, Activity
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function AssessmentShortlist() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
-  
-  const { data: applicationsData } = useQuery({
+
+  const { data: applicationsData, isLoading } = useQuery({
     queryKey: ['my-applications'],
     queryFn: () => applicationService.getMyApplications(),
   });
-  
+
   const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
-  
+
   const myApplication = applications.find(
-    (app) => app.studentId === user?.id && 
-    (app.status === 'assessment_submitted' || app.status === 'assessment_under_review')
+    (app) => app.studentId === user?.id &&
+      (app.status === 'assessment_submitted' || app.status === 'assessment_under_review')
   );
 
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Assessment Status" subtitle="Synchronizing technical dossier...">
+        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
+          <p className="font-black text-slate-400 animate-pulse text-[10px] uppercase tracking-widest">Accessing Secure Records...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <DashboardLayout title="Assessment Submitted" subtitle="Results under review">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Assessment Results</h1>
-          <p className="text-muted-foreground">Your assessment is being reviewed</p>
+    <DashboardLayout title="Assessment Submitted" subtitle="Calibration results currently under neural review">
+      <div className="max-w-5xl mx-auto space-y-12 pb-12">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-2">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-900 italic">Review Phase Active</h1>
+            <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-3 italic">
+              <Activity className="h-4 w-4 text-primary" /> Dossier Status: <span className="text-amber-500">PENDING AUDIT</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Badge className="bg-primary/5 text-primary border border-primary/10 font-bold text-[10px] uppercase px-4 py-2 rounded-full shadow-none italic">MISSION_ID: {myApplication?.id?.slice(-8).toUpperCase() || 'EXTERNAL'}</Badge>
+          </div>
         </div>
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Your assessment has been submitted successfully. Admin is reviewing your responses and will update your status soon.
-          </AlertDescription>
-        </Alert>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-12">
+            <Alert className="bg-slate-50 border-slate-200 rounded-[2rem] p-6 shadow-sm border">
+              <Info className="h-5 w-5 text-primary" />
+              <AlertDescription className="text-slate-500 font-bold italic ml-2">
+                Your technical calibration data has been securely archived. Our lead auditors are currently analyzing your problem-solving patterns and architectural implementations.
+              </AlertDescription>
+            </Alert>
+          </div>
 
-        <Card className="border-success/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileCheck className="h-5 w-5 text-success" />
-              Assessment Submitted
-            </CardTitle>
-            <CardDescription>
-              Thank you for completing the assessment
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-center p-8">
-              <div className="text-center space-y-4">
-                <div className="h-16 w-16 rounded-full bg-success/20 flex items-center justify-center mx-auto">
-                  <FileCheck className="h-8 w-8 text-success" />
+          <div className="lg:col-span-8 space-y-8">
+            <Card className="border-slate-200 shadow-xl rounded-[3rem] bg-white overflow-hidden border">
+              <CardHeader className="p-10 pb-4 border-b border-slate-100 bg-slate-50/50">
+                <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900 italic">
+                  <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                  Submission Archived
+                </CardTitle>
+                <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Technical Protocol Successfully Terminalized</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10 space-y-10">
+                <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-100 relative group transition-all">
+                  <div className="h-24 w-24 rounded-[2rem] bg-white shadow-inner flex items-center justify-center mb-6 border border-slate-100 group-hover:scale-110 transition-transform duration-500">
+                    <FileCheck className="h-10 w-10 text-emerald-500" />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <p className="text-2xl font-black text-slate-900 uppercase italic">Synchronization Success</p>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest italic">All technical metrics registered in secure buffer</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-lg">Submission Successful</p>
-                  <p className="text-sm text-muted-foreground">Your responses are under admin review</p>
+
+                {myApplication && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 border-t border-slate-100">
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Transmission Stamp</p>
+                      <p className="text-sm font-black text-slate-700 uppercase italic tracking-tighter">
+                        {myApplication.submittedAt && format(new Date(myApplication.submittedAt), 'dd MMM yyyy, HH:mm')}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Pattern Intensity</p>
+                      <p className="text-sm font-black text-slate-700 uppercase italic tracking-tighter">
+                        {(myApplication.assessmentAnswers?.length || 0) + (myApplication.assessmentCode ? 2 : 0)}/7 METRICS REGISTERED
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Audit Status</p>
+                      <Badge className="bg-amber-50 text-amber-600 border border-amber-100 font-black text-[9px] uppercase shadow-none rounded-lg px-3 italic">
+                        UNDER_AUDIT
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white p-8 border hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center border border-indigo-100">
+                    <Clock className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <h4 className="font-black text-sm uppercase tracking-tight text-slate-900 italic">Trajectory Path</h4>
                 </div>
-              </div>
+                <ul className="space-y-4 list-none">
+                  {[
+                    "Lead Auditors review structural logic",
+                    "Complexity & Approach Evaluation",
+                    "AI Interview Initialization",
+                    "Professional Round Scheduling"
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-3 group/item">
+                      <div className="h-5 w-5 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:border-primary/30 transition-colors">
+                        <span className="text-[9px] font-black text-slate-400 group-hover/item:text-primary transition-colors">{i + 1}</span>
+                      </div>
+                      <span className="text-xs font-bold text-slate-500 italic leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+
+              <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white p-8 border hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100">
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <h4 className="font-black text-sm uppercase tracking-tight text-slate-900 italic">Optimization Suite</h4>
+                </div>
+                <p className="text-[11px] text-slate-400 font-bold mb-5 italic">Prepare for next-gen evaluation nodes while results sync:</p>
+                <div className="flex flex-wrap gap-2">
+                  {["System Design", "Behavioral Logic", "Scale Dynamics", "Culture Fit"].map(tip => (
+                    <Badge key={tip} variant="secondary" className="bg-slate-50 text-slate-500 border border-slate-100 font-bold text-[9px] uppercase px-3 py-1 animate-in fade-in zoom-in-95 duration-700 shadow-none rounded-lg italic">{tip}</Badge>
+                  ))}
+                </div>
+              </Card>
             </div>
+          </div>
 
-            {myApplication && (
-              <div className="space-y-2 pt-4 border-t">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Submitted on:</span>
-                  <span>
-                    {myApplication.submittedAt && 
-                      new Date(myApplication.submittedAt).toLocaleString()}
-                  </span>
+          <div className="lg:col-span-4 space-y-8 sticky top-24">
+            <Card className="border-none shadow-xl rounded-[3rem] bg-indigo-600 text-white p-10 overflow-hidden relative group">
+              <Sparkles className="absolute -right-6 -top-6 h-32 w-32 opacity-10 group-hover:scale-110 transition-transform duration-1000" />
+              <div className="relative z-10 space-y-8">
+                <div className="space-y-4">
+                  <h4 className="text-2xl font-black uppercase leading-tight italic tracking-tighter">Elite Readiness</h4>
+                  <p className="text-white/70 text-xs font-bold leading-relaxed italic">System diagnostics show peak performance during the technical audit phase. Maintain calibration focus.</p>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Questions Attempted:</span>
-                  <span className="font-medium">
-                    {(myApplication.assessmentAnswers?.length || 0) + (myApplication.assessmentCode ? 2 : 0)}/7
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Status:</span>
-                  <Badge variant="outline" className="text-warning">
-                    Under Review
-                  </Badge>
+                <div className="p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/50">Next Node Probability</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">High Confidence</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-400" style={{ width: '85%' }} />
+                  </div>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              What's Next?
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-3 list-decimal list-inside">
-              <li>Admin will review your assessment responses</li>
-              <li>Your code quality and problem-solving approach will be evaluated</li>
-              <li>If approved, you'll proceed to AI mock interview</li>
-              <li>Interview rounds will be scheduled with professionals</li>
-            </ol>
-          </CardContent>
-        </Card>
+            <Button
+              className="w-full h-16 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white transition-all group/btn"
+              onClick={() => navigate('/student/applications')}
+            >
+              Return to Command Center <ChevronRight className="h-5 w-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+            </Button>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Prepare for Interviews
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              While waiting for results, you can prepare for the interview rounds:
-            </p>
-            <ul className="space-y-2 list-disc list-inside text-sm">
-              <li>Review your technical concepts</li>
-              <li>Practice behavioral interview questions</li>
-              <li>Research the company culture</li>
-              <li>Prepare questions to ask interviewers</li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Button 
-          className="w-full" 
-          variant="outline"
-          onClick={() => navigate('/student/applications')}
-        >
-          View Application Status
-        </Button>
+            <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white p-6 border text-center">
+              <p className="text-[9px] font-black uppercase text-slate-300 italic">Neural encrypted connection active • SHA-256</p>
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );

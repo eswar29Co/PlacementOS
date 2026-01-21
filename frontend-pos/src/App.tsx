@@ -37,12 +37,14 @@ import ScheduleInterview from "./pages/professional/ScheduleInterview";
 import ConductInterview from "./pages/professional/ConductInterview";
 import InterviewHistory from "./pages/professional/InterviewHistory";
 import ProfessionalProfile from "./pages/professional/ProfessionalProfile";
+import PendingInterviews from "./pages/professional/PendingInterviews";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard2";
 import StudentsManagement from "./pages/admin/StudentsManagement";
 import ProfessionalsManagement from "./pages/admin/ProfessionalsManagement";
 import JobsManagement from "./pages/admin/JobsManagement";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 import NotFound from "./pages/NotFound";
 
@@ -101,6 +103,7 @@ const App = () => (
                   <Route path="dashboard" element={<ProfessionalDashboard />} />
                   <Route path="schedule/:appId" element={<ScheduleInterview />} />
                   <Route path="conduct/:appId" element={<ConductInterview />} />
+                  <Route path="interviews" element={<PendingInterviews />} />
                   <Route path="history" element={<InterviewHistory />} />
                   <Route path="profile" element={<ProfessionalProfile />} />
                   <Route path="*" element={<Navigate to="/professional/dashboard" replace />} />
@@ -119,6 +122,7 @@ const App = () => (
                   <Route path="students" element={<StudentsManagement />} />
                   <Route path="professionals" element={<ProfessionalsManagement />} />
                   <Route path="jobs" element={<JobsManagement />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
                 </Routes>
               </ProtectedRoute>
