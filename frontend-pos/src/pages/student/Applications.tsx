@@ -83,10 +83,10 @@ export default function Applications() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Trajectory Control" subtitle="Synchronizing application spectra...">
+      <DashboardLayout title="My Applications" subtitle="Loading your applications...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
-          <p className="font-black text-muted-foreground animate-pulse text-[10px] uppercase tracking-widest">Accessing Secure Records...</p>
+          <p className="font-black text-muted-foreground animate-pulse text-[10px] uppercase tracking-widest">Fetching your data...</p>
         </div>
       </DashboardLayout>
     );
@@ -97,15 +97,15 @@ export default function Applications() {
   const offerCount = myApplications.filter(a => a.status === 'offer_released' || a.status === 'offer_accepted').length;
 
   return (
-    <DashboardLayout title="Trajectory Control" subtitle="Real-time navigation of your operational job tracks">
+    <DashboardLayout title="My Applications" subtitle="View and track the status of all your job applications">
       <div className="space-y-10 max-w-[1400px] mx-auto pb-12">
 
         {/* Tactical Intel Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <IntelCard title="Active Transmissions" value={activeCount} icon={TrendingUp} color="text-primary" bg="bg-primary/5" />
-          <IntelCard title="Engagement Phases" value={interviewCount} icon={Zap} color="text-amber-600" bg="bg-amber-50/5" />
-          <IntelCard title="Secured Decrees" value={offerCount} icon={Trophy} color="text-emerald-600" bg="bg-emerald-50/5" />
-          <IntelCard title="Sector Neutral" value={myApplications.filter(a => isRejected(a.status)).length} icon={XCircle} color="text-rose-600" bg="bg-rose-50/5" />
+          <IntelCard title="In Progress" value={activeCount} icon={TrendingUp} color="text-primary" bg="bg-primary/5" />
+          <IntelCard title="Interviews" value={interviewCount} icon={Zap} color="text-amber-600" bg="bg-amber-50/5" />
+          <IntelCard title="Offers" value={offerCount} icon={Trophy} color="text-emerald-600" bg="bg-emerald-50/5" />
+          <IntelCard title="Rejected" value={myApplications.filter(a => isRejected(a.status)).length} icon={XCircle} color="text-rose-600" bg="bg-rose-50/5" />
         </div>
 
         {/* Transmission Tracker */}
@@ -114,9 +114,9 @@ export default function Applications() {
             <div>
               <h2 className="text-2xl font-black tracking-tight flex items-center gap-3 uppercase text-slate-900">
                 <Target className="h-6 w-6 text-primary" />
-                Transmission Tracker
+                Application History
               </h2>
-              <p className="text-slate-400 font-medium text-xs">Phased monitoring of all active and historical simulations</p>
+              <p className="text-slate-400 font-medium text-xs">Track the progress of your active and past applications</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-4">
@@ -136,8 +136,8 @@ export default function Applications() {
                 <Briefcase className="h-12 w-12 text-slate-200" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-2xl font-black text-slate-900 leading-none">Frequency Silent</h3>
-                <p className="text-slate-400 max-w-sm font-medium">Initialize your career trajectory by engaging with available simulations in the marketplace.</p>
+                <h3 className="text-2xl font-black text-slate-900 leading-none">No Applications Found</h3>
+                <p className="text-slate-400 max-w-sm font-medium">Start applying for jobs to see your progress here.</p>
               </div>
               <Button size="lg" className="rounded-2xl h-14 px-10 font-black shadow-lg shadow-primary/20" onClick={() => navigate('/student/browse-jobs')}>
                 Browse Marketplace <ArrowRight className="ml-2 h-5 w-5" />
@@ -214,7 +214,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">
                   <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {job?.locationType}</span>
                   <span className="flex items-center gap-1.5"><IndianRupee className="h-3.5 w-3.5" /> {job?.ctcBand || 'Competitive'}</span>
-                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> DEPLOYED {format(new Date(app.appliedAt), 'dd MMM yyyy')}</span>
+                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> APPLIED ON {format(new Date(app.appliedAt), 'dd MMM yyyy')}</span>
                 </div>
               </div>
             </div>
@@ -228,7 +228,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                       <FileText className="h-6 w-6 text-slate-400" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="font-bold bg-slate-900 text-white">Neural Analysis</TooltipContent>
+                  <TooltipContent className="font-bold bg-slate-900 text-white">ATS Score Analysis</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -240,7 +240,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
               )}
 
               <Button variant="ghost" className="h-14 px-6 rounded-2xl font-black text-[10px] uppercase text-slate-400 hover:bg-slate-50" onClick={onToggleExpand}>
-                {isExpanded ? 'Collapse Track' : 'Expand Track'}
+                {isExpanded ? 'Show Less' : 'Show More'}
               </Button>
             </div>
           </div>
@@ -248,8 +248,8 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
           {!isExpanded && (
             <div className="mt-8 pt-8 border-t border-slate-100">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] mb-3">
-                <span className="text-slate-400">Trajectory Calibration</span>
-                <span className="text-primary">{Math.max(0, activeStageIndex) * 25}% ENGAGED</span>
+                <span className="text-slate-400">Application Progress</span>
+                <span className="text-primary">{Math.max(0, activeStageIndex) * 25}% COMPLETED</span>
               </div>
               <Progress value={Math.max(0, activeStageIndex) * 25} className="h-3 rounded-full bg-slate-100" />
             </div>
@@ -259,8 +259,8 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
         {isExpanded && (
           <div className="bg-slate-50/50 border-t border-slate-100 p-10 lg:p-14 animate-in fade-in slide-in-from-top-6 duration-500">
             <div className="flex items-center justify-between mb-16">
-              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-slate-300">Mission Trajectory</h4>
-              <Badge className="bg-primary/5 text-primary border border-primary/10 text-[10px] font-bold shadow-none">Node Synchronization Complete</Badge>
+              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-slate-300">Application Progress</h4>
+              <Badge className="bg-primary/5 text-primary border border-primary/10 text-[10px] font-bold shadow-none">Profile Verified</Badge>
             </div>
 
             <div className="relative flex flex-col lg:flex-row justify-between gap-y-16 mb-20">
@@ -289,11 +289,11 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                         isActive ? "text-slate-900 scale-110" : "text-slate-400"
                       )}>{stage.label}</span>
                       {isActive && !isCurrentlyRejected && (
-                        <span className="text-[9px] text-primary font-bold uppercase tracking-tighter mt-1 animate-pulse">Live Phase</span>
+                        <span className="text-[9px] text-primary font-bold uppercase tracking-tighter mt-1 animate-pulse">Current Stage</span>
                       )}
                       {isFailed && (
                         <span className="text-[9px] text-rose-500 font-black uppercase tracking-tighter mt-1 flex items-center gap-1">
-                          <XCircle className="h-3 w-3" /> Terminated
+                          <XCircle className="h-3 w-3" /> Rejected
                         </span>
                       )}
                     </div>
@@ -310,14 +310,14 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                     <div className="h-12 w-12 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10">
                       <Info className="h-6 w-6 text-primary" />
                     </div>
-                    <h5 className="font-black text-lg uppercase text-slate-900">Intelligence Feed</h5>
+                    <h5 className="font-black text-lg uppercase text-slate-900">Status Notes</h5>
                   </div>
                   <p className="text-sm text-slate-500 leading-loose font-medium italic">
                     {isCurrentlyRejected
-                      ? "Trajectory terminated at current phase. Neural analysis suggests recalibrating core specializations for future simulations. Archive remains accessible."
+                      ? "Your application was not selected for this role. We recommend updating your profile and applying for other opportunities."
                       : app.status === 'applied'
-                        ? "Primary dossier sync complete. Human capital audit in progress. Estimated window for technical assessment release: 48-72 hours."
-                        : `Current state synchronized at ${JOURNEY_STAGES[activeStageIndex]?.label}. All tactical subsystems are responsive. ${hasActionRequired(app.status) ? "Attention required: Initialize next stage protocol immediately." : "Awaiting external node response."}`
+                        ? "Your application has been received. Our team will review your profile and update you on the next steps within 2-3 business days."
+                        : `Current stage: ${JOURNEY_STAGES[activeStageIndex]?.label}. ${hasActionRequired(app.status) ? "Please take action on the pending steps." : "We will notify you once there is an update."}`
                     }
                   </p>
 
@@ -325,7 +325,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                     <div className="mt-10 pt-10 border-t space-y-6">
                       <h5 className="font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3">
                         <Sparkles className="h-4 w-4 text-amber-500 fill-amber-500" />
-                        Tactical Feedback Logs
+                        Interview Feedback
                       </h5>
                       <div className="space-y-4">
                         {app.interviewFeedback.map((f: any, i: number) => (
@@ -337,7 +337,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                               </div>
                             </div>
                             <p className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-2">
-                              <User className="h-3 w-3 text-slate-400" /> {f.professionalName || 'Lead Auditor'}
+                              <User className="h-3 w-3 text-slate-400" /> {f.professionalName || 'Expert Interviewer'}
                             </p>
                             <p className="text-xs text-slate-500 leading-relaxed font-medium">"{f.comments || f.feedback || 'Exceptional aptitude demonstrated in communication and technical calibration.'}"</p>
                           </div>
@@ -356,10 +356,10 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                       <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-100">
                         <Search className="h-6 w-6 text-amber-600" />
                       </div>
-                      <h5 className="font-black text-lg uppercase text-slate-900">Simulation Node</h5>
+                      <h5 className="font-black text-lg uppercase text-slate-900">Job Details</h5>
                     </div>
                     <Button variant="ghost" className="rounded-xl font-black text-[10px] uppercase text-primary hover:bg-primary/5" onClick={() => navigate(`/student/jobs/${job?.id || job?._id}`)}>
-                      Full Specs
+                      Full Details
                     </Button>
                   </div>
 
@@ -381,11 +381,11 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
 
                     <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
                       <div className="space-y-1">
-                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Base Compensation</p>
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Compensation</p>
                         <p className="text-sm font-black text-emerald-600">{job?.ctcBand || job?.package || 'Competitive'}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Operating Locale</p>
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Job Location</p>
                         <p className="text-sm font-black text-slate-700">{job?.locationType}</p>
                       </div>
                     </div>
@@ -406,9 +406,9 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                 <Card className="border-none shadow-lg rounded-[2.5rem] bg-primary p-10 text-white relative overflow-hidden group">
                   <BarChart3 className="absolute -right-6 -bottom-6 h-32 w-32 opacity-10 group-hover:scale-110 transition-transform duration-1000" />
                   <div className="relative z-10 space-y-4">
-                    <h6 className="text-lg font-black uppercase">Competitive Edge</h6>
-                    <p className="text-white/70 text-xs font-bold leading-relaxed">System diagnostics show your profile ranks in the Top 15% for this specific simulation node.</p>
-                    <Button variant="secondary" className="w-full rounded-2xl font-black text-xs uppercase text-primary shadow-lg h-12 bg-white hover:bg-slate-50">Enhanced Insights</Button>
+                    <h6 className="text-lg font-black uppercase">Matching Insight</h6>
+                    <p className="text-white/70 text-xs font-bold leading-relaxed">Our AI analysis shows your profile ranks in the Top 15% for this specific job role.</p>
+                    <Button variant="secondary" className="w-full rounded-2xl font-black text-xs uppercase text-primary shadow-lg h-12 bg-white hover:bg-slate-50">View Details</Button>
                   </div>
                 </Card>
               </div>

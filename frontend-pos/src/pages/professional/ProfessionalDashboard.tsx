@@ -57,25 +57,25 @@ export default function ProfessionalDashboard() {
   });
 
   const stats = [
-    { label: 'Evaluation Quota', value: professional.interviewsTaken, icon: Activity, color: 'text-primary', bg: 'bg-primary/5' },
-    { label: 'Confirmed Ops', value: scheduled.length, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50/5' },
-    { label: 'Mission Pending', value: pending.length, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50/5' },
-    { label: 'Expert rating', value: `${professional.rating.toFixed(1)}/5`, icon: Star, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
+    { label: 'Interviews Taken', value: professional.interviewsTaken, icon: Activity, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Scheduled', value: scheduled.length, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50/5' },
+    { label: 'Pending', value: pending.length, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50/5' },
+    { label: 'Average Rating', value: `${professional.rating.toFixed(1)}/5`, icon: Star, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
   ];
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Expert Nexus" subtitle="Synchronizing mission data...">
+      <DashboardLayout title="Dashboard" subtitle="Loading your dashboard...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
-          <p className="font-black text-muted-foreground animate-pulse text-[10px] uppercase tracking-widest">Accessing Secure Records...</p>
+          <p className="font-black text-muted-foreground animate-pulse text-[10px] uppercase tracking-widest">Loading Records...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Expert Nexus" subtitle={`Mission Control Interface for ${professional.name.split(' ')[0]}`}>
+    <DashboardLayout title="Dashboard" subtitle={`Welcome back, ${professional.name.split(' ')[0]}. Manage your candidate interviews here.`}>
       <div className="space-y-10 max-w-[1400px] mx-auto pb-12">
 
         {/* Tactical Profile Header */}
@@ -94,7 +94,7 @@ export default function ProfessionalDashboard() {
                   <div className="text-center md:text-left space-y-2">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                       <h2 className="text-4xl font-black tracking-tighter uppercase text-slate-900">{professional.name}</h2>
-                      <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-4 py-1 rounded-full uppercase text-[10px] tracking-widest shadow-none">Prime Auditor</Badge>
+                      <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black px-4 py-1 rounded-full uppercase text-[10px] tracking-widest shadow-none">Expert Interviewer</Badge>
                     </div>
                     <p className="text-muted-foreground font-black text-xs flex items-center justify-center md:justify-start gap-3 uppercase tracking-[0.2em]">
                       <Target className="h-4 w-4 text-primary" /> {professional.role || 'Senior Associate'} • {professional.yearsOfExperience} YRS EXPERTISE
@@ -118,7 +118,7 @@ export default function ProfessionalDashboard() {
                     </div>
                   </div>
                   <Button onClick={() => navigate('/professional/profile')} variant="outline" className="rounded-2xl h-16 px-8 font-black border-2 uppercase text-xs tracking-widest hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all">
-                    Review Identity
+                    View Profile
                   </Button>
                 </div>
               </div>
@@ -150,13 +150,13 @@ export default function ProfessionalDashboard() {
             <div className="space-y-1">
               <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-slate-900">
                 <Network className="h-6 w-6 text-primary" />
-                Operational Pipeline
+                Interview Management
               </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Neural routing of candidate evaluation tracks</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Track and manage candidate interview rounds</p>
             </div>
             <div className="bg-slate-50 p-1.5 rounded-2xl border border-slate-200 flex gap-1">
               <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 font-black text-[9px] uppercase tracking-widest shadow-sm">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Auditor Verified
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Expert Verified
               </div>
             </div>
           </div>
@@ -165,9 +165,9 @@ export default function ProfessionalDashboard() {
             <div className="flex items-center justify-between p-2 bg-slate-50 rounded-[2rem] border border-slate-200 overflow-x-auto no-scrollbar">
               <TabsList className="bg-transparent h-auto p-0 flex gap-2">
                 {[
-                  { value: 'pending', label: 'Queued Ops', count: pending.length, icon: Clock, color: 'text-amber-500' },
-                  { value: 'scheduled', label: 'Confirmed Log', count: scheduled.length, icon: Calendar, color: 'text-indigo-500' },
-                  { value: 'completed', label: 'Archive Hub', count: completed.length, icon: CheckCircle2, color: 'text-emerald-500' },
+                  { value: 'pending', label: 'Pending', count: pending.length, icon: Clock, color: 'text-amber-500' },
+                  { value: 'scheduled', label: 'Scheduled', count: scheduled.length, icon: Calendar, color: 'text-indigo-500' },
+                  { value: 'completed', label: 'Completed', count: completed.length, icon: CheckCircle2, color: 'text-emerald-500' },
                 ].map(tab => (
                   <TabsTrigger
                     key={tab.value}
@@ -181,20 +181,20 @@ export default function ProfessionalDashboard() {
                 ))}
               </TabsList>
               <div className="px-6 hidden lg:block">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Evaluation Control Interface</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Interview Management</p>
               </div>
             </div>
 
             <TabsContent value="pending" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {pending.length === 0 ? (
-                  <EmptyState icon={Monitor} title="Queues Clear" description="No active candidate tracks requiring immediate intervention." />
+                  <EmptyState icon={Monitor} title="No Pending Interviews" description="You have no active candidate interviews requiring your attention." />
                 ) : (
                   pending.map((app: any) => (
                     <AssignmentCard
                       key={app.id || app._id}
                       app={app}
-                      actionLabel="Initialize Protocol"
+                      actionLabel="Schedule Interview"
                       onClick={() => navigate(`/professional/schedule/${app.id || app._id}`)}
                     />
                   ))
@@ -205,13 +205,13 @@ export default function ProfessionalDashboard() {
             <TabsContent value="scheduled" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {scheduled.length === 0 ? (
-                  <EmptyState icon={Calendar} title="No Confirmed Missions" description="Confirmed interview tracks will synchronize here." />
+                  <EmptyState icon={Calendar} title="No Scheduled Interviews" description="Your upcoming interview schedules will appear here." />
                 ) : (
                   scheduled.map((app: any) => (
                     <AssignmentCard
                       key={app.id || app._id}
                       app={app}
-                      actionLabel="Launch Simulation"
+                      actionLabel="Start Interview"
                       onClick={() => navigate(`/professional/conduct/${app.id || app._id}`)}
                       isScheduled
                     />
@@ -223,13 +223,13 @@ export default function ProfessionalDashboard() {
             <TabsContent value="completed" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {completed.length === 0 ? (
-                  <EmptyState icon={ShieldCheck} title="Archives Ready" description="Historical dossier evaluations will be accessible here." />
+                  <EmptyState icon={ShieldCheck} title="No Completed Interviews" description="Your past interview evaluations will be visible here." />
                 ) : (
                   completed.map((app: any) => (
                     <AssignmentCard
                       key={app.id || app._id}
                       app={app}
-                      actionLabel="View Dossier"
+                      actionLabel="View Feedback"
                       onClick={() => navigate(`/professional/view/${app.id || app._id}`)}
                       isCompleted
                     />
@@ -259,11 +259,11 @@ function AssignmentCard({ app, actionLabel, onClick, isScheduled, isCompleted }:
               </div>
               <div className="space-y-1">
                 <Badge variant="secondary" className="bg-primary/5 text-primary border border-primary/10 text-[9px] font-black uppercase py-0.5 px-3 rounded-md shadow-none">
-                  {(app.interviewRound || 'Professional').toUpperCase()} CALIBRATION
+                  {(app.interviewRound || 'Professional').toUpperCase()} ROUND
                 </Badge>
-                <h4 className="font-black text-xl leading-tight uppercase tracking-tight text-slate-900">{student?.name || 'Unknown Subject'}</h4>
+                <h4 className="font-black text-xl leading-tight uppercase tracking-tight text-slate-900">{student?.name || 'Unknown Candidate'}</h4>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Building2 className="h-3 w-3" /> {student?.college || 'External Node'}
+                  <Building2 className="h-3 w-3" /> {student?.college || 'External College'}
                 </p>
               </div>
             </div>
@@ -271,15 +271,15 @@ function AssignmentCard({ app, actionLabel, onClick, isScheduled, isCompleted }:
               <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100">
                 <Fingerprint className="h-5 w-5" />
               </div>
-              {isCompleted && <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black text-[8px] uppercase shadow-none">Finalized</Badge>}
+              {isCompleted && <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black text-[8px] uppercase shadow-none">Completed</Badge>}
             </div>
           </div>
 
           <div className="p-6 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 space-y-4">
             <div className="flex justify-between items-center">
               <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase text-slate-400 opacity-70 tracking-widest">Mission Track</p>
-                <p className="text-xs font-black uppercase text-slate-700">{job?.roleTitle || 'Strategic Role'} <span className="text-primary mx-1">@</span> {job?.companyName || 'Lead Org'}</p>
+                <p className="text-[9px] font-black uppercase text-slate-400 opacity-70 tracking-widest">Job Details</p>
+                <p className="text-xs font-black uppercase text-slate-700">{job?.roleTitle || 'Role'} <span className="text-primary mx-1">@</span> {job?.companyName || 'Company'}</p>
               </div>
               <Globe className="h-4 w-4 text-slate-200" />
             </div>
@@ -289,7 +289,7 @@ function AssignmentCard({ app, actionLabel, onClick, isScheduled, isCompleted }:
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 text-indigo-500" />
                   <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Temporal Window</p>
+                    <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Scheduled Time</p>
                     <p className="text-xs font-black text-indigo-600 uppercase">{new Date(app.scheduledDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ function AssignmentCard({ app, actionLabel, onClick, isScheduled, isCompleted }:
               </>
             ) : (
               <Button variant="ghost" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase text-primary hover:bg-primary/5 gap-3" onClick={onClick}>
-                Review Submission Dossier <FileText className="h-4 w-4" />
+                View Submission Feedback <FileText className="h-4 w-4" />
               </Button>
             )}
           </div>

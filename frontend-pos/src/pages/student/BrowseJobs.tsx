@@ -60,17 +60,17 @@ export default function BrowseJobs() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Marketplace" subtitle="Calibrating placement opportunities...">
+      <DashboardLayout title="Browse Jobs" subtitle="Finding the best career opportunities for you...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-2xl shadow-primary/20" />
-          <p className="font-black text-primary animate-pulse uppercase tracking-[0.4em] text-[10px] italic">Scanning Global Network Graph...</p>
+          <p className="font-black text-primary animate-pulse uppercase tracking-[0.4em] text-[10px] italic">Scanning Opportunities...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Marketplace" subtitle="Identify and engage with elite career simulations across the global technical grid">
+    <DashboardLayout title="Browse Jobs" subtitle="Find and apply for the best career opportunities matching your profile">
       <div className="space-y-12 max-w-[1500px] mx-auto pb-12 relative">
 
         {/* Animated Background Decor */}
@@ -85,7 +85,7 @@ export default function BrowseJobs() {
               <div className="relative flex-1 w-full group">
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400 group-focus-within:text-primary transition-colors" />
                 <Input
-                  placeholder="Identify simulations by firm name, sector, or role..."
+                  placeholder="Search jobs by company, sector, or role..."
                   className="h-16 pl-16 border-slate-100 bg-slate-50 rounded-2xl font-black text-lg text-slate-900 focus-visible:ring-primary/20 shadow-inner placeholder:text-slate-400 italic"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -96,7 +96,7 @@ export default function BrowseJobs() {
                   <Filter className="h-5 w-5 opacity-50" /> FILTER
                 </Button>
                 <Button className="h-16 px-10 rounded-2xl font-black shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase tracking-widest text-[10px] gap-2 transition-all hover:scale-105 active:scale-95">
-                  SYNC RESULTS
+                  SEARCH
                 </Button>
               </div>
             </CardContent>
@@ -110,11 +110,11 @@ export default function BrowseJobs() {
               <div className="space-y-1">
                 <h2 className="text-3xl font-black italic tracking-tighter flex items-center gap-4 text-slate-900 uppercase">
                   <Sparkles className="h-8 w-8 text-amber-500 animate-pulse" />
-                  FORGED FOR YOU
+                  RECOMMENDED FOR YOU
                 </h2>
-                <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-12 italic">High-compatibility simulations based on your primary tech stack</p>
+                <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-12 italic">Jobs that match your technical background and interests</p>
               </div>
-              <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-[10px] uppercase tracking-[0.2em] py-2 px-6 rounded-full shadow-lg shadow-amber-500/5 italic">AI PROTOCOL ACTIVE</Badge>
+              <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-[10px] uppercase tracking-[0.2em] py-2 px-6 rounded-full shadow-lg shadow-amber-500/5 italic">AI MATCHING ACTIVE</Badge>
             </div>
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {recommendedJobs.map(({ job, matchScore }) => (
@@ -136,13 +136,13 @@ export default function BrowseJobs() {
             <div className="space-y-1">
               <h2 className="text-2xl font-black tracking-tighter italic flex items-center gap-4 text-slate-900 uppercase">
                 <Globe className="h-7 w-7 text-primary" />
-                {search ? `SEARCH RESULTS FOR "${search.toUpperCase()}"` : "GLOBAL OPPORTUNITY HUB"}
+                {search ? `SEARCH RESULTS FOR "${search.toUpperCase()}"` : "ALL AVAILABLE JOBS"}
               </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-11 italic">Access the full spectrum of available placement tracks across all sectors</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-11 italic">Access the full spectrum of available placement opportunities</p>
             </div>
             <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-slate-200 bg-slate-50 px-6 py-2 rounded-full shadow-none">
               <div className="h-1.5 w-1.5 rounded-full bg-primary mr-3 animate-pulse" />
-              {filteredJobs.length} LIVE OPS
+              {filteredJobs.length} JOBS FOUND
             </Badge>
           </div>
 
@@ -163,10 +163,10 @@ export default function BrowseJobs() {
                 <Briefcase className="h-12 w-12 text-slate-300" />
               </div>
               <div className="space-y-3 relative z-10">
-                <h3 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Network Quiet</h3>
-                <p className="text-slate-400 max-w-xs font-bold text-xs italic">No matching simulations found in the current sector graph.</p>
+                <h3 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">No Results Found</h3>
+                <p className="text-slate-400 max-w-xs font-bold text-xs italic">We couldn't find any jobs matching your current search criteria.</p>
               </div>
-              <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest relative z-10" onClick={() => setSearch('')}>RESET GLOBAL SEARCH</Button>
+              <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest relative z-10" onClick={() => setSearch('')}>CLEAR SEARCH</Button>
             </div>
           )}
         </div>
@@ -232,7 +232,7 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
         </div>
 
         <Button className="w-full h-14 rounded-2xl font-black gap-3 shadow-lg shadow-primary/10 transition-all group-hover:translate-y-[-2px] group-hover:shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest" onClick={onApply}>
-          INITIALIZE JOURNEY <ChevronRight className="h-4 w-4" />
+          VIEW DETAILS <ChevronRight className="h-4 w-4" />
         </Button>
       </CardContent>
     </Card>

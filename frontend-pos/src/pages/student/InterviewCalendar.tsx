@@ -50,7 +50,7 @@ export default function InterviewCalendar() {
   const selectedDateInterviews = allInterviews.filter(i => i.date && isSameDay(new Date(i.date), selectedDate));
 
   return (
-    <DashboardLayout title="Temporal Ops" subtitle="Strategic management of interview schedules and historical dossiers">
+    <DashboardLayout title="Interview Calendar" subtitle="Manage and track your upcoming interview schedules">
       <div className="max-w-[1400px] mx-auto space-y-8 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
@@ -63,7 +63,7 @@ export default function InterviewCalendar() {
                     {format(currentDate, 'MMMM yyyy')}
                   </CardTitle>
                   <CardDescription className="font-bold flex items-center gap-2 text-slate-400">
-                    <Zap className="h-3 w-3 text-amber-500 fill-amber-500" /> Focus Date: {format(selectedDate, 'do MMM, yyyy')}
+                    <Zap className="h-3 w-3 text-amber-500 fill-amber-500" /> Selected Date: {format(selectedDate, 'do MMM, yyyy')}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2 p-1 bg-white rounded-2xl shadow-inner border border-slate-100">
@@ -71,7 +71,7 @@ export default function InterviewCalendar() {
                     <ChevronLeft className="h-5 w-5" />
                   </Button>
                   <Button variant="ghost" size="sm" className="font-black px-4 text-slate-600 hover:text-primary" onClick={() => { setCurrentDate(new Date()); setSelectedDate(new Date()); }}>
-                    Present
+                    Today
                   </Button>
                   <Button variant="ghost" size="icon" className="h-10 w-10 text-primary" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
                     <ChevronRight className="h-5 w-5" />
@@ -125,7 +125,7 @@ export default function InterviewCalendar() {
               <h3 className="text-xl font-black flex items-center gap-2 text-slate-900">
                 <Target className="h-5 w-5 text-primary" /> Tasks For Today
               </h3>
-              <Badge className="bg-primary/10 text-primary border-none font-black shadow-none">{selectedDateInterviews.length} Missions</Badge>
+              <Badge className="bg-primary/10 text-primary border-none font-black shadow-none">{selectedDateInterviews.length} Interviews</Badge>
             </div>
 
             {selectedDateInterviews.length === 0 ? (
@@ -134,10 +134,10 @@ export default function InterviewCalendar() {
                   <Clock className="h-8 w-8 text-slate-300" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-black text-lg text-slate-800">Timeline Clear</p>
-                  <p className="text-xs font-medium text-slate-400">No simulation events scheduled for this window.</p>
+                  <p className="font-black text-lg text-slate-800">No Interviews</p>
+                  <p className="text-xs font-medium text-slate-400">You have no interviews scheduled for this day.</p>
                 </div>
-                <Button variant="ghost" className="w-full font-bold text-primary hover:bg-primary/5">Consult Syllabus</Button>
+                <Button variant="ghost" className="w-full font-bold text-primary hover:bg-primary/5">View Jobs</Button>
               </Card>
             ) : (
               <div className="space-y-4">
@@ -168,11 +168,11 @@ export default function InterviewCalendar() {
 
                       {int.status === 'scheduled' && int.app.meetingLink ? (
                         <Button className="w-full h-11 rounded-xl font-black gap-2 shadow-lg shadow-primary/10" onClick={() => window.open(int.app.meetingLink, '_blank')}>
-                          <Video className="h-4 w-4" /> Engage Link
+                          <Video className="h-4 w-4" /> Join Meeting
                         </Button>
                       ) : (
                         <Button variant="outline" className="w-full h-11 rounded-xl border-2 font-black gap-2 opacity-50">
-                          {int.status === 'completed' ? 'Dossier Filed' : 'Link Pending'}
+                          {int.status === 'completed' ? 'Completed' : 'Link Pending'}
                         </Button>
                       )}
                     </CardContent>
@@ -185,9 +185,9 @@ export default function InterviewCalendar() {
               <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10 group-hover:scale-125 transition-transform duration-1000" />
               <div className="relative z-10 space-y-4">
                 <h3 className="text-xl font-black leading-tight">Prepare for Success</h3>
-                <p className="text-white/70 text-xs font-medium leading-relaxed">System diagnostics suggest reviewing Data Structures for your upcoming Technical Round.</p>
+                <p className="text-white/70 text-xs font-medium leading-relaxed">Remember to review your core subjects before your next interview.</p>
                 <Button variant="secondary" className="w-full rounded-xl font-black text-primary shadow-xl">
-                  Launch Prep Bot
+                  Get Prepared
                 </Button>
               </div>
             </Card>

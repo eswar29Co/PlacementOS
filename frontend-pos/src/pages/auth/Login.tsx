@@ -28,7 +28,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error('Identity requirements missing. Populate all pattern data.');
+      toast.error('Please enter both email and password.');
       return;
     }
     setLoading(true);
@@ -37,7 +37,7 @@ export default function Login() {
       if (response.success && response.data.user && response.data.token) {
         localStorage.setItem('token', response.data.token);
         dispatch(login(response.data.user));
-        toast.success(`Access Granted. Welcome back, ${response.data.user.name.split(' ')[0]}.`);
+        toast.success(`Login successful! Welcome back, ${response.data.user.name.split(' ')[0]}.`);
         switch (response.data.user.role) {
           case 'admin': navigate('/admin/dashboard'); break;
           case 'student': navigate('/student/home'); break;
@@ -46,7 +46,7 @@ export default function Login() {
         }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Authentication sequence failed. Check pattern parameters.');
+      toast.error(error.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ export default function Login() {
             </div>
             <div className="flex flex-col">
               <span className="text-3xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">Placement<span className="text-primary italic">OS</span></span>
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 mt-1">Ecosystem v4.0.2</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 mt-1">Version 4.0.2</span>
             </div>
           </div>
 
@@ -83,13 +83,13 @@ export default function Login() {
             <div className="space-y-4">
               <div className="h-1 w-20 bg-primary/30 rounded-full" />
               <h1 className="text-7xl font-black leading-[0.95] tracking-tighter text-slate-900 uppercase italic">
-                CALIBRATE <br />
+                UNLOCK <br />
                 YOUR <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-tr from-primary via-indigo-500 to-indigo-700">EXPERTISE</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-tr from-primary via-indigo-500 to-indigo-700">CAREER</span>
               </h1>
             </div>
             <p className="text-slate-500 font-bold text-xl leading-relaxed italic max-w-md">
-              Unlock high-fidelity career intelligence and mission-critical placements through the sector's most advanced neural matching ecosystem.
+              Access premium job opportunities and career resources through our advanced recruitment platform.
             </p>
           </div>
         </div>
@@ -99,19 +99,19 @@ export default function Login() {
           <div className="space-y-4 group">
             <div className="flex items-center gap-3 text-primary font-black uppercase text-[11px] tracking-[0.2em] italic">
               <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
-              <ShieldCheck className="h-4 w-4" /> Secure Transmission
+              <ShieldCheck className="h-4 w-4" /> Secure Platform
             </div>
             <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-loose italic group-hover:text-slate-600 transition-colors">
-              State-of-the-art RSA-4096 encryption protecting your professional identity dossier.
+              Advanced encryption protocols to keep your personal data and profile safe.
             </p>
           </div>
           <div className="space-y-4 group">
             <div className="flex items-center gap-3 text-indigo-600 font-black uppercase text-[11px] tracking-[0.2em] italic">
               <div className="h-2 w-2 rounded-full bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
-              <Zap className="h-4 w-4" /> Neural Alignment
+              <Zap className="h-4 w-4" /> Smart Matching
             </div>
             <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-loose italic group-hover:text-slate-600 transition-colors">
-              AI-driven synchronization logic for high-compatibility mission-critical role matching.
+              AI-powered matching to connect you with the most relevant job opportunities.
             </p>
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function Login() {
         <div className="w-full max-w-[480px] space-y-12 relative z-10">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-black uppercase tracking-[0.3em] text-[10px] py-1.5 px-5 rounded-full shadow-sm italic">SECURE GATEWAY ACTIVE</Badge>
+              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 font-black uppercase tracking-[0.3em] text-[10px] py-1.5 px-5 rounded-full shadow-sm italic">SECURE ACCESS</Badge>
               <div className="flex gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
                 <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
@@ -144,38 +144,38 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <h2 className="text-5xl font-black tracking-tighter text-slate-900 uppercase italic leading-none">
-                AUTH <span className="text-primary">PORTAL</span>
+                LOGIN <span className="text-primary">ACCOUNT</span>
               </h2>
-              <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[11px] italic">Initialize User Identity Sequence</p>
+              <p className="text-slate-400 font-black uppercase tracking-[0.3em] text-[11px] italic">Sign in to your account</p>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-8">
             <div className="space-y-4">
               <Label htmlFor="role" className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2 flex items-center gap-3 italic">
-                <UserCheck className="h-4 w-4 text-primary" /> Authority Context
+                <UserCheck className="h-4 w-4 text-primary" /> Login As
               </Label>
               <Select value={role} onValueChange={(value: any) => setRole(value)}>
                 <SelectTrigger className="h-20 rounded-[1.5rem] bg-slate-50 border-slate-100 focus:ring-primary/20 text-slate-700 font-bold text-base px-8 shadow-inner hover:bg-white transition-all">
-                  <SelectValue placeholder="Select Authority" />
+                  <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-slate-200 rounded-3xl p-2 shadow-2xl">
-                  <SelectItem value="student" className="font-black uppercase text-[10px] tracking-widest py-4 rounded-xl focus:bg-primary focus:text-white transition-colors cursor-pointer italic">Student Initiate (LVL 1)</SelectItem>
-                  <SelectItem value="professional" className="font-black uppercase text-[10px] tracking-widest py-4 rounded-xl focus:bg-indigo-600 focus:text-white transition-colors cursor-pointer italic">Professional Expert (LVL 2)</SelectItem>
-                  <SelectItem value="admin" className="font-black uppercase text-[10px] tracking-widest py-4 rounded-xl focus:bg-slate-900 focus:text-white transition-colors cursor-pointer italic">System Moderator (MAX)</SelectItem>
+                  <SelectItem value="student" className="font-black uppercase text-[10px] tracking-widest py-4 rounded-xl focus:bg-primary focus:text-white transition-colors cursor-pointer italic">Student</SelectItem>
+                  <SelectItem value="professional" className="font-black uppercase text-[10px] tracking-widest py-4 rounded-xl focus:bg-indigo-600 focus:text-white transition-colors cursor-pointer italic">Expert / Professional</SelectItem>
+                  <SelectItem value="admin" className="font-black uppercase text-[10px] tracking-widest py-4 rounded-xl focus:bg-slate-900 focus:text-white transition-colors cursor-pointer italic">System Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-4">
               <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2 flex items-center gap-3 italic">
-                <Mail className="h-4 w-4 text-primary" /> Identity Vector (Email)
+                <Mail className="h-4 w-4 text-primary" /> Email Address
               </Label>
               <div className="relative group">
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@nexus.com"
+                  placeholder="name@example.com"
                   className="h-20 rounded-[1.5rem] bg-slate-50 border-slate-100 focus:ring-primary/20 px-8 font-bold text-base shadow-inner transition-all hover:bg-white focus:bg-white text-slate-900 placeholder:text-slate-300"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -187,9 +187,9 @@ export default function Login() {
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <Label htmlFor="password" className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-3 italic">
-                  <Lock className="h-4 w-4 text-primary" /> Security Pattern
+                  <Lock className="h-4 w-4 text-primary" /> Password
                 </Label>
-                <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors p-0 h-auto italic">Forgotten Pattern?</Button>
+                <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors p-0 h-auto italic">Forgot Password?</Button>
               </div>
               <Input
                 id="password"
@@ -208,7 +208,7 @@ export default function Login() {
               disabled={loading}
             >
               <span className="relative z-10 flex items-center justify-center gap-4">
-                {loading ? 'CALIBRATING LINK...' : 'ESTABLISH NEURAL UPLINK'}
+                {loading ? 'LOGGING IN...' : 'LOGIN'}
                 <ChevronRight className="h-5 w-5 group-hover/btn:translate-x-2 transition-transform" />
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -218,7 +218,7 @@ export default function Login() {
           <div className="space-y-10 pt-4">
             <div className="relative flex items-center justify-center">
               <div className="absolute w-full h-[1px] bg-slate-100" />
-              <span className="relative z-10 bg-white px-8 text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic">Initialize New Sequence</span>
+              <span className="relative z-10 bg-white px-8 text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic">Don't have an account?</span>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
@@ -246,10 +246,10 @@ export default function Login() {
             </div>
             <div className="flex items-center gap-3 text-primary relative z-10">
               <Terminal className="h-4 w-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest italic">Admin Override Access</span>
+              <span className="text-[10px] font-black uppercase tracking-widest italic">Demo Login Info</span>
             </div>
             <p className="text-[11px] font-bold leading-relaxed text-slate-400 italic relative z-10">
-              Use identity <span className="text-white">admin@placementos.com</span> with access pattern <span className="text-white">admin123</span> for global system-level authority.
+              Use email <span className="text-white">admin@placementos.com</span> with password <span className="text-white">admin123</span> for demo access.
             </p>
           </div>
         </div>

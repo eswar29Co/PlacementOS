@@ -47,7 +47,7 @@ export default function ProfessionalProfile() {
   const handleAddTech = () => {
     if (!newTech.trim()) return;
     if (techStack.includes(newTech.trim())) {
-      toast.error('Sector specialization already registered in matrix');
+      toast.error('This technology is already added');
       return;
     }
     setTechStack([...techStack, newTech.trim()]);
@@ -63,26 +63,26 @@ export default function ProfessionalProfile() {
       professionalService.updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      toast.success('Dossier synchronized with central node');
+      toast.success('Profile updated successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Synchronization failure in uplink');
+      toast.error(error.message || 'Failed to update profile');
     },
   });
 
   const handleSave = () => {
-    if (techStack.length === 0) return toast.error('Minimum one (1) specialization required for vetting');
-    if (yearsOfExperience < 0 || yearsOfExperience > 50) return toast.error('Invalid experience metric detect');
+    if (techStack.length === 0) return toast.error('Minimum one (1) skill required');
+    if (yearsOfExperience < 0 || yearsOfExperience > 50) return toast.error('Invalid experience value');
 
     updateProfileMutation.mutate({ techStack, yearsOfExperience, bio });
   };
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Expert Identity" subtitle="Fetching neural link data...">
+      <DashboardLayout title="My Profile" subtitle="Loading profile...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-xl shadow-2xl shadow-primary/20" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse">Establishing Nexus Connection...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse">Connecting...</p>
         </div>
       </DashboardLayout>
     );
@@ -97,8 +97,8 @@ export default function ProfessionalProfile() {
               <Info className="h-10 w-10 text-primary/40" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-black uppercase tracking-tighter">DATASET <span className="text-primary italic">VOID</span></h3>
-              <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Profile not found in central registry</p>
+              <h3 className="text-2xl font-black uppercase tracking-tighter">NO <span className="text-primary italic">DATA</span></h3>
+              <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Profile not found</p>
             </div>
           </Card>
         </div>
@@ -108,8 +108,8 @@ export default function ProfessionalProfile() {
 
   return (
     <DashboardLayout
-      title="Expert Identity"
-      subtitle="Operational hub for professional verification and skill synchronization"
+      title="My Profile"
+      subtitle="Manage your professional details, expertise, and interview stats"
     >
       <div className="max-w-[1400px] mx-auto space-y-12 pb-20 relative">
 
@@ -161,8 +161,8 @@ export default function ProfessionalProfile() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 w-full lg:w-auto">
-                  <ImpactMetric label="Protocol Sessions" value={professional.interviewsTaken} icon={Terminal} />
-                  <ImpactMetric label="Heuristic Rating" value={`${professional.rating.toFixed(1)}/5`} icon={Star} />
+                  <ImpactMetric label="Total Interviews" value={professional.interviewsTaken} icon={Terminal} />
+                  <ImpactMetric label="Expert Rating" value={`${professional.rating.toFixed(1)}/5`} icon={Star} />
                 </div>
 
               </div>
@@ -181,9 +181,9 @@ export default function ProfessionalProfile() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900">
-                      <BrainCircuit className="h-7 w-7 text-primary" /> Specialist Matrix
+                      <BrainCircuit className="h-7 w-7 text-primary" /> Expertise & Tech Stack
                     </CardTitle>
-                    <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Domains under expert jurisdiction</CardDescription>
+                    <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">The technologies and skills you specialize in</CardDescription>
                   </div>
                   <Command className="h-8 w-8 text-slate-200" />
                 </div>
@@ -191,7 +191,7 @@ export default function ProfessionalProfile() {
               <CardContent className="p-12 space-y-12">
                 <div className="space-y-5">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
-                    <Sparkles className="h-3 w-3 text-primary" /> Initialize New Talent Sector
+                    <Sparkles className="h-3 w-3 text-primary" /> Add New Technology
                   </Label>
                   <div className="flex gap-4">
                     <div className="relative flex-1 group">
@@ -215,7 +215,7 @@ export default function ProfessionalProfile() {
                     {techStack.length === 0 ? (
                       <div className="flex flex-col items-center justify-center w-full space-y-4 opacity-20">
                         <Network className="h-12 w-12 text-slate-400" />
-                        <p className="text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-400">Knowledge Graph Offline</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-400">No Skills Added</p>
                       </div>
                     ) : (
                       techStack.map((tech) => (
@@ -238,13 +238,13 @@ export default function ProfessionalProfile() {
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50/50">
                 <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900">
-                  <Fingerprint className="h-7 w-7 text-primary" /> Expert Narrative
+                  <Fingerprint className="h-7 w-7 text-primary" /> Professional Bio
                 </CardTitle>
-                <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Strategic briefing for student initiates</CardDescription>
+                <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">Your professional summary and advice for students</CardDescription>
               </CardHeader>
               <CardContent className="p-12 space-y-10">
                 <div className="space-y-5">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Industry Tenure (Deployment Years)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Years of Experience</Label>
                   <div className="relative w-48 group">
                     <Award className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
                     <Input
@@ -258,17 +258,17 @@ export default function ProfessionalProfile() {
                   </div>
                 </div>
                 <div className="space-y-5">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Dossier Briefing</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">About You</Label>
                   <div className="relative group">
                     <Textarea
-                      placeholder="Initialize professional trajectory briefing..."
+                      placeholder="Write a short bio about your professional journey..."
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={6}
                       className="rounded-[2.5rem] border-2 border-slate-200 p-12 font-bold text-lg focus-visible:ring-primary/20 bg-slate-50/50 placeholder:text-slate-300 shadow-none resize-none leading-relaxed text-slate-600"
                     />
                     <div className="absolute bottom-6 right-8 text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                      <Globe className="h-3 w-3" /> Visible to all nodes
+                      <Globe className="h-3 w-3" /> Publicly visible
                     </div>
                   </div>
                 </div>
@@ -284,16 +284,16 @@ export default function ProfessionalProfile() {
               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
               <CardHeader className="p-10 pb-4 border-b border-slate-100 bg-slate-50/30">
                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-3">
-                  <SecurityIcon className="h-4 w-4" /> Identity Ledger
+                  <SecurityIcon className="h-4 w-4" /> Account Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-8">
-                <LedgerItem label="Vanguard Level" value={professional.professionalRole || 'Senior Auditor'} />
-                <LedgerItem label="Access Token" value={professional.status?.toUpperCase()} valueColor="text-emerald-600" icon={Activity} />
-                <LedgerItem label="Active Missions" value={professional.activeInterviewCount} icon={Briefcase} />
+                <LedgerItem label="Role" value={professional.professionalRole || 'Expert Interviewer'} />
+                <LedgerItem label="System Status" value={professional.status?.toUpperCase()} valueColor="text-emerald-600" icon={Activity} />
+                <LedgerItem label="Pending Interviews" value={professional.activeInterviewCount} icon={Briefcase} />
                 <div className="pt-6 border-t border-slate-100">
                   <p className="text-[10px] font-medium text-slate-400 leading-relaxed italic">
-                    Core dataset is locked by System Overdrive. Contact Admin for identity recalibration.
+                    Your basic account details are managed by the admin. Please contact support for changes.
                   </p>
                 </div>
               </CardContent>
@@ -306,15 +306,15 @@ export default function ProfessionalProfile() {
                 <Zap className="absolute -right-8 -bottom-8 h-40 w-40 text-slate-50 group-hover/save:rotate-12 transition-transform duration-1000" />
                 <div className="space-y-8 relative z-10">
                   <div className="space-y-3">
-                    <h4 className="text-2xl font-black uppercase leading-tight italic text-slate-900">DATA SYNC</h4>
-                    <p className="text-slate-500 text-xs font-bold leading-relaxed">Ensure your specialization matrix is cached for neural candidate matching.</p>
+                    <h4 className="text-2xl font-black uppercase leading-tight italic text-slate-900">SAVE PROFILE</h4>
+                    <p className="text-slate-500 text-xs font-bold leading-relaxed">Keep your profile updated to match with the most relevant candidates.</p>
                   </div>
                   <Button
                     className="w-full h-16 rounded-2xl bg-primary text-white font-black text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 gap-4 group/btn uppercase tracking-widest transition-all"
                     onClick={handleSave}
                     disabled={updateProfileMutation.isPending}
                   >
-                    {updateProfileMutation.isPending ? 'UPLOADING...' : 'INITIALIZE SYNC'}
+                    {updateProfileMutation.isPending ? 'SAVING...' : 'SAVE CHANGES'}
                     <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
                   </Button>
                 </div>
@@ -326,10 +326,10 @@ export default function ProfessionalProfile() {
               <div className="space-y-6 relative z-10">
                 <div className="flex items-center gap-3 text-primary">
                   <CheckCircle2 className="h-5 w-5" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Protocol Integrity</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Pro Tip</span>
                 </div>
                 <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">
-                  As a verified node in the PlacementOS network, your narrative and matrix calibrations define the benchmark for student evaluation metrics.
+                  Keep your bio and skills updated to help students understand your expectations.
                 </p>
               </div>
             </div>

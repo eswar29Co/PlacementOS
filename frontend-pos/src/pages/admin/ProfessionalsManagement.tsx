@@ -79,7 +79,7 @@ export default function ProfessionalsManagement() {
       professionalService.updateProfessionalStatus(profId, { status: 'approved' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['professionals'] });
-      toast.success('Expert credential verified! Guild access granted.');
+      toast.success('Expert approved successfully!');
     },
     onError: (error: any) => toast.error(error.message || 'Verification failed'),
   });
@@ -89,7 +89,7 @@ export default function ProfessionalsManagement() {
       professionalService.updateProfessionalStatus(profId, { status: 'rejected' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['professionals'] });
-      toast.error('Registration declined. Identity purged.');
+      toast.error('Expert registration rejected.');
     },
     onError: (error: any) => toast.error(error.message || 'Rejection failed'),
   });
@@ -98,25 +98,25 @@ export default function ProfessionalsManagement() {
   const approvedCount = professionalsList.filter((p: any) => p.status === 'approved').length;
 
   const headerStats = [
-    { label: 'Global Experts', value: professionalsList.length, icon: Users, color: 'text-primary', bg: 'bg-primary/5' },
-    { label: 'Verified Guild', value: approvedCount, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
-    { label: 'Pending Audit', value: pendingCount, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50/5' },
-    { label: 'Guild Mastery', value: 'Lv. 8', icon: Award, color: 'text-blue-600', bg: 'bg-blue-50/5' },
+    { label: 'Total Experts', value: professionalsList.length, icon: Users, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Verified Experts', value: approvedCount, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
+    { label: 'Pending Reviews', value: pendingCount, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50/5' },
+    { label: 'Platform Rating', value: '4.8', icon: Award, color: 'text-blue-600', bg: 'bg-blue-50/5' },
   ];
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Expert Management" subtitle="Credential verification and performance tracking">
+      <DashboardLayout title="Expert Management" subtitle="Verify and track expert performance">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-6">
           <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-2xl shadow-2xl shadow-primary/20" />
-          <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.4em] text-[10px]">Authenticating Expert Guild...</p>
+          <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.4em] text-[10px]">Loading Experts...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Expert Management" subtitle="Credential verification and performance tracking for professional curators">
+    <DashboardLayout title="Expert Management" subtitle="Verify and manage industry experts on the platform">
       <div className="space-y-10 max-w-[1600px] mx-auto pb-20 relative">
 
         {/* Cinematic Backdrop */}
@@ -149,9 +149,9 @@ export default function ProfessionalsManagement() {
               <div className="space-y-2">
                 <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
                   <ShieldCheck className="h-8 w-8 text-primary" />
-                  Professional Registry
+                  Experts List
                 </CardTitle>
-                <CardDescription className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">Master override for industry specialists and interview curators</CardDescription>
+                <CardDescription className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">Verify and manage industry experts on the platform</CardDescription>
               </div>
               <div className="relative group">
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -169,11 +169,11 @@ export default function ProfessionalsManagement() {
               <Table>
                 <TableHeader className="bg-slate-50 h-20">
                   <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="px-12 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Expert Identity</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Operational Focus</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-center">Platform Impact</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Credential Status</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-right px-12">Audit Protocol</TableHead>
+                    <TableHead className="px-12 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Expert Name</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Role & Expertise</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-center">Performance</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-right px-12">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -184,7 +184,7 @@ export default function ProfessionalsManagement() {
                           <div className="h-24 w-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm">
                             <Award className="h-12 w-12 text-slate-200" />
                           </div>
-                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Expert Signatures Detected</p>
+                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Experts Found</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -234,7 +234,7 @@ export default function ProfessionalsManagement() {
                               </div>
                               <div className="flex items-center gap-6">
                                 <div className="text-center group-hover:scale-110 transition-transform">
-                                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1">MISSIONS</p>
+                                  <p className="text-[8px] font-black text-slate-400 uppercase mb-1">INTERVIEWS</p>
                                   <p className="text-sm font-black text-slate-800">{stats.total}</p>
                                 </div>
                                 <div className="text-center group-hover:scale-110 transition-transform">

@@ -46,7 +46,7 @@ export default function TakeAssessment() {
     mutationFn: (data: { applicationId: string; assessmentCode?: string; assessmentAnswers?: any[] }) =>
       applicationService.submitAssessment(data),
     onSuccess: () => {
-      toast.success('Simulation filed. Neural mapping locked.');
+      toast.success('Assessment submitted successfully.');
       navigate('/student/applications');
     },
     onError: (error: any) => {
@@ -56,14 +56,14 @@ export default function TakeAssessment() {
 
   useEffect(() => {
     if (application && !canTakeAssessment(application.status)) {
-      toast.error('Session expired or inactive');
+      toast.error('Assessment session expired or inactive');
       navigate('/student/applications');
     }
   }, [application]);
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [code, setCode] = useState('// Initialize solution protocol\n\nfunction solution(input) {\n  // Implement logic core\n}');
+  const [code, setCode] = useState('// Write your solution here\n\nfunction solution(input) {\n  // Your code here\n}');
   const [timeLeft, setTimeLeft] = useState(90 * 60);
   const [showSubmit, setShowSubmit] = useState(false);
   const [output, setOutput] = useState('');
@@ -93,14 +93,14 @@ export default function TakeAssessment() {
   };
 
   const runCode = () => {
-    setOutput('Neural testing initiated...\n\nPattern 01: COMPLIANT [✓]\nPattern 02: COMPLIANT [✓]\n\nAll calibration checks passed.');
-    toast.success('Simulation executed');
+    setOutput('Testing your code...\n\nTest Case 01: Passed [✓]\nTest Case 02: Passed [✓]\n\nAll tests passed.');
+    toast.success('Code executed successfully');
   };
 
   const handleSubmit = () => {
     if (!application) return;
     submitMutation.mutate({
-      applicationId: application._id || application.id,
+      applicationId: (application as any)._id || (application as any).id,
       assessmentCode: code,
       assessmentAnswers: Object.entries(answers).map(([qId, ans]) => ({
         questionId: qId,
@@ -113,7 +113,7 @@ export default function TakeAssessment() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center space-y-6">
         <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-2xl shadow-xl shadow-primary/20" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse italic">Establishing Secure Link...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse italic">Starting Assessment...</p>
       </div>
     );
   }
@@ -138,17 +138,17 @@ export default function TakeAssessment() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">NEURAL <span className="text-primary">SIMULATION</span></h1>
+              <h1 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">ONLINE <span className="text-primary">ASSESSMENT</span></h1>
               <div className="flex items-center gap-3">
                 <div className="h-1 w-8 bg-primary rounded-full" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] italic">NODE ACCESS: {applicationId?.slice(-8).toUpperCase()}</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] italic">ASSESSMENT ID: {applicationId?.slice(-8).toUpperCase()}</p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-12">
             <div className="hidden xl:flex flex-col items-end">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 italic">Calibration Progress</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 italic">Assessment Progress</p>
               <div className="flex items-center gap-3">
                 <span className="text-xs font-black text-slate-900">{Math.round(progress)}%</span>
                 <div className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
@@ -175,7 +175,7 @@ export default function TakeAssessment() {
               className="h-14 px-8 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-2xl uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-rose-600/20 group"
               onClick={() => setShowSubmit(true)}
             >
-              TERMINATE & FILE <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              FINISH & SUBMIT <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         </div>
@@ -193,13 +193,13 @@ export default function TakeAssessment() {
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">
-                  CURRENT SEQUENCE: <span className="text-slate-900">{isCodingQuestion ? 'NEURAL LOGIC CALIBRATION' : 'PATTERN RECOGNITION'}</span>
+                  CURRENT SECTION: <span className="text-slate-900">{isCodingQuestion ? 'CODING' : 'MCQ'}</span>
                 </p>
               </div>
             </div>
             <div className="px-6 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary italic">
-                SEGMENT <span className="text-slate-900 text-sm mx-1 not-italic">{currentQuestion + 1}</span> OF <span className="text-slate-400 text-sm ml-1 not-italic">{totalQuestions}</span>
+                QUESTION <span className="text-slate-900 text-sm mx-1 not-italic">{currentQuestion + 1}</span> OF <span className="text-slate-400 text-sm ml-1 not-italic">{totalQuestions}</span>
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function TakeAssessment() {
                           {mockCodingQuestions[0].title}
                         </CardTitle>
                         <div className="flex items-center gap-3">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Complexity Index</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Difficulty</span>
                           <Badge className="bg-amber-50 text-amber-600 border border-amber-200 font-black text-[9px] uppercase tracking-widest px-4 py-1.5 rounded-full shadow-none">
                             {mockCodingQuestions[0].difficulty}
                           </Badge>
@@ -289,7 +289,7 @@ export default function TakeAssessment() {
                         <div className="relative bg-slate-50 rounded-[2rem] p-10 font-mono text-[11px] border border-slate-100 space-y-4">
                           <div className="flex items-center gap-3 border-b border-slate-200 pb-4 mb-4">
                             <Fingerprint className="h-4 w-4 text-slate-400" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Test Case Pattern 0{i + 1}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Example Case 0{i + 1}</span>
                           </div>
                           <div className="flex gap-10">
                             <p className="flex-1"><span className="text-primary font-black uppercase tracking-widest mr-4">INPUT:</span> <span className="text-slate-700 font-black italic">{ex.input}</span></p>
@@ -307,7 +307,7 @@ export default function TakeAssessment() {
                 <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-[0.3em] flex items-center gap-4 italic text-[11px]">
-                      <Code2 className="h-6 w-6 text-primary" /> Logic Synthesis Workspace
+                      <Code2 className="h-6 w-6 text-primary" /> Code Editor
                     </CardTitle>
                     <div className="flex gap-2">
                       <div className="h-2 w-2 rounded-full bg-slate-200" />
@@ -333,7 +333,7 @@ export default function TakeAssessment() {
                         className="h-14 px-8 rounded-2xl bg-white border-slate-200 hover:bg-slate-50 text-slate-900 font-black text-[10px] uppercase tracking-widest gap-3 shadow-md"
                         onClick={runCode}
                       >
-                        <PlayCircle className="h-5 w-5 text-primary" /> EXECUTE PATTERN
+                        <PlayCircle className="h-5 w-5 text-primary" /> RUN CODE
                       </Button>
                     </div>
                   </div>
@@ -343,7 +343,7 @@ export default function TakeAssessment() {
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                           <Activity className="h-4 w-4 text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Simulation Output Log</span>
+                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Code Output</span>
                         </div>
                         <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
                       </div>
@@ -368,12 +368,12 @@ export default function TakeAssessment() {
             disabled={currentQuestion === 0}
             onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
           >
-            <ChevronLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" /> REVERT SEQUENCE
+            <ChevronLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" /> PREVIOUS
           </Button>
 
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-3 px-6 py-2 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 italic">
-              <ShieldCheck className="h-4 w-4 text-primary" /> End-to-End Encryption Active
+              <ShieldCheck className="h-4 w-4 text-primary" /> Secure Test Mode
             </div>
             <Button
               className="h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20 flex items-center gap-4 group/btn transition-all duration-300"
@@ -385,7 +385,7 @@ export default function TakeAssessment() {
                 }
               }}
             >
-              {currentQuestion === totalQuestions - 1 ? 'READY FOR FILING' : 'ADVANCE SEQUENCE'}
+              {currentQuestion === totalQuestions - 1 ? 'FINISH' : 'NEXT'}
               <ChevronRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
             </Button>
           </div>
@@ -403,22 +403,22 @@ export default function TakeAssessment() {
               </div>
             </div>
             <div className="space-y-2 text-center">
-              <AlertDialogTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">TERMINATE & FILE?</AlertDialogTitle>
-              <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Critical Protocol Interruption</p>
+              <AlertDialogTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">SUBMIT ASSESSMENT?</AlertDialogTitle>
+              <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Final Submission</p>
             </div>
             <AlertDialogDescription className="text-slate-400 font-bold text-base text-center leading-relaxed italic">
-              Initiating the filing sequence will permanently lock your neural patterns for this simulation. This action is <span className="text-slate-900 italic underline">IRREVERSIBLE</span> within the current deployment cycle.
+              Once you submit your assessment, you will not be able to change your answers. This action is <span className="text-slate-900 italic underline">IRREVERSIBLE</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col sm:flex-row gap-6 mt-12">
             <AlertDialogCancel className="h-16 flex-1 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer shadow-none">
-              ABORT SEQUENCE
+              BACK TO TEST
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSubmit}
               className="h-16 flex-1 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-600/20 transition-all cursor-pointer"
             >
-              CONFIRM FILING
+              CONFIRM SUBMIT
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

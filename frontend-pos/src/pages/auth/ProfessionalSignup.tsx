@@ -38,11 +38,11 @@ export default function ProfessionalSignup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Security pattern mismatch. Verification failed.');
+      toast.error('Passwords do not match. Please try again.');
       return;
     }
     if (techStack.length === 0) {
-      toast.error('Expertise matrix incomplete. Provide at least one competency.');
+      toast.error('Please add at least one skill or expertise.');
       return;
     }
     setLoading(true);
@@ -63,10 +63,10 @@ export default function ProfessionalSignup() {
       });
       if (response.success) {
         setSubmitted(true);
-        toast.success('Dossier archived. Pending admin validation.');
+        toast.success('Registration submitted! Waiting for admin approval.');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Registration sequence failure.');
+      toast.error(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -107,14 +107,14 @@ export default function ProfessionalSignup() {
 
             <div className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-tight">
-                DOSSIER <span className="text-emerald-500 italic">ARCHIVED</span>
+                REGISTRATION <span className="text-emerald-500 italic">SUBMITTED</span>
               </h2>
-              <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-xs italic">Awaiting System Admin Validation</p>
+              <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-xs italic">Awaiting Admin Approval</p>
             </div>
 
             <div className="max-w-md mx-auto">
               <p className="text-slate-500 font-bold text-lg leading-relaxed italic">
-                Strategic contribution recognized. Your credentials have been synchronized for manual verification. Access will be authorized upon successful calibration of your professional orb.
+                Thank you for joining our expert network. Your credentials have been submitted for manual verification. You will receive an email once your account is approved.
               </p>
             </div>
 
@@ -122,10 +122,10 @@ export default function ProfessionalSignup() {
               onClick={() => navigate('/login')}
               className="h-20 px-16 rounded-[2rem] bg-slate-900 hover:bg-black text-white font-black uppercase text-sm tracking-[0.2em] transition-all shadow-2xl active:scale-95 group"
             >
-              RETURN TO NEXUS PORTAL <ChevronRight className="h-5 w-5 ml-3 group-hover:translate-x-2 transition-transform" />
+              BACK TO LOGIN <ChevronRight className="h-5 w-5 ml-3 group-hover:translate-x-2 transition-transform" />
             </Button>
 
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 italic">Verification latency: 24-48 Business Cycles</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 italic">Approval time: 24-48 hours</p>
           </CardContent>
         </Card>
       </div>
@@ -147,7 +147,7 @@ export default function ProfessionalSignup() {
         {/* Presidential Header Section */}
         <div className="flex flex-col items-center gap-10 mb-16 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
           <Link to="/login" className="group flex items-center gap-3 px-8 py-3 rounded-full bg-white border border-slate-200 hover:border-indigo-600/30 hover:shadow-lg transition-all text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-            <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" /> Access Nexus Portal
+            <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" /> Back to Login
           </Link>
 
           <div className="flex flex-col items-center gap-6">
@@ -164,11 +164,11 @@ export default function ProfessionalSignup() {
 
             <div className="space-y-4">
               <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-tight text-slate-900">
-                EXPERT <span className="text-indigo-600 italic">ONBOARDING</span>
+                EXPERT <span className="text-indigo-600 italic">SIGN UP</span>
               </h1>
               <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs flex items-center justify-center gap-4 italic">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
-                SYNERGIZE WITH THE NEXT GENERATION OF TALENT
+                JOIN OUR NETWORK OF INDUSTRY PROFESSIONALS
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
               </p>
             </div>
@@ -181,7 +181,7 @@ export default function ProfessionalSignup() {
             <AlertTriangle className="h-6 w-6 text-amber-600" />
           </div>
           <p className="text-[11px] font-black uppercase tracking-widest text-amber-600 leading-relaxed italic">
-            Verification Protocol Alpha: Professional dossiers undergo high-fidelity manual screening (24-48h temporal latency).
+            Verification Notice: All professional profiles undergo manual review (usually within 24-48 hours).
           </p>
         </div>
 
@@ -203,14 +203,14 @@ export default function ProfessionalSignup() {
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Expert Identity</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Personal Manifestation Parameters</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Personal Details</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Basic Identity Information</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">FULL NAME IDENTIFIER</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Full Name</Label>
                     <Input
                       required
                       className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-100 focus:ring-indigo-600/20 px-8 font-bold text-base shadow-inner transition-all hover:bg-white placeholder:text-slate-200 text-slate-900"
@@ -221,7 +221,7 @@ export default function ProfessionalSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">PROFESSIONAL VECTOR (EMAIL)</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</Label>
                     <Input
                       type="email"
                       required
@@ -233,7 +233,7 @@ export default function ProfessionalSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">COMM LINK (PHONE)</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Phone Number</Label>
                     <Input
                       required
                       className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-100 focus:ring-indigo-600/20 px-8 font-bold text-base shadow-inner transition-all hover:bg-white placeholder:text-slate-200 text-slate-900"
@@ -245,7 +245,7 @@ export default function ProfessionalSignup() {
 
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">SECURITY PATTERN</Label>
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Password</Label>
                       <Input
                         type="password"
                         required
@@ -256,7 +256,7 @@ export default function ProfessionalSignup() {
                       />
                     </div>
                     <div className="space-y-4">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">VERIFY PATTERN</Label>
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Confirm Password</Label>
                       <Input
                         type="password"
                         required
@@ -277,14 +277,14 @@ export default function ProfessionalSignup() {
                     <Landmark className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Operational Zenith</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Industry Foundation Parameters</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Work Experience</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Current Role & History</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                   <div className="space-y-4 md:col-span-2">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">CURRENT ORBIT (COMPANY)</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Current Company</Label>
                     <Input
                       required
                       className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-indigo-600/20 px-8 font-bold text-base shadow-sm"
@@ -295,7 +295,7 @@ export default function ProfessionalSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">FUNCTIONAL DESIGNATION</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Designation</Label>
                     <Input
                       required
                       className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-indigo-600/20 px-8 font-bold text-base shadow-sm"
@@ -306,7 +306,7 @@ export default function ProfessionalSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">TENURE (YEARS)</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Years of Experience</Label>
                     <Input
                       type="number"
                       required
@@ -328,8 +328,8 @@ export default function ProfessionalSignup() {
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Expertise HUD</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Technical Competency Telemetry</p>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Skills & Expertise</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Technical Compentency Detail</p>
                       </div>
                     </div>
 
@@ -339,7 +339,7 @@ export default function ProfessionalSignup() {
                           <Plus className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                           <Input
                             className="h-16 pl-14 rounded-2xl bg-transparent border-none focus-visible:ring-0 font-bold text-base placeholder:text-slate-300"
-                            placeholder="INITIALIZE COMPETENCY (EX: ARCHITECTURE)"
+                            placeholder="Add Skill (e.g. React, Python)"
                             value={techInput}
                             onChange={(e) => setTechInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTech())}
@@ -364,7 +364,7 @@ export default function ProfessionalSignup() {
                         {techStack.length === 0 && (
                           <div className="flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-dashed border-slate-100 w-full justify-center">
                             <Monitor className="h-4 w-4 text-slate-200" />
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200 italic">Expertise Matrix Uninitialized. Define Mission Skills.</p>
+                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200 italic">No skills added yet.</p>
                           </div>
                         )}
                       </div>
@@ -377,7 +377,7 @@ export default function ProfessionalSignup() {
                     <div className="relative z-10 space-y-10">
                       <div className="space-y-5">
                         <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 italic">
-                          <Linkedin className="h-4 w-4 text-indigo-400" /> Executive Vector (LinkedIn)
+                          <Linkedin className="h-4 w-4 text-indigo-400" /> LinkedIn Profile
                         </Label>
                         <Input
                           required
@@ -394,10 +394,10 @@ export default function ProfessionalSignup() {
                         </div>
                         <div className="flex items-center gap-3 text-indigo-400">
                           <Award className="h-5 w-5" />
-                          <span className="text-[11px] font-black uppercase tracking-widest italic">Protocol Tip</span>
+                          <span className="text-[11px] font-black uppercase tracking-widest italic">Success Tip</span>
                         </div>
                         <p className="text-[10px] font-medium leading-relaxed italic text-slate-400 relative z-10">
-                          Verified expert profiles receive priority mission assignments. Ensure your professional orbit coordinates are synchronized for high-fidelity validation.
+                          Complete expert profiles receive more interview assignments. Make sure your LinkedIn profile is updated.
                         </p>
                       </div>
                     </div>
@@ -411,7 +411,7 @@ export default function ProfessionalSignup() {
                       <ShieldCheck className="h-6 w-6" />
                     </div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 max-w-sm leading-relaxed italic text-left">
-                      VALIDATION IMPLIES ACCEPTANCE OF THE <span className="text-slate-900 underline cursor-pointer hover:text-indigo-600 transition-colors">EXPERT CODE OF CONDUCT</span> AND THE <span className="text-slate-900 underline cursor-pointer hover:text-indigo-600 transition-colors">CONFIDENTIALITY PROTOCOL</span>.
+                      BY SIGNING UP, YOU AGREE TO OUR <span className="text-slate-900 underline cursor-pointer hover:text-indigo-600 transition-colors">CODE OF CONDUCT</span> AND <span className="text-slate-900 underline cursor-pointer hover:text-indigo-600 transition-colors">PRIVACY POLICY</span>.
                     </p>
                   </div>
 
@@ -421,7 +421,7 @@ export default function ProfessionalSignup() {
                     className="w-full md:w-auto h-20 px-16 rounded-[2rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-sm tracking-[0.2em] shadow-2xl shadow-indigo-600/30 group/btn transition-all active:scale-95"
                   >
                     <span className="flex items-center gap-4">
-                      {loading ? 'SYNCHRONIZING...' : 'SUBMIT FOR VALIDATION'}
+                      {loading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
                       <Rocket className="h-5 w-5 group-hover/btn:translate-x-2 group-hover/btn:-translate-y-2 transition-transform" />
                     </span>
                   </Button>
@@ -434,7 +434,7 @@ export default function ProfessionalSignup() {
         {/* Tactical Footer */}
         <div className="mt-16 text-center space-y-4">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic">
-            SECURE ARCHIVAL SYSTEM • SECTOR-LEVEL ENCRYPTION ACTIVE • PLACEMENT OS
+            SECURE REGISTRATION SYSTEM • PLACEMENT OS
           </p>
         </div>
       </div>

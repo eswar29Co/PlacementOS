@@ -38,21 +38,21 @@ export default function Profile() {
       const file = e.target.files[0];
       setResumeFile(file);
       setResumeName(file.name);
-      toast.success('Dossier selected: ' + file.name);
+      toast.success('File selected: ' + file.name);
     }
   };
 
   const handleATSAnalysis = async () => {
-    if (!resumeFile && !student?.resumeUrl) return toast.error('Dossier required for scan');
+    if (!resumeFile && !student?.resumeUrl) return toast.error('Resume required for scan');
     setAnalyzing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
     setAtsAnalysis(generateATSAnalysis(resumeFile?.name || 'resume.pdf'));
     setAnalyzing(false);
-    toast.success('Dossier synchronization complete!');
+    toast.success('Resume analysis complete!');
   };
 
   return (
-    <DashboardLayout title="Identity Dossier" subtitle="Strategic management of candidate telemetry and mission calibration">
+    <DashboardLayout title="My Profile" subtitle="Manage your personal information, skills, and resume">
       <div className="max-w-[1500px] mx-auto pb-20 space-y-12 relative">
 
         {/* Cinematic Background Decor */}
@@ -92,7 +92,7 @@ export default function Profile() {
                       </h2>
                       <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-[0.3em] inline-flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        VERIFIED CANDIDATE
+                        VERIFIED STUDENT
                       </Badge>
                     </div>
                     <div className="flex items-center justify-center lg:justify-start gap-3">
@@ -111,10 +111,10 @@ export default function Profile() {
 
                 <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col gap-4">
                   <Button className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 gap-3 group/btn uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95">
-                    <Save className="h-5 w-5 group-hover/btn:rotate-12 transition-transform" /> FLUSH CHANGES
+                    <Save className="h-5 w-5 group-hover/btn:rotate-12 transition-transform" /> SAVE CHANGES
                   </Button>
                   <Button variant="outline" className="h-16 px-10 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black gap-3 uppercase tracking-widest text-xs transition-all">
-                    <Globe className="h-5 w-5 opacity-50" /> PUBLIC IDENTITY
+                    <Globe className="h-5 w-5 opacity-50" /> VIEW AS PUBLIC
                   </Button>
                 </div>
               </div>
@@ -132,20 +132,20 @@ export default function Profile() {
                 <div className="flex items-center justify-between relative z-10">
                   <div className="space-y-2">
                     <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                      <Terminal className="h-8 w-8 text-primary" /> IDENTITY HUB
+                      <Terminal className="h-8 w-8 text-primary" /> PERSONAL INFORMATION
                     </CardTitle>
-                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">MAINTAIN YOUR CORE PERSONAL AND ACADEMIC PARAMETERS</CardDescription>
+                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">Manage your personal details and academic info</CardDescription>
                   </div>
                   <Cpu className="h-10 w-10 text-primary animate-pulse opacity-20" />
                 </div>
               </CardHeader>
               <CardContent className="p-12 space-y-12">
                 <div className="grid gap-12 md:grid-cols-2">
-                  <FormInput label="Full Identity" icon={User} defaultValue={student?.name} />
-                  <FormInput label="Communication Channel" icon={Mail} defaultValue={student?.email} readOnly />
-                  <FormInput label="Tactical Contact" icon={Phone} defaultValue={student?.phone || '1234567890'} />
+                  <FormInput label="Full Name" icon={User} defaultValue={student?.name} />
+                  <FormInput label="Email Address" icon={Mail} defaultValue={student?.email} readOnly />
+                  <FormInput label="Phone Number" icon={Phone} defaultValue={student?.phone || '1234567890'} />
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">SOCIAL ARCHITECTURE (LINKEDIN)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">PROFESSIONAL LINKS (LINKEDIN)</Label>
                     <div className="flex gap-4">
                       <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm group/link transition-all hover:bg-indigo-100/50">
                         <Linkedin className="h-6 w-6 text-indigo-600" />
@@ -157,7 +157,7 @@ export default function Profile() {
 
                 <div className="space-y-8 pt-10 border-t border-slate-100 relative">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">COMPETENCY MATRIX (ACTIVE SPECIALIZATIONS)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">SKILLS & EXPERTISE</Label>
                     <Sparkles className="h-5 w-5 text-primary opacity-30" />
                   </div>
                   <div className="flex flex-wrap gap-4 p-12 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 min-h-[160px] relative overflow-hidden group/matrix">
@@ -168,7 +168,7 @@ export default function Profile() {
                       </Badge>
                     ))}
                     <Button variant="ghost" className="h-14 px-8 rounded-2xl bg-primary/5 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all font-black uppercase text-[10px] tracking-[0.2em]">
-                      + SYNC NEW SPEC
+                      + ADD SKILL
                     </Button>
                   </div>
                 </div>
@@ -182,13 +182,13 @@ export default function Profile() {
                   <div className="absolute top-0 right-0 h-64 w-64 bg-primary/5 rounded-full blur-[100px] -z-10" />
                   <div className="space-y-8 relative z-10 text-center md:text-left">
                     <div className="space-y-2">
-                      <h3 className="text-4xl font-black uppercase italic tracking-tighter leading-none">PROFESSIONAL <span className="text-primary italic">PORTFOLIO</span></h3>
-                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">HYPER-DYNAMICS AGENTIC WEB PRESENCE</p>
+                      <h3 className="text-4xl font-black uppercase italic tracking-tighter leading-none">PORTFOLIO <span className="text-primary italic">WEBSITE</span></h3>
+                      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">YOUR PROFESSIONAL ONLINE PRESENCE</p>
                     </div>
                     <p className="text-slate-500 font-bold text-sm leading-relaxed max-w-sm italic">
-                      Instantiate your high-performance web presence using system telemetry to maximize recruiter visibility across the global grid.
+                      Create a professional portfolio website based on your profile and skills to help recruiters find you.
                     </p>
-                    <Button className="h-16 px-12 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-[0.2em] text-xs transition-all hover:scale-105">GENERATE WEB PRESENCE</Button>
+                    <Button className="h-16 px-12 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-[0.2em] text-xs transition-all hover:scale-105">CREATE PORTFOLIO</Button>
                   </div>
                   <div className="h-56 w-56 bg-slate-50 rounded-[3rem] flex items-center justify-center border border-slate-100 rotate-6 group-hover/portfolio:rotate-0 transition-all duration-700 shadow-sm">
                     <Fingerprint className="h-32 w-32 text-primary opacity-20 animate-pulse-slow" />
@@ -203,7 +203,7 @@ export default function Profile() {
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
                 <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                  <Briefcase className="h-6 w-6 text-primary" /> TACTICAL DOSSIER
+                  <Briefcase className="h-6 w-6 text-primary" /> RESUME & ANALYSIS
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-12 space-y-12">
@@ -213,7 +213,7 @@ export default function Profile() {
                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Upload className="h-14 w-14 text-slate-300 mx-auto mb-6 group-hover:scale-110 group-hover:text-primary transition-all duration-500" />
                     <p className="font-black text-[11px] uppercase tracking-[0.4em] text-slate-400 italic relative z-10 group-hover:text-slate-600">
-                      {resumeName ? `LOADED: ${resumeName}` : 'DEPLOY NEW DOSSIER'}
+                      {resumeName ? `LOADED: ${resumeName}` : 'UPLOAD RESUME'}
                     </p>
                   </label>
                 </div>
@@ -227,13 +227,13 @@ export default function Profile() {
                         onClick={handleATSAnalysis}
                         disabled={analyzing}
                       >
-                        <Zap className="h-5 w-5 fill-current" /> {analyzing ? 'SCANNING HUB...' : 'RUN COMPATIBILITY SCAN'}
+                        <Zap className="h-5 w-5 fill-current" /> {analyzing ? 'ANALYZING...' : 'RUN ATS SCORE CHECK'}
                       </Button>
                     </div>
                     {student?.resumeUrl && (
                       <Button variant="outline" className="w-full h-16 rounded-2xl border-slate-200 bg-white font-black gap-3 text-xs uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all" asChild>
                         <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-5 w-5" /> INITIAL DOSSIER
+                          <ExternalLink className="h-5 w-5" /> VIEW RESUME
                         </a>
                       </Button>
                     )}
@@ -245,8 +245,8 @@ export default function Profile() {
                     <div className="space-y-6">
                       <div className="flex justify-between items-end">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">COMPATIBILITY INDEX</p>
-                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic animate-pulse">Neural Synchronization Optimal</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">ATS SCORE</p>
+                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic animate-pulse">Resume Optimization Good</p>
                         </div>
                         <p className="text-5xl font-black text-primary italic leading-none">{atsAnalysis.atsScore}<span className="text-xs opacity-30 not-italic ml-1 font-bold">/100</span></p>
                       </div>
@@ -265,17 +265,17 @@ export default function Profile() {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group/metric">
                         <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-full blur-2xl" />
-                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">LEXICON SYNC</p>
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">MATCHING KEYWORDS</p>
                         <p className="text-3xl font-black text-slate-900 italic leading-none">{atsAnalysis.keywordMatches.length}</p>
                       </div>
                       <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group/metric">
                         <div className="absolute top-0 right-0 h-16 w-16 bg-blue-500/5 rounded-full blur-2xl" />
-                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">WORD QUANTUM</p>
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">WORD COUNT</p>
                         <p className="text-3xl font-black text-slate-900 italic leading-none">{atsAnalysis.readability.wordCount}</p>
                       </div>
                     </div>
 
-                    <Button variant="ghost" className="w-full rounded-2xl font-black text-[10px] uppercase text-primary hover:bg-primary/5 h-16 tracking-[0.4em] transition-all">VIEW DETAILED TELEMETRY <ChevronRight className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="ghost" className="w-full rounded-2xl font-black text-[10px] uppercase text-primary hover:bg-primary/5 h-16 tracking-[0.4em] transition-all">VIEW DETAILED REPORT <ChevronRight className="ml-2 h-4 w-4" /></Button>
                   </div>
                 )}
               </CardContent>
@@ -287,9 +287,9 @@ export default function Profile() {
                   <Activity className="h-8 w-8 text-amber-500" />
                 </div>
                 <div className="space-y-3">
-                  <h4 className="font-black text-[11px] uppercase tracking-[0.3em] text-amber-600 italic">SECURITY UPLINK ACTIVE</h4>
+                  <h4 className="font-black text-[11px] uppercase tracking-[0.3em] text-amber-600 italic">DATA PRIVACY</h4>
                   <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">
-                    Candidate telemetry encrypted via AES-256 tactical protocols. End-to-end synchronization verified.
+                    Your data is securely stored and protected. We use advanced encryption to keep your info safe.
                   </p>
                 </div>
               </div>

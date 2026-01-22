@@ -67,18 +67,18 @@ export default function JobsManagement() {
     mutationFn: (data: any) => jobService.createJob(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      toast.success('Simulation launched successfully!');
+      toast.success('Job posted successfully!');
       setIsCreateDialogOpen(false);
       resetForm();
     },
-    onError: (error: any) => toast.error(error.message || 'Simulation launch failed'),
+    onError: (error: any) => toast.error(error.message || 'Job posting failed'),
   });
 
   const updateJobMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => jobService.updateJob(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      toast.success('Simulation parameters updated');
+      toast.success('Job details updated');
       setIsEditDialogOpen(false);
       setEditingJob(null);
     },
@@ -89,9 +89,9 @@ export default function JobsManagement() {
     mutationFn: (id: string) => jobService.deleteJob(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      toast.success('Simulation decommissioned');
+      toast.success('Job removed successfully');
     },
-    onError: (error: any) => toast.error(error.message || 'Decommissioning failed'),
+    onError: (error: any) => toast.error(error.message || 'Removal failed'),
   });
 
   const resetForm = () => {
@@ -174,25 +174,25 @@ export default function JobsManagement() {
   const totalOffers = jobsList.reduce((sum: number, j: any) => sum + getJobStats(j._id || j.id).offers, 0);
 
   const headerStats = [
-    { label: 'Live Simulations', value: jobsList.length, icon: Rocket, color: 'text-primary', bg: 'bg-primary/5' },
-    { label: 'Active Opportunities', value: activeJobsCount, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50/5' },
-    { label: 'Total Engagement', value: totalApplications, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50/5' },
-    { label: 'Offers Processed', value: totalOffers, icon: Sparkles, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
+    { label: 'Total Jobs', value: jobsList.length, icon: Rocket, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Active Jobs', value: activeJobsCount, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50/5' },
+    { label: 'Total Applications', value: totalApplications, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50/5' },
+    { label: 'Offers Shared', value: totalOffers, icon: Sparkles, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
   ];
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Opportunity Control" subtitle="System overrides for job simulations">
+      <DashboardLayout title="Job Management" subtitle="Manage and track job postings">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-xl shadow-primary/20" />
-          <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.3em] text-[10px]">Synchronizing Orbital Hub...</p>
+          <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.3em] text-[10px]">Loading Jobs...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Opportunity Control" subtitle="Simulation architect and job pipeline management">
+    <DashboardLayout title="Job Management" subtitle="Create and manage job opportunities and track their pipeline">
       <div className="space-y-10 max-w-[1600px] mx-auto pb-20">
 
         {/* Header Stats */}
@@ -222,15 +222,15 @@ export default function JobsManagement() {
               <div className="space-y-2">
                 <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
                   <Target className="h-8 w-8 text-primary" />
-                  Simulation Architect
+                  Job Postings
                 </CardTitle>
-                <CardDescription className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">Design and deploy placement simulations across the neural network</CardDescription>
+                <CardDescription className="font-bold text-[10px] uppercase tracking-[0.2em] text-slate-400">Manage and track job opportunities across the platform</CardDescription>
               </div>
               <div className="flex items-center flex-wrap gap-6">
                 <div className="relative group">
                   <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                   <Input
-                    placeholder="Search simulations by role or firm..."
+                    placeholder="Search by role or company..."
                     className="pl-14 h-14 w-full md:w-[400px] bg-white border-slate-200 rounded-2xl shadow-sm font-bold text-slate-900 focus-visible:ring-primary/20 transition-all placeholder:text-slate-400"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -239,26 +239,26 @@ export default function JobsManagement() {
                 <Dialog open={isCreateDialogOpen} onOpenChange={(open) => { setIsCreateDialogOpen(open); if (!open) resetForm(); }}>
                   <DialogTrigger asChild>
                     <Button className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-2xl shadow-primary/20 gap-3 uppercase tracking-widest text-xs">
-                      <Plus className="h-6 w-6" /> Launch Simulation
+                      <Plus className="h-6 w-6" /> Add New Job
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl rounded-[3rem] p-0 overflow-hidden border border-slate-200 bg-white shadow-3xl">
                     <DialogHeader className="p-12 bg-primary text-white relative">
                       <div className="absolute top-0 right-0 h-40 w-40 bg-white/10 rounded-full blur-3xl" />
                       <div className="relative z-10">
-                        <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Architecture Blueprint</DialogTitle>
-                        <DialogDescription className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-2">Define parameters for the new placement scenario</DialogDescription>
+                        <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Job Details</DialogTitle>
+                        <DialogDescription className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-2">Fill in the parameters for the new job posting</DialogDescription>
                       </div>
                     </DialogHeader>
                     <div className="p-12 max-h-[75vh] overflow-y-auto space-y-10 custom-scrollbar">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <JobInputField label="Entity Name" icon={Building2} placeholder="Microsoft, Stripe, etc." value={formData.companyName} onChange={v => setFormData({ ...formData, companyName: v })} />
-                        <JobInputField label="Target Designation" icon={Target} placeholder="Lead Architect, SDE II, etc." value={formData.roleTitle} onChange={v => setFormData({ ...formData, roleTitle: v })} />
+                        <JobInputField label="Company Name" icon={Building2} placeholder="Microsoft, Stripe, etc." value={formData.companyName} onChange={v => setFormData({ ...formData, companyName: v })} />
+                        <JobInputField label="Job Title" icon={Target} placeholder="Software Engineer, Product Manager, etc." value={formData.roleTitle} onChange={v => setFormData({ ...formData, roleTitle: v })} />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <JobInputField label="CTC Compensation Range" icon={TrendingUp} placeholder="12-24 LPA" value={formData.ctcBand} onChange={v => setFormData({ ...formData, ctcBand: v })} />
                         <div className="space-y-4">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Location Window</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Location</Label>
                           <Select value={formData.locationType} onValueChange={v => setFormData({ ...formData, locationType: v as any })}>
                             <SelectTrigger className="rounded-2xl h-14 border-slate-200 bg-slate-50 shadow-sm font-bold text-slate-900">
                               <div className="flex items-center gap-3">
@@ -267,19 +267,19 @@ export default function JobsManagement() {
                               </div>
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-3xl text-slate-900">
-                              <SelectItem value="Onsite">Onsite Deployment</SelectItem>
-                              <SelectItem value="Hybrid">Hybrid Protocol</SelectItem>
-                              <SelectItem value="Remote">Remote Uplink</SelectItem>
+                              <SelectItem value="Onsite">Onsite</SelectItem>
+                              <SelectItem value="Hybrid">Hybrid</SelectItem>
+                              <SelectItem value="Remote">Remote</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Engagement Description</Label>
-                        <Textarea placeholder="Define the scope of interaction..." className="rounded-[2rem] border-slate-200 bg-slate-50 shadow-sm font-medium min-h-[140px] p-8 text-slate-900 focus-visible:ring-primary/20 placeholder:text-slate-300" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Job Description</Label>
+                        <Textarea placeholder="Enter job requirements and details..." className="rounded-[2rem] border-slate-200 bg-slate-50 shadow-sm font-medium min-h-[140px] p-8 text-slate-900 focus-visible:ring-primary/20 placeholder:text-slate-300" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                       </div>
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Technical Stack & Requirements (Comma separated)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Technical Stack & Skills (Comma separated)</Label>
                         <div className="relative group">
                           <Cpu className="absolute left-6 top-6 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                           <Textarea
@@ -295,13 +295,13 @@ export default function JobsManagement() {
                           <Sparkles className="h-6 w-6 text-primary" />
                         </div>
                         <p className="text-xs font-bold text-slate-400 leading-relaxed italic">
-                          System will automatically append standard selection protocols (AI Interview → Technical → HR) to this simulation.
+                          Standard selection process (AI Interview → Technical → HR) will be applied to this job.
                         </p>
                       </div>
                     </div>
                     <DialogFooter className="p-10 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                      <Button variant="ghost" className="font-black rounded-2xl h-14 px-8 text-slate-400 hover:bg-slate-100 uppercase text-[10px] tracking-widest" onClick={() => setIsCreateDialogOpen(false)}>Abort Architect</Button>
-                      <Button className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary/90 font-black shadow-lg shadow-primary/20 uppercase text-xs tracking-widest" onClick={handleCreateJob}>Activate Simulation</Button>
+                      <Button variant="ghost" className="font-black rounded-2xl h-14 px-8 text-slate-400 hover:bg-slate-100 uppercase text-[10px] tracking-widest" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                      <Button className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary/90 font-black shadow-lg shadow-primary/20 uppercase text-xs tracking-widest" onClick={handleCreateJob}>Post Job</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -313,10 +313,10 @@ export default function JobsManagement() {
               <Table>
                 <TableHeader className="bg-slate-50 h-16">
                   <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="px-10 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Simulation Spec</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-center">Neural Engagement</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Compensation / Uplink</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-right px-10">System Control</TableHead>
+                    <TableHead className="px-10 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Job Details</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-center">Applications</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Package / Location</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 text-right px-10">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -327,7 +327,7 @@ export default function JobsManagement() {
                           <div className="h-24 w-24 rounded-[2rem] bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm">
                             <Briefcase className="h-12 w-12 text-slate-200" />
                           </div>
-                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Active Simulations Detected</p>
+                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Jobs Found</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -383,7 +383,7 @@ export default function JobsManagement() {
                                   <MapPin className="h-3.5 w-3.5 text-primary" /> {job.locationType}
                                 </div>
                                 <div className="flex items-center gap-3 text-[10px] font-black text-rose-500 uppercase tracking-widest">
-                                  <Clock className="h-3.5 w-3.5" /> SECURE BY: {new Date(job.deadline).toLocaleDateString()}
+                                  <Clock className="h-3.5 w-3.5" /> DEADLINE: {new Date(job.deadline).toLocaleDateString()}
                                 </div>
                               </div>
                             </div>
@@ -400,7 +400,7 @@ export default function JobsManagement() {
                                 )}
                                 onClick={() => updateJobMutation.mutate({ id: job._id || job.id, data: { isActive: !job.isActive } })}
                               >
-                                {job.isActive ? "ACTIVE NODE" : "PAUSED"}
+                                {job.isActive ? "ACTIVE" : "PAUSED"}
                               </Button>
 
                               <Button
@@ -418,7 +418,7 @@ export default function JobsManagement() {
                                 className="h-12 w-12 text-rose-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-slate-100 shadow-sm"
                                 disabled={stats.total > 0}
                                 onClick={() => {
-                                  if (confirm('Confirm Decommission? This simulation will be purged.')) {
+                                  if (confirm('Are you sure you want to delete this job?')) {
                                     deleteJobMutation.mutate(job._id || job.id);
                                   }
                                 }}
@@ -445,8 +445,8 @@ export default function JobsManagement() {
             <div className="absolute top-0 right-0 h-40 w-40 bg-white/10 rounded-full blur-3xl" />
             <div className="relative z-10 flex items-center justify-between">
               <div className="space-y-1">
-                <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Parameter Override</DialogTitle>
-                <DialogDescription className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-2">Modify existing simulation constraints for {editingJob?.companyName}</DialogDescription>
+                <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Edit Job Posting</DialogTitle>
+                <DialogDescription className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-2">Update job details for {editingJob?.companyName}</DialogDescription>
               </div>
               <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
                 <Edit className="h-6 w-6 text-white" />
@@ -455,13 +455,13 @@ export default function JobsManagement() {
           </DialogHeader>
           <div className="p-12 max-h-[75vh] overflow-y-auto space-y-10 custom-scrollbar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <JobInputField label="Entity Name" icon={Building2} placeholder="Microsoft, Stripe, etc." value={formData.companyName} onChange={v => setFormData({ ...formData, companyName: v })} />
-              <JobInputField label="Target Designation" icon={Target} placeholder="Lead Architect, SDE II, etc." value={formData.roleTitle} onChange={v => setFormData({ ...formData, roleTitle: v })} />
+              <JobInputField label="Company Name" icon={Building2} placeholder="Microsoft, Stripe, etc." value={formData.companyName} onChange={v => setFormData({ ...formData, companyName: v })} />
+              <JobInputField label="Job Title" icon={Target} placeholder="Software Engineer, Product Manager, etc." value={formData.roleTitle} onChange={v => setFormData({ ...formData, roleTitle: v })} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <JobInputField label="CTC Compensation Range" icon={TrendingUp} placeholder="12-24 LPA" value={formData.ctcBand} onChange={v => setFormData({ ...formData, ctcBand: v })} />
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Location Window</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Location</Label>
                 <Select value={formData.locationType} onValueChange={v => setFormData({ ...formData, locationType: v as any })}>
                   <SelectTrigger className="rounded-2xl h-14 border-slate-200 bg-slate-50 shadow-sm font-bold text-slate-900">
                     <div className="flex items-center gap-3">
@@ -470,9 +470,9 @@ export default function JobsManagement() {
                     </div>
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-3xl text-slate-900">
-                    <SelectItem value="Onsite">Onsite Deployment</SelectItem>
-                    <SelectItem value="Hybrid">Hybrid Protocol</SelectItem>
-                    <SelectItem value="Remote">Remote Uplink</SelectItem>
+                    <SelectItem value="Onsite">Onsite</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                    <SelectItem value="Remote">Remote</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -499,13 +499,13 @@ export default function JobsManagement() {
             <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-6">
               <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0 mt-1" />
               <p className="text-xs font-bold text-slate-400 leading-relaxed italic">
-                Updating active simulation parameters may affect existing application neural maps. Use caution when modifying the base architecture of a live opportunity.
+                Updating active jobs may affect current applicants. Use caution when modifying live opportunities.
               </p>
             </div>
           </div>
           <DialogFooter className="p-10 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-            <Button variant="ghost" className="font-black rounded-2xl h-14 px-8 text-slate-400 hover:bg-slate-100 uppercase text-[10px] tracking-widest" onClick={() => setIsEditDialogOpen(false)}>Discard Overrides</Button>
-            <Button className="h-14 px-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-600/20 uppercase text-xs tracking-widest" onClick={handleUpdateJob}>Confirm Parameter Sync</Button>
+            <Button variant="ghost" className="font-black rounded-2xl h-14 px-8 text-slate-400 hover:bg-slate-100 uppercase text-[10px] tracking-widest" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button className="h-14 px-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-600/20 uppercase text-xs tracking-widest" onClick={handleUpdateJob}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -61,17 +61,17 @@ export default function ConductInterview() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application', appId] });
       queryClient.invalidateQueries({ queryKey: ['professional-applications'] });
-      toast.success('Evaluation finalized and synchronized');
+      toast.success('Evaluation submitted successfully');
       navigate('/professional/dashboard');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Finalization failure');
+      toast.error(error.message || 'Submission failed');
     },
   });
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Evaluation Console" subtitle="Initializing secure buffer...">
+      <DashboardLayout title="Interview Evaluation" subtitle="Loading interview data...">
         <div className="flex items-center justify-center h-[60vh]">
           <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
         </div>
@@ -81,12 +81,12 @@ export default function ConductInterview() {
 
   if (!application || !user) {
     return (
-      <DashboardLayout title="Evaluation Console" subtitle="Session Not Found">
+      <DashboardLayout title="Interview Evaluation" subtitle="Interview Not Found">
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-background/50 backdrop-blur-sm p-24 text-center space-y-6">
           <AlertTriangle className="h-12 w-12 text-rose-500 mx-auto" />
-          <p className="text-muted-foreground font-black text-xs uppercase tracking-widest leading-none">Evaluation node missing or inactive</p>
+          <p className="text-muted-foreground font-black text-xs uppercase tracking-widest leading-none">The interview you are looking for is not available.</p>
           <Button onClick={() => navigate('/professional/dashboard')} variant="outline" className="rounded-2xl h-12 px-8 font-black border-2 uppercase text-xs tracking-widest">
-            Return to Hub
+            Back to Dashboard
           </Button>
         </Card>
       </DashboardLayout>
@@ -103,8 +103,8 @@ export default function ConductInterview() {
   };
 
   const handleSubmit = () => {
-    if (!comments.trim()) return toast.error('Full intelligence briefing required');
-    if (recommendation === 'Fail' && improvementAreas.length === 0) return toast.error('Specify critical failure sectors');
+    if (!comments.trim()) return toast.error('Please provide evaluation feedback');
+    if (recommendation === 'Fail' && improvementAreas.length === 0) return toast.error('Please specify areas of improvement');
 
     let round: 'professional' | 'manager' | 'hr' = 'professional';
     if (application.status.includes('manager')) round = 'manager';
@@ -128,7 +128,7 @@ export default function ConductInterview() {
 
   return (
     <DashboardLayout
-      title="Evaluation Console"
+      title="Interview Evaluation"
       subtitle={`Conducting ${getRoundTitle()} for ${student?.name || 'Candidate'}`}
     >
       <div className="max-w-[1400px] mx-auto space-y-10 pb-12">
@@ -137,15 +137,15 @@ export default function ConductInterview() {
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
               <Monitor className="h-10 w-10 text-primary" />
-              Active Evaluation
+              Interview Progress
             </h1>
-            <p className="text-muted-foreground font-black text-[10px] uppercase tracking-[0.4em] ml-14">Sector: {job?.roleTitle}</p>
+            <p className="text-muted-foreground font-black text-[10px] uppercase tracking-[0.4em] ml-14">Role: {job?.roleTitle}</p>
           </div>
 
           <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-3xl border border-muted/50">
             <div className="text-right">
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Simulation Load</p>
-              <p className="text-xs font-black uppercase text-rose-500 animate-pulse">Live Recording Active</p>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Interview Status</p>
+              <p className="text-xs font-black uppercase text-rose-500">Live Feedback Active</p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
               <Activity className="h-6 w-6 text-rose-500" />
@@ -161,9 +161,9 @@ export default function ConductInterview() {
             <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-background/50 backdrop-blur-xl border border-muted group">
               <CardHeader className="p-10 pb-4 border-b bg-muted/20">
                 <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-4">
-                  <Fingerprint className="h-6 w-6 text-primary" /> Candidate Intelligence Dossier
+                  <Fingerprint className="h-6 w-6 text-primary" /> Candidate Profile
                 </CardTitle>
-                <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground/60">Review patterns before finalizing calibration</CardDescription>
+                <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground/60">Review student details before feedback</CardDescription>
               </CardHeader>
               <CardContent className="p-10">
                 <div className="flex flex-col md:flex-row gap-10">
@@ -172,21 +172,21 @@ export default function ConductInterview() {
                   </div>
                   <div className="flex-1 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      <DossierItem label="Identity" value={student?.name || 'N/A'} icon={User} />
-                      <DossierItem label="Mission Node" value={job?.roleTitle || 'N/A'} icon={Briefcase} />
-                      <DossierItem label="Alma Mater" value={student?.college || 'N/A'} icon={Building2} />
-                      <DossierItem label="GPA Metric" value={student?.cgpa || 'N/A'} icon={Activity} />
-                      <DossierItem label="Target Org" value={job?.companyName || 'N/A'} icon={Building2} />
+                      <DossierItem label="Student Name" value={student?.name || 'N/A'} icon={User} />
+                      <DossierItem label="Applied Job" value={job?.roleTitle || 'N/A'} icon={Briefcase} />
+                      <DossierItem label="College" value={student?.college || 'N/A'} icon={Building2} />
+                      <DossierItem label="CGPA" value={student?.cgpa || 'N/A'} icon={Activity} />
+                      <DossierItem label="Company" value={job?.companyName || 'N/A'} icon={Building2} />
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Skill Matrix</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Skills</Label>
                       <div className="flex flex-wrap gap-2">
                         {student?.skills?.map((skill: string) => (
                           <Badge key={skill} className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase py-1 px-3 rounded-lg">
                             {skill}
                           </Badge>
-                        )) || <p className="text-xs text-muted-foreground italic">No specialized patterns detected.</p>}
+                        )) || <p className="text-xs text-muted-foreground italic">No skills listed.</p>}
                       </div>
                     </div>
 
@@ -194,7 +194,7 @@ export default function ConductInterview() {
                       <div className="pt-4 border-t border-muted">
                         <Button variant="outline" size="lg" className="h-14 rounded-2xl border-2 font-black text-xs uppercase tracking-widest gap-2 hover:bg-muted" asChild>
                           <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
-                            Access Primary Resume <FileText className="h-4 w-4" />
+                            View Resume <FileText className="h-4 w-4" />
                           </a>
                         </Button>
                       </div>
@@ -208,16 +208,16 @@ export default function ConductInterview() {
             <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-background/50 backdrop-blur-xl border border-muted ring-1 ring-primary/5">
               <CardHeader className="p-10 pb-4 border-b bg-muted/20">
                 <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-4">
-                  <BrainCircuit className="h-6 w-6 text-primary" /> Heuristic Calibration
+                  <BrainCircuit className="h-6 w-6 text-primary" /> Evaluation Feedback
                 </CardTitle>
-                <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground/60">Provide high-fidelity assessment metrics</CardDescription>
+                <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground/60">Provide detailed assessment of the candidate</CardDescription>
               </CardHeader>
               <CardContent className="p-10 space-y-10">
 
                 {/* Rating Slider */}
                 <div className="space-y-6">
                   <Label className="flex items-center justify-between ml-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Calibration Scale</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rating Scale</span>
                     <span className="text-xl font-black text-primary uppercase">{rating}.0 / 5.0</span>
                   </Label>
                   <div className="px-2">
@@ -230,8 +230,8 @@ export default function ConductInterview() {
                       className="w-full"
                     />
                     <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mt-3 italic">
-                      <span>Fragmented Aptitude</span>
-                      <span>Exceptional Capability</span>
+                      <span>Needs Improvement</span>
+                      <span>Excellent</span>
                     </div>
                   </div>
                 </div>
@@ -248,9 +248,9 @@ export default function ConductInterview() {
                       <Label htmlFor="pass" className="flex-1 cursor-pointer space-y-1">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-emerald-600" />
-                          <span className="font-black text-sm uppercase tracking-tight">Advance Tier</span>
+                          <span className="font-black text-sm uppercase tracking-tight">Pass Candidate</span>
                         </div>
-                        <p className="text-[9px] font-bold text-muted-foreground leading-relaxed uppercase opacity-60">Candidate fulfills neural requirements for next node.</p>
+                        <p className="text-[9px] font-bold text-muted-foreground leading-relaxed uppercase opacity-60">Candidate is qualified for the next round.</p>
                       </Label>
                     </div>
 
@@ -262,9 +262,9 @@ export default function ConductInterview() {
                       <Label htmlFor="fail" className="flex-1 cursor-pointer space-y-1">
                         <div className="flex items-center gap-2">
                           <XCircle className="h-4 w-4 text-rose-600" />
-                          <span className="font-black text-sm uppercase tracking-tight">Terminate Path</span>
+                          <span className="font-black text-sm uppercase tracking-tight">Reject Candidate</span>
                         </div>
-                        <p className="text-[9px] font-bold text-muted-foreground leading-relaxed uppercase opacity-60">Candidate patterns incompatible with target mission.</p>
+                        <p className="text-[9px] font-bold text-muted-foreground leading-relaxed uppercase opacity-60">Candidate does not meet the requirements.</p>
                       </Label>
                     </div>
                   </RadioGroup>
@@ -275,7 +275,7 @@ export default function ConductInterview() {
                   "space-y-6 overflow-hidden transition-all duration-500",
                   recommendation === 'Fail' ? "max-h-[500px] opacity-100 pb-4" : "max-h-0 opacity-0 pointer-events-none"
                 )}>
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-rose-500 ml-1">Critical Failure Sectors</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-rose-500 ml-1">Areas for Improvement</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {improvementOptions.map((area) => (
                       <div key={area} className={cn(
@@ -296,17 +296,17 @@ export default function ConductInterview() {
 
                 {/* Detailed Briefing */}
                 <div className="space-y-4">
-                  <Label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Full Intelligence Briefing</Label>
+                  <Label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Detailed Feedback</Label>
                   <Textarea
                     id="comments"
-                    placeholder="Initialize comprehensive evaluation briefing..."
+                    placeholder="Enter your detailed feedback here..."
                     value={comments}
                     onChange={(e) => setComments(e.target.value)}
                     rows={8}
                     className="rounded-[2.5rem] border-2 p-10 font-bold text-base focus-visible:ring-primary/20 bg-muted/10 border-muted placeholder:text-muted-foreground/30 shadow-inner resize-none leading-relaxed"
                   />
                   <p className="text-[9px] font-black uppercase text-muted-foreground/40 text-center tracking-widest italic flex items-center justify-center gap-2">
-                    <MessageSquare className="h-3 w-3" /> Constructive feedback architecture required for audit.
+                    <MessageSquare className="h-3 w-3" /> Please provide clear and constructive comments.
                   </p>
                 </div>
 
@@ -321,8 +321,8 @@ export default function ConductInterview() {
               <ShieldCheck className="absolute -right-6 -top-6 h-32 w-32 opacity-10 group-hover:scale-110 transition-transform duration-1000" />
               <div className="relative z-10 space-y-10">
                 <div className="space-y-4">
-                  <h4 className="text-2xl font-black uppercase leading-tight italic">Finalize Calibration</h4>
-                  <p className="text-white/70 text-xs font-medium leading-relaxed">By finalizing, you formally archive this evaluation to the global talent ledger. This operation is irreversible.</p>
+                  <h4 className="text-2xl font-black uppercase leading-tight italic">Submit Evaluation</h4>
+                  <p className="text-white/70 text-xs font-medium leading-relaxed">By submitting, you formally save this evaluation. This action cannot be undone.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -334,7 +334,7 @@ export default function ConductInterview() {
                     onClick={handleSubmit}
                     disabled={submitFeedbackMutation.isPending}
                   >
-                    {submitFeedbackMutation.isPending ? 'FILING...' : recommendation === 'Pass' ? 'Confirm Advancement' : 'Confirm Rejection'}
+                    {submitFeedbackMutation.isPending ? 'SUBMITTING...' : recommendation === 'Pass' ? 'Confirm Pass' : 'Confirm Rejection'}
                     <ArrowRight className="h-6 w-6 group-hover/btn:translate-x-1 transition-transform" />
                   </Button>
 
@@ -343,13 +343,13 @@ export default function ConductInterview() {
                     onClick={() => navigate('/professional/dashboard')}
                     className="w-full text-white/50 hover:text-white hover:bg-white/5 font-black uppercase text-[10px] tracking-widest h-14 rounded-2xl"
                   >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> Abort Session
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Cancel
                   </Button>
                 </div>
 
                 <div className="flex items-center gap-3 bg-white/5 p-4 rounded-3xl border border-white/5">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Secure Auditor Verification: ACTIVE</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Secure Verification Active</p>
                 </div>
               </div>
             </Card>
@@ -358,7 +358,7 @@ export default function ConductInterview() {
             {application.interviewFeedback && application.interviewFeedback.length > 0 && (
               <Card className="border-none shadow-xl rounded-[2.5rem] bg-background/50 backdrop-blur-sm p-8 border space-y-6">
                 <h4 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-primary" /> Multi-Round Insight
+                  <Zap className="h-4 w-4 text-primary" /> Past Rounds
                 </h4>
                 <div className="space-y-6">
                   {application.interviewFeedback.map((f: any, idx: number) => (
@@ -377,9 +377,9 @@ export default function ConductInterview() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-background/50 backdrop-blur-sm p-8 border space-y-6">
               <div className="flex items-center gap-3">
                 <Info className="h-4 w-4 text-primary" />
-                <h4 className="font-black text-[10px] uppercase tracking-widest">Procedural Info</h4>
+                <h4 className="font-black text-[10px] uppercase tracking-widest">Help & Info</h4>
               </div>
-              <p className="text-[10px] font-medium text-muted-foreground/60 leading-relaxed">Candidate metrics will be updated immediately post-finalization. AI Calibration will re-scan patterns based on your briefing.</p>
+              <p className="text-[10px] font-medium text-muted-foreground/60 leading-relaxed">Student details will be updated immediately after submission. Please ensure all feedback is accurate.</p>
             </Card>
 
           </div>

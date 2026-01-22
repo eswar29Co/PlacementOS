@@ -43,11 +43,11 @@ export default function StudentSignup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Security pattern mismatch. Verification failed.');
+      toast.error('Passwords do not match. Please try again.');
       return;
     }
     if (skills.length === 0) {
-      toast.error('Skill matrix incomplete. Provide at least one competency.');
+      toast.error('Please add at least one skill.');
       return;
     }
     setLoading(true);
@@ -69,11 +69,11 @@ export default function StudentSignup() {
       });
       if (response.success) {
         dispatch(login(response.data.user));
-        toast.success('Identity Verified. Welcome to the Collective.');
+        toast.success('Registration successful! Welcome.');
         navigate('/student/home');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Registration sequence failure.');
+      toast.error(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function StudentSignup() {
         {/* Cinematic Header Section */}
         <div className="flex flex-col items-center gap-10 mb-20 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
           <Link to="/login" className="group flex items-center gap-3 px-8 py-3 rounded-full bg-white border border-slate-200 hover:border-primary/30 hover:shadow-lg transition-all text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-            <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" /> Access Nexus Portal
+            <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-1 transition-transform" /> Back to Login
           </Link>
 
           <div className="flex flex-col items-center gap-6">
@@ -126,11 +126,11 @@ export default function StudentSignup() {
 
             <div className="space-y-3">
               <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-tight text-slate-900">
-                STUDENT <span className="text-primary">INITIATE</span>
+                STUDENT <span className="text-primary">SIGN UP</span>
               </h1>
               <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs flex items-center justify-center gap-3 italic">
                 <div className="h-1 w-12 bg-primary/20 rounded-full" />
-                ESTABLISH UNIQUE PROFESSIONAL COORDINATES
+                START YOUR PROFESSIONAL JOURNEY WITH US
                 <div className="h-1 w-12 bg-primary/20 rounded-full" />
               </p>
             </div>
@@ -155,15 +155,15 @@ export default function StudentSignup() {
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Core Identity</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Personal Manifestation Parameters</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Personal Details</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Basic Identity Information</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-4">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2 flex items-center gap-2">
-                      IDENTIFIER NAME
+                      Full Name
                     </Label>
                     <Input
                       required
@@ -176,7 +176,7 @@ export default function StudentSignup() {
 
                   <div className="space-y-4">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2 flex items-center gap-2">
-                      IDENTITY VECTOR (EMAIL)
+                      Email Address
                     </Label>
                     <Input
                       type="email"
@@ -189,7 +189,7 @@ export default function StudentSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">COMM LINK (PHONE)</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Phone Number</Label>
                     <Input
                       required
                       className="h-16 rounded-[1.5rem] bg-slate-50 border-slate-100 focus:ring-primary/20 px-8 font-bold text-base shadow-inner transition-all hover:bg-white placeholder:text-slate-200 text-slate-900"
@@ -201,7 +201,7 @@ export default function StudentSignup() {
 
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">SECURITY PATTERN</Label>
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Password</Label>
                       <Input
                         type="password"
                         required
@@ -212,7 +212,7 @@ export default function StudentSignup() {
                       />
                     </div>
                     <div className="space-y-4">
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">VERIFY PATTERN</Label>
+                      <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Confirm Password</Label>
                       <Input
                         type="password"
                         required
@@ -233,14 +233,14 @@ export default function StudentSignup() {
                     <School className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Academic Nexus</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Institutional Foundation Parameters</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Education Details</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">University & Graduation Information</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                   <div className="space-y-4 md:col-span-2">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">INCUBATIONAL HUB (COLLEGE)</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">College / University Name</Label>
                     <Input
                       required
                       className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-primary/20 px-8 font-bold text-base shadow-sm"
@@ -251,7 +251,7 @@ export default function StudentSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">ATTAINMENT LEVEL</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Degree Name</Label>
                     <Select value={formData.degree} onValueChange={(v) => updateField('degree', v)}>
                       <SelectTrigger className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-primary/20 text-slate-700 font-bold text-base px-8 shadow-sm">
                         <SelectValue placeholder="Select Degree" />
@@ -265,7 +265,7 @@ export default function StudentSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">SPECIALIZATION BRANCH</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Branch / Major</Label>
                     <Input
                       className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-primary/20 px-8 font-bold text-base shadow-sm"
                       placeholder="Ex: Neural Systems"
@@ -276,7 +276,7 @@ export default function StudentSignup() {
 
                   <div className="space-y-4">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2 flex items-center gap-2">
-                      <BrainCircuit className="h-3.5 w-3.5 text-primary" /> COGNITIVE INDEX (CGPA)
+                      <BrainCircuit className="h-3.5 w-3.5 text-primary" /> CGPA
                     </Label>
                     <Input
                       type="number" step="0.01" min="0" max="10"
@@ -289,7 +289,7 @@ export default function StudentSignup() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">DEPLOYMENT YEAR</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Graduation Year</Label>
                     <Select value={formData.graduationYear} onValueChange={(v) => updateField('graduationYear', v)}>
                       <SelectTrigger className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-primary/20 text-slate-700 font-bold text-base px-8 shadow-sm">
                         <SelectValue placeholder="Graduation" />
@@ -313,8 +313,8 @@ export default function StudentSignup() {
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Competency Matrix</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Active Skill Telemetry</p>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Skills & Interests</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Technical & Professional Skills</p>
                       </div>
                     </div>
 
@@ -349,7 +349,7 @@ export default function StudentSignup() {
                         {skills.length === 0 && (
                           <div className="flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-dashed border-slate-100 w-full justify-center">
                             <Monitor className="h-4 w-4 text-slate-200" />
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200 italic">Matrix Empty. Decrypt and upload skills.</p>
+                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200 italic">No skills added yet.</p>
                           </div>
                         )}
                       </div>
@@ -362,7 +362,7 @@ export default function StudentSignup() {
                     <div className="relative z-10 space-y-10">
                       <div className="space-y-5">
                         <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 italic">
-                          <Linkedin className="h-4 w-4 text-primary" /> LinkedIn Vector
+                          <Linkedin className="h-4 w-4 text-primary" /> LinkedIn Profile
                         </Label>
                         <Input
                           className="h-14 rounded-2xl bg-white/5 border-white/10 text-sm font-bold placeholder:text-white/20 px-6 focus:ring-primary/40 text-white"
@@ -374,7 +374,7 @@ export default function StudentSignup() {
 
                       <div className="space-y-5">
                         <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 italic">
-                          <Github className="h-4 w-4 text-primary" /> GitHub Vector
+                          <Github className="h-4 w-4 text-primary" /> GitHub Profile
                         </Label>
                         <Input
                           className="h-14 rounded-2xl bg-white/5 border-white/10 text-sm font-bold placeholder:text-white/20 px-6 focus:ring-primary/40 text-white"
@@ -387,10 +387,10 @@ export default function StudentSignup() {
                       <div className="p-6 bg-white/5 rounded-2xl border border-white/10 space-y-4">
                         <div className="flex items-center gap-3 text-primary">
                           <ShieldCheck className="h-5 w-5" />
-                          <span className="text-[11px] font-black uppercase tracking-widest italic">Encrypted Sink</span>
+                          <span className="text-[11px] font-black uppercase tracking-widest italic">Secure Storage</span>
                         </div>
                         <p className="text-[10px] font-medium leading-relaxed italic text-slate-400">
-                          Your profile vectors are hashed and stored in our secure neural vault. Verified institutional access only.
+                          Your data is stored securely and only shared with verified employers during your applications.
                         </p>
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export default function StudentSignup() {
                       <ShieldCheck className="h-6 w-6" />
                     </div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 max-w-sm leading-relaxed italic">
-                      BY INITIALIZING, YOU SYNC WITH THE <span className="text-slate-900 underline cursor-pointer hover:text-primary transition-colors">SECURITY PROTOCOL</span> AND DEPLOY THE <span className="text-slate-900 underline cursor-pointer hover:text-primary transition-colors">PRIVACY UPLINK</span> GUIDELINES.
+                      BY SIGNING UP, YOU AGREE TO OUR <span className="text-slate-900 underline cursor-pointer hover:text-primary transition-colors">SECURITY POLICY</span> AND <span className="text-slate-900 underline cursor-pointer hover:text-primary transition-colors">PRIVACY TERMS</span>.
                     </p>
                   </div>
 
@@ -414,7 +414,7 @@ export default function StudentSignup() {
                     className="w-full md:w-auto h-20 px-16 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-black uppercase text-sm tracking-[0.2em] shadow-2xl shadow-primary/30 group/btn transition-all active:scale-95"
                   >
                     <span className="flex items-center gap-4">
-                      {loading ? 'CALIBRATING...' : 'INITIALIZE MISSION'}
+                      {loading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
                       <Rocket className="h-5 w-5 group-hover/btn:translate-x-2 group-hover/btn:-translate-y-1 transition-transform" />
                     </span>
                   </Button>
@@ -427,7 +427,7 @@ export default function StudentSignup() {
         {/* Tactical Footer */}
         <div className="mt-16 text-center space-y-4 animate-in fade-in duration-1000 delay-500">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic">
-            END-TO-END NEURAL PROTECTION ACTIVE • PLACEMENT OS v4.0
+            SECURE REGISTRATION SYSTEM ACTIVE • PLACEMENT OS
           </p>
         </div>
       </div>

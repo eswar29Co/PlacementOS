@@ -190,9 +190,9 @@ export default function AdminDashboard() {
 
   const stats = [
     { label: 'Active Students', value: students.length, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Certified Experts', value: approvedProfessionals.length, icon: UserCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: 'Live Opportunities', value: jobs.filter((j: any) => j.isActive).length, icon: Briefcase, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'Pending Validations', value: pendingProfessionals.length, icon: ShieldCheck, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+    { label: 'Verified Experts', value: approvedProfessionals.length, icon: UserCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Live Jobs', value: jobs.filter((j: any) => j.isActive).length, icon: Briefcase, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Pending Reviews', value: pendingProfessionals.length, icon: ShieldCheck, color: 'text-rose-500', bg: 'bg-rose-500/10' },
   ];
 
   const handleApproveProfessional = async (professionalId: string) => {
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
   const getJobById = (id: string) => (jobs as any[]).find(j => (j._id || j.id) === id);
 
   return (
-    <DashboardLayout title="Control Center" subtitle="Master override for platform operations and validations">
+    <DashboardLayout title="Dashboard" subtitle="Global management of platform operations and reviews">
       <div className="space-y-8 max-w-[1600px] mx-auto pb-12 relative">
 
         {/* Animated Background Decor */}
@@ -258,10 +258,10 @@ export default function AdminDashboard() {
         {/* Hero Welcome */}
         <div className="relative overflow-hidden rounded-[3rem] bg-slate-50 border border-slate-200 px-12 py-12 text-slate-900 shadow-sm">
           <div className="relative z-10 space-y-4">
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Control <span className="text-primary italic">Nexus</span></h1>
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Admin <span className="text-primary italic">Dashboard</span></h1>
             <p className="max-w-xl text-slate-500 font-bold uppercase tracking-widest text-[10px] leading-relaxed">
-              Active Validation Streams: {pendingProfessionals.length + resumeReviewApps.length + assessmentReviewApps.length} pending.
-              System Integrity: <span className="text-primary">Optimized</span>.
+              Applications to review: {resumeReviewApps.length + assessmentReviewApps.length} pending.
+              System Status: <span className="text-primary">Healthy</span>.
             </p>
             <div className="flex gap-4 pt-6">
               <Button className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white" onClick={() => setActiveTab('professionals')}>
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
                 { value: 'professionals', label: 'EXPERTS', count: pendingProfessionals.length, icon: UserCheck },
                 { value: 'resumes', label: 'RESUMES', count: resumeReviewApps.length, icon: FileText },
                 { value: 'assessments', label: 'ASSESSMENTS', count: assessmentReviewApps.length, icon: Zap },
-                { value: 'ai-interviews', label: 'AI ROUNDS', count: aiInterviewReviewApps.length, icon: MessageSquare },
+                { value: 'ai-interviews', label: 'AI INTERVIEWS', count: aiInterviewReviewApps.length, icon: MessageSquare },
                 { value: 'technical-rounds', label: 'INTERVIEWS', count: activeInterviewApps.length, icon: Target },
                 { value: 'offers', label: 'OFFERS', count: offerReadyApps.length, icon: Award },
                 { value: 'overview', label: 'VITALS', icon: Activity },
@@ -329,7 +329,7 @@ export default function AdminDashboard() {
           <TabsContent value="professionals" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {pendingProfessionals.length === 0 ? (
-                <EmptyState icon={UserCheck} title="All Experts Verified" description="No new signatures awaiting validation in the registry." />
+                <EmptyState icon={UserCheck} title="No Pending Approvals" description="You have no new expert registrations to review at this moment." />
               ) : (
                 pendingProfessionals.map((prof: any) => (
                   <Card key={(prof._id || prof.id)} className="overflow-hidden border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500">
@@ -345,16 +345,16 @@ export default function AdminDashboard() {
                           <CardDescription className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest text-slate-400"><Clock className="h-3 w-3" /> REGISTERED TODAY</CardDescription>
                         </div>
                       </div>
-                      <Badge className="bg-primary/10 text-primary border border-primary/20 px-4 py-1 font-black uppercase text-[8px] tracking-[0.2em]">PENDING AUDIT</Badge>
+                      <Badge className="bg-primary/10 text-primary border border-primary/20 px-4 py-1 font-black uppercase text-[8px] tracking-[0.2em]">PENDING REVIEW</Badge>
                     </CardHeader>
                     <CardContent className="p-10 space-y-8">
                       <div className="grid grid-cols-2 gap-8">
                         <div className="space-y-2">
                           <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Company & Experience</span>
-                          <p className="text-sm font-black text-slate-700 italic uppercase">{prof.company} • {prof.yearsOfExperience}Y EXPERTISE</p>
+                          <p className="text-sm font-black text-slate-700 italic uppercase">{prof.company} • {prof.yearsOfExperience}Y Experience</p>
                         </div>
                         <div className="space-y-2">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Competency Stack</span>
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Skills</span>
                           <div className="flex flex-wrap gap-2">
                             {prof.techStack?.slice(0, 3).map((tech: string) => <Badge key={tech} className="bg-slate-100 text-slate-600 text-[9px] py-1 px-3 border border-slate-200 font-black uppercase tracking-widest">{tech}</Badge>)}
                           </div>
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                             onValueChange={(value) => setProfessionalRoles({ ...professionalRoles, [prof._id || prof.id]: value })}
                           >
                             <SelectTrigger className="rounded-2xl h-14 border-slate-200 bg-slate-50 font-black text-[10px] uppercase tracking-widest text-slate-600">
-                              <SelectValue placeholder="IDENTIFY CURATOR ROLE..." />
+                              <SelectValue placeholder="SELECT ROLE..." />
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-xl">
                               <SelectItem value="Technical" className="font-bold text-[10px] uppercase">Technical Expert</SelectItem>
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex gap-3">
                           <Button className="rounded-2xl h-14 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black uppercase text-[10px] tracking-widest text-white" onClick={() => handleApproveProfessional(prof._id || prof.id)}>
-                            AUTHORIZE
+                            APPROVE
                           </Button>
                           <Button variant="ghost" className="rounded-2xl h-14 w-14 p-0 text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100 transition-all" onClick={() => handleRejectProfessional(prof._id || prof.id)}>
                             <XCircle className="h-6 w-6" />
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
           <TabsContent value="resumes" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {resumeReviewApps.length === 0 ? (
-                <EmptyState icon={FileText} title="Screening Balanced" description="No candidate dossiers awaiting manual bypass." />
+                <EmptyState icon={FileText} title="No Pending Resumes" description="All candidate resumes have been reviewed." />
               ) : (
                 resumeReviewApps.map((app: any) => {
                   const student = getStudentById(app.studentId);
@@ -424,13 +424,13 @@ export default function AdminDashboard() {
                             )}>
                               {atsScore}%
                             </div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Compatibility Index</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">ATS Score</p>
                           </div>
                         </div>
 
                         <div className="bg-white/5 rounded-3xl p-6 border border-white/5 relative overflow-hidden group/target">
                           <div className="absolute top-0 right-0 h-20 w-20 bg-primary/5 rounded-full blur-[40px] -z-10" />
-                          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3">Target Mission</p>
+                          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3">Applied Job</p>
                           <div className="flex items-center justify-between">
                             <p className="font-black text-sm text-slate-300 italic uppercase">{job?.companyName} — {job?.roleTitle}</p>
                             <Badge className="bg-primary/20 text-primary border border-primary/30 text-[8px] font-black uppercase tracking-widest px-2">HIGH INTENT</Badge>
@@ -439,8 +439,8 @@ export default function AdminDashboard() {
 
                         <div className="space-y-3 px-2">
                           <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            <span>Neural Alignment</span>
-                            <span className={cn(atsScore >= 75 ? "text-emerald-500" : "text-primary")}>{atsScore >= 75 ? 'OPTIMAL' : 'VALIDATED'}</span>
+                            <span>Matching Status</span>
+                            <span className={cn(atsScore >= 75 ? "text-emerald-500" : "text-primary")}>{atsScore >= 75 ? 'Excellent' : 'Good'}</span>
                           </div>
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200 shadow-inner">
                             <div className={cn(
@@ -452,11 +452,11 @@ export default function AdminDashboard() {
 
                         <div className="flex gap-4 pt-4">
                           <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveResume(app._id || app.id)}>
-                            AUTHORIZE ADMISSION
+                            APPROVE RESUME
                           </Button>
                           {app.resumeUrl && (
                             <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest" asChild>
-                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">DOSSIER</a>
+                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">VIEW RESUME</a>
                             </Button>
                           )}
                           <Button variant="ghost" className="h-14 w-14 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100" onClick={() => handleRejectResume(app._id || app.id)}>
@@ -475,7 +475,7 @@ export default function AdminDashboard() {
           <TabsContent value="assessments" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
             <div className="grid grid-cols-1 gap-10">
               {assessmentReviewApps.length === 0 ? (
-                <EmptyState icon={Zap} title="Evaluations Normalized" description="All technical assessments successfully synchronized." />
+                <EmptyState icon={Zap} title="No Pending Assessments" description="All student technical assessments have been reviewed." />
               ) : (
                 assessmentReviewApps.map((app: any) => (
                   <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden flex flex-col md:flex-row bg-white border group">
@@ -491,23 +491,23 @@ export default function AdminDashboard() {
                       </div>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-10">
                         <MetricBlock label="Active Time" value="24M 12S" />
-                        <MetricBlock label="Simulation Score" value="88 / 100" color="text-primary" />
-                        <MetricBlock label="Uplink Timestamp" value="TODAY, 10:45 AM" />
-                        <MetricBlock label="Neural Integrity" value="HIGH" color="text-emerald-500" />
+                        <MetricBlock label="Assessment Score" value="88 / 100" color="text-primary" />
+                        <MetricBlock label="Submitted At" value="TODAY, 10:45 AM" />
+                        <MetricBlock label="Integrity" value="PASSED" color="text-emerald-500" />
                       </div>
                       <div className="flex gap-4 pt-6">
-                        <Button className="rounded-2xl h-14 px-12 bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveAssessment(app._id || app.id)}>AUTHORIZE ADVANCEMENT</Button>
-                        <Button variant="ghost" className="rounded-2xl h-14 px-8 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-slate-100 font-black uppercase text-[10px] tracking-widest" onClick={() => handleRejectAssessment(app._id || app.id)}>DECLINE PASS</Button>
+                        <Button className="rounded-2xl h-14 px-12 bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveAssessment(app._id || app.id)}>APPROVE ASSESSMENT</Button>
+                        <Button variant="ghost" className="rounded-2xl h-14 px-8 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-slate-100 font-black uppercase text-[10px] tracking-widest" onClick={() => handleRejectAssessment(app._id || app.id)}>REJECT ASSESSMENT</Button>
                       </div>
                     </div>
                     <div className="bg-slate-50 w-full md:w-1/3 p-12 border-l border-slate-100 relative group/code overflow-hidden">
                       <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover/code:scale-150 transition-transform duration-1000" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-3"> <Terminal className="h-4 w-4" /> CODE TELEMETRY</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-3"> <Terminal className="h-4 w-4" /> CODE PREVIEW</p>
                       <div className="bg-white rounded-3xl p-6 border border-slate-200 font-mono text-[11px] overflow-hidden h-[200px] relative shadow-sm">
                         <pre className="text-slate-600 opacity-80 leading-relaxed italic">{app.assessmentCode || '// SECURE DATA STREAM EMPTY'}</pre>
                         <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
                       </div>
-                      <Button variant="ghost" className="w-full mt-6 h-12 rounded-2xl hover:bg-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest transition-all">DECRYPT FULL SOURCE <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" className="w-full mt-6 h-12 rounded-2xl hover:bg-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest transition-all">VIEW FULL CODE <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
                     </div>
                   </Card>
                 ))
@@ -519,7 +519,7 @@ export default function AdminDashboard() {
           <TabsContent value="ai-interviews" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {aiInterviewReviewApps.length === 0 ? (
-                <EmptyState icon={MessageSquare} title="AI Nodes Synchronized" description="No behavioral telemetry awaiting curator review." />
+                <EmptyState icon={MessageSquare} title="No Pending AI Interviews" description="All candidate AI interviews have been processed." />
               ) : (
                 aiInterviewReviewApps.map((app: any) => (
                   <Card key={app._id || app.id} className="border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500 overflow-hidden">
@@ -531,7 +531,7 @@ export default function AdminDashboard() {
                           </div>
                           <div className="space-y-1">
                             <h4 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">NEURAL BEHAVIORAL LOGS</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">AI INTERVIEW LOGS</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -540,14 +540,14 @@ export default function AdminDashboard() {
                       </div>
                       <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group/feedback">
                         <div className="absolute -right-4 -top-4 h-20 w-20 bg-purple-50 rounded-full blur-[40px]" />
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">SYSTEM EVALUATION SUMMARY</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">AI FEEDBACK SUMMARY</p>
                         <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic relative z-10">
                           "Candidate demonstrated high linguistic fluidity and adaptive reasoning. Recommended for specialist technical deep-dive protocols..."
                         </p>
                       </div>
                       <div className="flex gap-4 pt-2">
                         <Button className="flex-1 h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-purple-600/20" onClick={() => handleProgressAfterAIInterview(app._id || app.id)}>
-                          INITIATE EXPERT ROUND
+                          APPROVE & ASSIGN EXPERT
                         </Button>
                         <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white text-slate-700 font-black uppercase text-[10px] tracking-widest">TRANSCRIPT</Button>
                       </div>
@@ -562,7 +562,7 @@ export default function AdminDashboard() {
           <TabsContent value="technical-rounds" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {activeInterviewApps.length === 0 ? (
-                <EmptyState icon={Target} title="No Active Missions" description="All tactical rounds successfully executed or de-initialized." />
+                <EmptyState icon={Target} title="No Active Interviews" description="All interviews have been processed or are completed." />
               ) : (
                 activeInterviewApps.map((app: any) => {
                   const student = getStudentById(app.studentId);
@@ -589,7 +589,7 @@ export default function AdminDashboard() {
                           )}>
                             <span className="flex items-center gap-2">
                               <div className={cn("h-1.5 w-1.5 rounded-full", isScheduled ? "bg-emerald-500" : "bg-amber-500")} />
-                              {isScheduled ? 'PROTOCOL SET' : 'AWAITING UPLINK'}
+                              {isScheduled ? 'SCHEDULED' : 'NOT SCHEDULED'}
                             </span>
                           </Badge>
                         </div>
@@ -597,12 +597,12 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-2 gap-6">
                           <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2 relative overflow-hidden group/round">
                             <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-full blur-[30px]" />
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Operational Phase</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Interview Round</p>
                             <p className="text-sm font-black uppercase text-primary italic leading-none">{currentStage}</p>
                           </div>
                           <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2 text-right relative overflow-hidden group/expert">
                             <div className="absolute top-0 left-0 h-16 w-16 bg-indigo-500/5 rounded-full blur-[30px]" />
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Assigned Curator</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Assigned Expert</p>
                             <p className="text-sm font-black uppercase text-slate-600 italic truncate leading-none">
                               {app.timeline?.find((t: any) => t.notes?.includes('Assigned'))?.notes?.split('to ')[1]?.split(' for')[0] || 'UNASSIGNED'}
                             </p>
@@ -615,10 +615,10 @@ export default function AdminDashboard() {
                               <CalendarIcon className="h-4.5 w-4.5" />
                             </div>
                             <span className="text-[10px] font-black text-slate-400 group-hover/cal:text-slate-600 transition-colors uppercase tracking-widest italic">
-                              {app.scheduledDate ? format(new Date(app.scheduledDate), 'PPP p') : 'STANDBY MODE'}
+                              {app.scheduledDate ? format(new Date(app.scheduledDate), 'PPP p') : 'PENDING SCHEDULE'}
                             </span>
                           </div>
-                          <Button variant="ghost" className="h-12 rounded-2xl hover:bg-slate-50 text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] transition-all">VIEW FULL DOSSIER <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" className="h-12 rounded-2xl hover:bg-slate-50 text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] transition-all">VIEW PROFILE <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {offerReadyApps.length === 0 ? (
                 <div className="lg:col-span-3">
-                  <EmptyState icon={Award} title="Deployment Readiness Nil" description="All recruitment mission objectives currently fulfilled." />
+                  <EmptyState icon={Award} title="No Pending Offers" description="There are no students currently ready for offer letter release." />
                 </div>
               ) : (
                 offerReadyApps.map((app: any) => {
@@ -654,7 +654,7 @@ export default function AdminDashboard() {
                       </CardHeader>
                       <CardContent className="space-y-8 p-10 pt-0">
                         <div className="flex flex-col items-center gap-2">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-60">CERTIFIED POSITION</span>
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-60">OFFER FOR POSITION</span>
                           <p className="font-black text-base text-center leading-tight uppercase italic text-slate-700">{job?.roleTitle}</p>
                         </div>
                         <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 flex justify-around shadow-inner">
@@ -669,7 +669,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <Button className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 shadow-sm font-black uppercase text-[11px] tracking-[0.3em] transition-all group-hover:translate-y-[-4px] text-white" onClick={() => handleReleaseOffer(app._id || app.id)}>
-                          RELEASE ADMITTANCE LETTER
+                          RELEASE OFFER LETTER
                         </Button>
                       </CardContent>
                     </Card>
@@ -687,17 +687,17 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
                       <Cpu className="h-8 w-8 text-primary" />
-                      Operational Pipeline
+                      Application Pipeline
                     </CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Real-time candidate throughput across nodes</CardDescription>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Real-time candidate progress across all rounds</CardDescription>
                   </div>
                   <AppWindow className="h-10 w-10 text-primary opacity-10" />
                 </CardHeader>
                 <CardContent className="p-12 space-y-10">
-                  <PipelineProgress label="Dossier Validation" count={resumeReviewApps.length} color="bg-primary" total={applications.length} />
-                  <PipelineProgress label="Simulation Sync" count={assessmentReviewApps.length} color="bg-blue-500" total={applications.length} />
-                  <PipelineProgress label="Behavioral Audit" count={aiInterviewReviewApps.length} color="bg-purple-500" total={applications.length} />
-                  <PipelineProgress label="Deployment Ready" count={offerReadyApps.length} color="bg-emerald-500" total={applications.length} />
+                  <PipelineProgress label="Resume Screening" count={resumeReviewApps.length} color="bg-primary" total={applications.length} />
+                  <PipelineProgress label="Assessments" count={assessmentReviewApps.length} color="bg-blue-500" total={applications.length} />
+                  <PipelineProgress label="AI Interviews" count={aiInterviewReviewApps.length} color="bg-purple-500" total={applications.length} />
+                  <PipelineProgress label="Ready for Offers" count={offerReadyApps.length} color="bg-emerald-500" total={applications.length} />
                 </CardContent>
               </Card>
 
@@ -707,9 +707,9 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
                       <MousePointer2 className="h-8 w-8 text-emerald-500" />
-                      Success Velocity
+                      Platform Success
                     </CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Predictive indicators and current conversion dynamics</CardDescription>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Overview of successful placements and candidate status</CardDescription>
                   </div>
                   <TrendingUp className="h-10 w-10 text-emerald-500 opacity-10" />
                 </CardHeader>
@@ -725,12 +725,12 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h4 className="font-black text-2xl uppercase tracking-tighter italic text-slate-900 leading-tight">Placement <span className="text-emerald-500">Velocity</span></h4>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed italic">PROBABILITY OF SUCCESSFUL DEPLOYMENT ACROSS THE CURRENT POOL.</p>
+                      <h4 className="font-black text-2xl uppercase tracking-tighter italic text-slate-900 leading-tight">Placement <span className="text-emerald-500">Rate</span></h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed italic">PERCENTAGE OF CANDIDATES WHO HAVE SUCCESSFULLY RECEIVED OFFERS.</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-8">
-                    <DetailedMetric label="Avg Simulation" value="82%" sub="STABLE" color="primary" />
+                    <DetailedMetric label="Avg Assessment" value="82%" sub="STABLE" color="primary" />
                     <DetailedMetric label="Expert Approval" value="68%" sub="OPTIMIZING" color="emerald" />
                   </div>
                 </CardContent>
@@ -744,8 +744,8 @@ export default function AdminDashboard() {
         <DialogContent className="max-w-5xl rounded-[3rem] p-0 overflow-hidden border border-slate-200 bg-white shadow-2xl outline-none">
           <DialogHeader className="p-12 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
             <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px]" />
-            <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-slate-900">Curator <span className="text-primary">Allocation</span></DialogTitle>
-            <DialogDescription className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em] mt-3">Assign a senior industry operative to execute the technical validation sequence.</DialogDescription>
+            <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-slate-900">Assign <span className="text-primary">Expert</span></DialogTitle>
+            <DialogDescription className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em] mt-3">Assign an industry professional to conduct the technical interview round.</DialogDescription>
           </DialogHeader>
 
           <div className="p-12">
@@ -753,11 +753,11 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow className="border-slate-100 hover:bg-transparent">
-                    <TableHead className="px-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Expert Identity</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Operational Node</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Expertise Level</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Engagement Load</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16 text-right px-10">Protocol</TableHead>
+                    <TableHead className="px-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Expert Name</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Company</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Role</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16">Current Load</TableHead>
+                    <TableHead className="font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 h-16 text-right px-10">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -766,7 +766,7 @@ export default function AdminDashboard() {
                       <TableCell colSpan={5} className="text-center py-24">
                         <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700 opacity-20">
                           <Users className="h-16 w-16" />
-                          <p className="font-black text-xl uppercase italic">No Available Operatives</p>
+                          <p className="font-black text-xl uppercase italic">No Available Professionals</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -793,7 +793,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell className="text-right px-10">
                           <Button className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[9px] uppercase tracking-[0.2em] transition-all" onClick={() => handleAssignProfessional(prof._id || prof.id)}>
-                            ALLOCATE
+                            ASSIGN
                           </Button>
                         </TableCell>
                       </TableRow>

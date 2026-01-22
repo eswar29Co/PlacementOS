@@ -44,10 +44,10 @@ export default function Interviews() {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Command Center" subtitle="Accessing evaluation protocols...">
+      <DashboardLayout title="Interviews" subtitle="Loading interviews...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
-          <p className="font-black text-muted-foreground animate-pulse uppercase tracking-widest text-[10px]">Synchronizing Neural Records...</p>
+          <p className="font-black text-muted-foreground animate-pulse uppercase tracking-widest text-[10px]">Fetching your records...</p>
         </div>
       </DashboardLayout>
     );
@@ -56,14 +56,14 @@ export default function Interviews() {
   const conversionRate = myApplications.length > 0 ? Math.round((completed.length / myApplications.length) * 100) : 0;
 
   return (
-    <DashboardLayout title="Command Center" subtitle="Direct access to live evaluations and tactical feedback archives">
+    <DashboardLayout title="Interviews" subtitle="Manage your upcoming interviews and view past feedback">
       <div className="space-y-10 max-w-[1400px] mx-auto pb-12">
 
         {/* Global Evaluation Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard title="Active Operations" value={scheduled.length} icon={Zap} color="text-primary" bg="bg-primary/5" gradient="from-primary/5 to-blue-50/5" />
-          <MetricCard title="Tactical Archive" value={completed.length} icon={ShieldCheck} color="text-emerald-600" bg="bg-emerald-50/5" gradient="from-emerald-50/5 to-teal-50/5" />
-          <MetricCard title="Success Index" value={`${conversionRate}%`} icon={BarChart3} color="text-indigo-600" bg="bg-indigo-50/5" gradient="from-indigo-50/5 to-indigo-100/5" />
+          <MetricCard title="Upcoming" value={scheduled.length} icon={Zap} color="text-primary" bg="bg-primary/5" gradient="from-primary/5 to-blue-50/5" />
+          <MetricCard title="Completed" value={completed.length} icon={ShieldCheck} color="text-emerald-600" bg="bg-emerald-50/5" gradient="from-emerald-50/5 to-teal-50/5" />
+          <MetricCard title="Completion Rate" value={`${conversionRate}%`} icon={BarChart3} color="text-indigo-600" bg="bg-indigo-50/5" gradient="from-indigo-50/5 to-indigo-100/5" />
         </div>
 
         <div className="space-y-6">
@@ -71,9 +71,9 @@ export default function Interviews() {
             <div className="space-y-1">
               <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-slate-900">
                 <Network className="h-6 w-6 text-primary" />
-                Operational Hub
+                Interview Management
               </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Manage your live deployments and finalized dossiers</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Track your active interviews and past results</p>
             </div>
           </div>
 
@@ -81,21 +81,21 @@ export default function Interviews() {
             <div className="flex items-center justify-between p-2 bg-slate-50/50 rounded-[2rem] border border-slate-200 overflow-x-auto no-scrollbar">
               <TabsList className="bg-transparent h-auto p-0 flex gap-2">
                 <TabsTrigger value="scheduled" className="rounded-2xl px-8 py-3.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-black text-xs uppercase tracking-widest flex items-center gap-3 text-slate-400">
-                  <Monitor className="h-4 w-4 text-primary" /> Live Deployments
+                  <Monitor className="h-4 w-4 text-primary" /> Upcoming Interviews
                 </TabsTrigger>
                 <TabsTrigger value="completed" className="rounded-2xl px-8 py-3.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 font-black text-xs uppercase tracking-widest flex items-center gap-3 text-slate-400">
-                  <Star className="h-4 w-4 text-emerald-500" /> Finalized Dossiers
+                  <Star className="h-4 w-4 text-emerald-500" /> Past Interviews
                 </TabsTrigger>
               </TabsList>
               <div className="px-6 hidden lg:block">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/50">Command Interface Active</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/50">Interview Management System</p>
               </div>
             </div>
 
             <TabsContent value="scheduled" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {scheduled.length === 0 ? (
-                  <EmptyState icon={Video} title="Zone Quiet" description="No scheduled evaluations detected in the proximal window." />
+                  <EmptyState icon={Video} title="No Interviews" description="You have no upcoming interviews scheduled." />
                 ) : (
                   scheduled.map((app: any) => (
                     <InterviewCard
@@ -111,7 +111,7 @@ export default function Interviews() {
             <TabsContent value="completed" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {completed.length === 0 ? (
-                  <EmptyState icon={Star} title="Archive Empty" description="Historical evaluation data will appear here once missions are finalized." />
+                  <EmptyState icon={Star} title="No History" description="Your past interview results will appear here." />
                 ) : (
                   completed.map((app: any) => (
                     <InterviewCard
@@ -166,11 +166,11 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
               </div>
               <div className="space-y-1">
                 <Badge variant="secondary" className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase py-0.5 px-3 border border-slate-100 rounded-md shadow-none">
-                  {isAI ? 'Neural Simulation' : 'Expert Evaluation'}
+                  {isAI ? 'AI Interview' : 'Expert Interview'}
                 </Badge>
-                <h4 className="font-black text-2xl leading-tight uppercase tracking-tighter text-slate-900">{job?.roleTitle || 'Tactical Role'}</h4>
+                <h4 className="font-black text-2xl leading-tight uppercase tracking-tighter text-slate-900">{job?.roleTitle || 'Job Role'}</h4>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Building2 className="h-3.5 w-3.5 text-primary/50" /> {job?.companyName || 'Lead Organization'}
+                  <Building2 className="h-3.5 w-3.5 text-primary/50" /> {job?.companyName || 'Company'}
                 </p>
               </div>
             </div>
@@ -192,7 +192,7 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-50">Finalized Assessment</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-50">Interview Result</p>
                     <div className="flex gap-1 pt-1">
                       {[1, 2, 3, 4, 5].map(star => (
                         <Star
@@ -206,16 +206,16 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-black text-emerald-600 tracking-tighter">{isAI ? `${app.aiInterviewScore || 0}%` : `LVL ${app.rating || 0}`}</p>
+                    <p className="text-2xl font-black text-emerald-600 tracking-tighter">{isAI ? `${app.aiInterviewScore || 0}%` : `Result: ${app.rating || 0}`}</p>
                   </div>
                 </div>
-                <p className="text-xs font-medium text-slate-400 italic leading-relaxed line-clamp-2">"Performance analyzed across technical competence and communication metrics. Strategic patterns confirmed..."</p>
+                <p className="text-xs font-medium text-slate-400 italic leading-relaxed line-clamp-2">"Your performance was evaluated based on your technical skills and communication."</p>
               </div>
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 text-primary" />
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Protocol Window: {app.scheduledDate ? 'ACTIVE' : 'QUEUED'}</p>
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status: {app.scheduledDate ? 'Scheduled' : 'Waiting'}</p>
                 </div>
                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-primary animate-pulse" style={{ width: app.scheduledDate ? '100%' : '20%' }} />
@@ -227,12 +227,12 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
           <div className="flex gap-4">
             {isCompleted ? (
               <Button variant="outline" className="w-full h-16 rounded-[1.5rem] font-black text-xs uppercase tracking-widest border-slate-200 hover:bg-slate-50 gap-3 text-slate-600">
-                Access Deployment Dossier <FileText className="h-4 w-4" />
+                View Feedback <FileText className="h-4 w-4" />
               </Button>
             ) : (
               <>
                 <Button className="flex-1 h-16 rounded-[1.5rem] font-black gap-3 shadow-lg shadow-primary/20 text-xs uppercase tracking-widest group/btn" onClick={onAction}>
-                  {isAI ? 'Initialize Protocol' : 'Launch Simulation'} <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                  {isAI ? 'Start AI Interview' : 'Join Interview'} <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
                 {app.meetingLink && !isAI && (
                   <Button variant="outline" className="h-16 w-16 rounded-[1.5rem] border-slate-200 group/link bg-white hover:bg-slate-50" asChild>

@@ -35,7 +35,7 @@ export default function AdminAnalytics() {
                 setData(response.data);
             }
         } catch (error: any) {
-            toast.error(error.message || 'Telemetry link failure');
+            toast.error(error.message || 'Failed to load analytics');
         } finally {
             setLoading(false);
         }
@@ -43,10 +43,10 @@ export default function AdminAnalytics() {
 
     if (loading) {
         return (
-            <DashboardLayout title="Operational Analytics" subtitle="Comprehensive platform intelligence telemetry">
+            <DashboardLayout title="Platform Analytics" subtitle="Overview of platform performance and growth">
                 <div className="flex flex-col items-center justify-center h-[60vh] space-y-6">
                     <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-2xl shadow-2xl shadow-primary/20" />
-                    <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.4em] text-[10px]">Processing Telemetry Streams...</p>
+                    <p className="font-extrabold text-primary animate-pulse uppercase tracking-[0.4em] text-[10px]">Loading Analytics...</p>
                 </div>
             </DashboardLayout>
         );
@@ -55,7 +55,7 @@ export default function AdminAnalytics() {
     const { overview, jobsByCategory, studentSkills, professionalTechStack, applicationStatus, monthlyTrends } = data;
 
     return (
-        <DashboardLayout title="Operational Intelligence" subtitle="Deep-space analytics and platform growth kinetics">
+        <DashboardLayout title="System Analytics" subtitle="Insights into platform growth and user activity">
             <div className="space-y-10 max-w-[1600px] mx-auto pb-20 relative">
 
                 {/* Background Decor */}
@@ -64,12 +64,12 @@ export default function AdminAnalytics() {
 
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
                     <div className="space-y-2">
-                        <h1 className="text-4xl font-black tracking-tighter uppercase italic text-slate-900">SYSTEM <span className="text-primary">KINETICS</span></h1>
-                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Real-time synchronization across student, expert, and mission nodes</p>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase italic text-slate-900">SYSTEM <span className="text-primary">STATS</span></h1>
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Real-time overview of students, experts, and job postings</p>
                     </div>
                     <div className="flex items-center gap-4 px-6 py-3 bg-primary/5 border border-primary/10 text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm animate-pulse">
                         <Activity className="h-4 w-4" />
-                        Live Synchronous Flux
+                        Live Sync Active
                     </div>
                 </div>
 
@@ -77,16 +77,16 @@ export default function AdminAnalytics() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <AnalyticsCard label="Total Jobs" value={overview.totalJobs} icon={Briefcase} color="text-indigo-600" bg="bg-indigo-50/5" />
                     <AnalyticsCard label="Active Students" value={overview.totalStudents} icon={GraduationCap} color="text-emerald-600" bg="bg-emerald-50/5" />
-                    <AnalyticsCard label="Expert Guild" value={overview.totalProfessionals} icon={Users} color="text-amber-600" bg="bg-amber-50/5" />
-                    <AnalyticsCard label="Live Applications" value={overview.totalApplications} icon={FileText} color="text-rose-600" bg="bg-rose-50/5" />
+                    <AnalyticsCard label="Active Experts" value={overview.totalProfessionals} icon={Users} color="text-amber-600" bg="bg-amber-50/5" />
+                    <AnalyticsCard label="Total Applications" value={overview.totalApplications} icon={FileText} color="text-rose-600" bg="bg-rose-50/5" />
                 </div>
 
                 <Tabs defaultValue="skills" className="w-full">
                     <div className="flex justify-center mb-10">
                         <TabsList className="bg-slate-100/50 backdrop-blur-3xl border border-slate-200 p-2 rounded-2xl h-auto">
-                            <TabsTrigger value="skills" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Competency Matrix</TabsTrigger>
-                            <TabsTrigger value="applications" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Pipeline Dynamics</TabsTrigger>
-                            <TabsTrigger value="jobs" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Market Vectors</TabsTrigger>
+                            <TabsTrigger value="skills" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Student Skills</TabsTrigger>
+                            <TabsTrigger value="applications" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Applications</TabsTrigger>
+                            <TabsTrigger value="jobs" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Job Categories</TabsTrigger>
                         </TabsList>
                     </div>
 
@@ -108,7 +108,7 @@ export default function AdminAnalytics() {
                                 </ResponsiveContainer>
                             </ChartCard>
 
-                            <ChartCard title="Expertise Distribution" subtitle="Active tech-stack dominance in the expert guild" icon={Database}>
+                            <ChartCard title="Expert Skills" subtitle="Distribution of expertise among professionals" icon={Database}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={professionalTechStack} layout="vertical" margin={{ left: 30, right: 30, top: 20 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -128,7 +128,7 @@ export default function AdminAnalytics() {
 
                     <TabsContent value="applications" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <ChartCard title="Success Pipeline" subtitle="Full breakdown of application phase distribution" icon={Zap} className="lg:col-span-1">
+                            <ChartCard title="Application Status" subtitle="Current distribution of all student applications" icon={Zap} className="lg:col-span-1">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
@@ -153,7 +153,7 @@ export default function AdminAnalytics() {
                                 </ResponsiveContainer>
                             </ChartCard>
 
-                            <ChartCard title="Temporal Engagement Growth" subtitle="Application volume progression over operational timeline" icon={TrendingUp} className="lg:col-span-2">
+                            <ChartCard title="Monthly Applications" subtitle="Trend of application volume over time" icon={TrendingUp} className="lg:col-span-2">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={monthlyTrends} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                                         <defs>
@@ -182,7 +182,7 @@ export default function AdminAnalytics() {
                     </TabsContent>
 
                     <TabsContent value="jobs" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
-                        <ChartCard title="Market Sector Saturation" subtitle="Demand distribution across specialized industrial domains" icon={Globe}>
+                        <ChartCard title="Jobs by Category" subtitle="Distribution of job postings across different industries" icon={Globe}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={jobsByCategory} margin={{ top: 40, right: 30, left: 20, bottom: 40 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -200,7 +200,7 @@ export default function AdminAnalytics() {
                                         contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                                         itemStyle={{ color: '#0f172a', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
                                     />
-                                    <Bar dataKey="value" name="Mission Count" fill="#8b5cf6" radius={[8, 8, 0, 0]} barSize={40} />
+                                    <Bar dataKey="value" name="Job Count" fill="#8b5cf6" radius={[8, 8, 0, 0]} barSize={40} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </ChartCard>
@@ -215,14 +215,14 @@ export default function AdminAnalytics() {
                                 <Info className="h-7 w-7" />
                             </div>
                             <div className="space-y-2">
-                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Intelligence Briefing</CardTitle>
-                                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Curated insights from system telemetry</CardDescription>
+                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Key Insights</CardTitle>
+                                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Summarized system insights</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="px-10 pb-10 space-y-4">
-                            <InsightItem text={`${studentSkills[0]?.name || 'N/A'} is the dominant technical denominator among the initiate pool.`} />
-                            <InsightItem text={`${professionalTechStack[0]?.name || 'N/A'} expertise remains the core specialization of the expert guild.`} />
-                            <InsightItem text={`Current market kinetics favor ${jobsByCategory[0]?.name || 'N/A'} mission deployments.`} />
+                            <InsightItem text={`${studentSkills[0]?.name || 'N/A'} is the most common skill among students.`} />
+                            <InsightItem text={`${professionalTechStack[0]?.name || 'N/A'} is the top skill among experts.`} />
+                            <InsightItem text={`Highest number of jobs are in ${jobsByCategory[0]?.name || 'N/A'}.`} />
                         </CardContent>
                     </Card>
 
@@ -233,13 +233,13 @@ export default function AdminAnalytics() {
                                 <Target className="h-7 w-7" />
                             </div>
                             <div className="space-y-2">
-                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Calibration Guide</CardTitle>
-                                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Optimizing interaction with data streams</CardDescription>
+                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Analytics Guide</CardTitle>
+                                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">How to use these charts</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="px-10 pb-10">
                             <p className="text-slate-500 font-bold text-xs leading-relaxed italic">
-                                All telemetry nodes are interactive. Engage with chart elements to reveal deep-level metrics. Use the competency matrix to optimize student-expert alignment protocols across the platform.
+                                All charts are interactive. Hover over elements to see detailed numbers. Use these insights to understand platform growth and user trends.
                             </p>
                         </CardContent>
                     </Card>

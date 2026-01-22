@@ -39,7 +39,7 @@ export default function InterviewHistory() {
 
   if (appsLoading || jobsLoading) {
     return (
-      <DashboardLayout title="Tactical Archive" subtitle="Accessing historical dossiers...">
+      <DashboardLayout title="Interview History" subtitle="Loading evaluation records...">
         <div className="flex items-center justify-center h-[60vh]">
           <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
         </div>
@@ -63,17 +63,17 @@ export default function InterviewHistory() {
 
   return (
     <DashboardLayout
-      title="Tactical Archive"
-      subtitle="Historical record of conducted evaluations and candidate fingerprints"
+      title="Interview History"
+      subtitle="View results and feedback from interviews you have conducted"
     >
       <div className="max-w-[1400px] mx-auto space-y-10 pb-12">
 
         {/* Metric Hub */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard title="Total Sessions" value={completedInterviews.length} icon={Fingerprint} color="text-primary" bg="bg-primary/5" />
-          <MetricCard title="Calibration Rating" value={`${avgRating}/5`} icon={Star} color="text-amber-600" bg="bg-amber-50/5" />
-          <MetricCard title="Advancement Index" value={`${passRate}%`} icon={Zap} color="text-emerald-600" bg="bg-emerald-50/5" />
-          <MetricCard title="Node Coverage" value="Global" icon={Database} color="text-indigo-600" bg="bg-indigo-50/5" />
+          <MetricCard title="Total Interviews" value={completedInterviews.length} icon={Fingerprint} color="text-primary" bg="bg-primary/5" />
+          <MetricCard title="Avg Student Rating" value={`${avgRating}/5`} icon={Star} color="text-amber-600" bg="bg-amber-50/5" />
+          <MetricCard title="Pass Rate" value={`${passRate}%`} icon={Zap} color="text-emerald-600" bg="bg-emerald-50/5" />
+          <MetricCard title="Region" value="Global" icon={Database} color="text-indigo-600" bg="bg-indigo-50/5" />
         </div>
 
         {/* Archives Interface */}
@@ -82,9 +82,9 @@ export default function InterviewHistory() {
             <div className="space-y-1">
               <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-slate-900">
                 <Binary className="h-6 w-6 text-primary" />
-                Archive Logs
+                Past Evaluations
               </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest opacity-60">Synchronized with global talent ledger</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest opacity-60">Records of all interviews conducted by you</p>
             </div>
             <div className="flex gap-2">
               <div className="relative group">
@@ -93,7 +93,7 @@ export default function InterviewHistory() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Ident: Candidate Name..."
+                  placeholder="Filter by name..."
                   className="h-12 w-64 pl-12 pr-4 bg-slate-50 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-primary/20 font-bold text-xs uppercase tracking-widest placeholder:text-slate-400 focus:bg-white transition-all text-slate-900"
                 />
               </div>
@@ -107,10 +107,10 @@ export default function InterviewHistory() {
                 <Calendar className="h-10 w-10 text-slate-300" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-2xl font-black text-slate-800 leading-none">Archives Empty</h3>
-                <p className="text-slate-400 max-w-sm font-medium">No tactical evaluations have been registered on this node yet.</p>
+                <h3 className="text-2xl font-black text-slate-800 leading-none">No History</h3>
+                <p className="text-slate-400 max-w-sm font-medium">You haven't conducted any interviews yet.</p>
               </div>
-              <Button variant="ghost" className="font-black text-primary hover:bg-primary/5 uppercase text-xs tracking-widest">Awaiting First Deployment</Button>
+              <Button variant="ghost" className="font-black text-primary hover:bg-primary/5 uppercase text-xs tracking-widest">Waiting for Interviews</Button>
             </Card>
           ) : (
             <div className="grid gap-4">
@@ -128,7 +128,7 @@ export default function InterviewHistory() {
 
                         {/* Candidate Identity */}
                         <div className="flex items-center gap-6 min-w-[300px]">
-                          <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center text-2xl font-black text-primary border border-primary/10 shadow-sm">
+                          <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center text-2xl font-black text-primary border border-primary/10 shadow-sm" title="Student Details">
                             {student.name.charAt(0)}
                           </div>
                           <div className="space-y-1">
@@ -147,7 +147,7 @@ export default function InterviewHistory() {
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-3">
                             <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest px-3 py-0.5">
-                              {myFeedback.round} Evaluation
+                              {myFeedback.round} Round
                             </Badge>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{format(new Date(myFeedback.conductedAt), 'dd MMM yyyy')}</span>
                           </div>
@@ -163,7 +163,7 @@ export default function InterviewHistory() {
                               <Star key={s} className={cn("h-4 w-4", s <= myFeedback.rating ? "text-amber-500 fill-amber-500" : "text-slate-200")} />
                             ))}
                           </div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-50">Score: {myFeedback.rating}.0</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-50">Assessment: {myFeedback.rating}.0</p>
                         </div>
 
                         {/* Recommendation Outcome */}
@@ -179,7 +179,7 @@ export default function InterviewHistory() {
                         {/* Detailed Dossier Toggle */}
                         <div className="w-full xl:w-auto pt-6 xl:pt-0 border-t xl:border-none">
                           <Button variant="ghost" className="w-full h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest text-primary gap-3 hover:bg-primary/5 transition-all">
-                            Access dossier <FileText className="h-4 w-4" />
+                            View Report <FileText className="h-4 w-4" />
                           </Button>
                         </div>
 

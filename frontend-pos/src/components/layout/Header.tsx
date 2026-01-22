@@ -50,7 +50,7 @@ export function Header({ title, subtitle }: HeaderProps) {
           <div className="relative">
             <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input
-              placeholder="Execute Global Search..."
+              placeholder="Search..."
               className="w-80 h-12 pl-12 pr-6 bg-slate-50 border-slate-200 rounded-2xl focus-visible:ring-primary/20 font-bold text-xs shadow-inner placeholder:text-slate-400 focus:bg-white transition-all text-slate-900"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-white border border-slate-200 flex items-center gap-1">
@@ -74,7 +74,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 <div className="hidden sm:flex flex-col items-end gap-0.5">
                   <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">{user?.name}</p>
                   <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em] leading-none opacity-80 group-hover/user:opacity-100 transition-opacity">
-                    LEVEL: {role}
+                    Role: {role}
                   </p>
                 </div>
                 <div className="relative">
@@ -98,10 +98,10 @@ export function Header({ title, subtitle }: HeaderProps) {
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
                   <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                    <ShieldCheck className="h-3 w-3 text-emerald-500" /> Security Protocol
+                    <ShieldCheck className="h-3 w-3 text-emerald-500" /> Security
                   </div>
                   <p className="text-[10px] text-slate-500 italic font-medium leading-relaxed">
-                    Access granted via neural-verified credentials.
+                    Your account is secure.
                   </p>
                 </div>
               </div>
@@ -114,8 +114,9 @@ export function Header({ title, subtitle }: HeaderProps) {
                 }}
               >
                 <LogOut className="mr-3 h-4 w-4" />
-                Terminate Connection
+                Log Out
               </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

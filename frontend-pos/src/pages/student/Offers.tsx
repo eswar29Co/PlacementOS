@@ -26,7 +26,7 @@ export default function Offers() {
       applicationService.acceptOffer(applicationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-applications'] });
-      toast.success('Congratulations! You are officially part of the elite guild!');
+      toast.success('Congratulations! You have successfully accepted the offer!');
     },
     onError: (error: any) => toast.error(error.message || 'Verification link failed'),
   });
@@ -53,7 +53,7 @@ export default function Offers() {
     const joiningDate = offerDetails.joiningDate ? new Date(offerDetails.joiningDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     const offerLetterContent = `
-OFFICIAL SELECTION DECREE
+OFFICIAL OFFER LETTER
 
 Date: ${format(new Date(), 'dd MMMM yyyy')}
 
@@ -63,10 +63,10 @@ Organization: ${job?.companyName || 'Global Enterprise'}
 
 COMPENSATION ARCHITECTURE:
 - Base Package: ${ctc}
-- Deployment Date: ${format(joiningDate, 'dd MMMM yyyy')}
-- Operating Locale: ${job?.locationType || 'Distributed'}
+- Joining Date: ${format(joiningDate, 'dd MMMM yyyy')}
+- Location: ${job?.locationType || 'Remote / On-site'}
 
-Congratulations on navigating the evaluation protocols.
+Congratulations on successfully completing the interview process.
 
 Best regards,
 ${job?.companyName || 'Corporate'} Global Talent Acquisition
@@ -76,27 +76,27 @@ ${job?.companyName || 'Corporate'} Global Talent Acquisition
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `SELECTION_DECREE_${job?.companyName}_${student.name}.txt`;
+    a.download = `OFFER_LETTER_${job?.companyName}_${student.name}.txt`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    toast.success('Certification dossier downloaded!');
+    toast.success('Offer letter downloaded!');
   };
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Selection Bureau" subtitle="Scanning for finalized contracts...">
+      <DashboardLayout title="Offer Letters" subtitle="Loading your offers...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full" />
-          <p className="font-bold text-slate-400 animate-pulse uppercase tracking-widest text-[10px]">Filtering Success Matrix...</p>
+          <p className="font-bold text-slate-400 animate-pulse uppercase tracking-widest text-[10px]">Fetching data...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Selection Bureau" subtitle="Official selection decrees and contractual certifications">
+    <DashboardLayout title="Offer Letters" subtitle="View and manage your job offers and employment letters">
       <div className="max-w-[1400px] mx-auto pb-12">
         {offers.length === 0 ? (
           <div className="py-32 flex flex-col items-center text-center space-y-6 bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-200">
@@ -105,10 +105,10 @@ ${job?.companyName || 'Corporate'} Global Talent Acquisition
               <Trophy className="relative h-24 w-24 text-slate-200" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-3xl font-black text-slate-900 leading-none">Victories Pending</h3>
-              <p className="text-slate-400 max-w-sm font-medium">Navigate the simulation protocols to unlock official selection decrees here.</p>
+              <h3 className="text-3xl font-black text-slate-900 leading-none">No Offers Yet</h3>
+              <p className="text-slate-400 max-w-sm font-medium">Complete your interviews to receive job offers here.</p>
             </div>
-            <Button variant="outline" className="rounded-2xl border-slate-200 bg-white hover:bg-slate-50 font-black h-12 px-8 shadow-sm text-slate-600">View Active Tracks</Button>
+            <Button variant="outline" className="rounded-2xl border-slate-200 bg-white hover:bg-slate-50 font-black h-12 px-8 shadow-sm text-slate-600" onClick={() => navigate('/student/applications')}>My Applications</Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -136,11 +136,11 @@ ${job?.companyName || 'Corporate'} Global Talent Acquisition
                         </div>
                         <div className="space-y-1">
                           <Badge className={cn("border-none font-black text-[10px] uppercase py-1 px-3 shadow-none", isAccepted ? "bg-emerald-50 text-emerald-600" : "bg-primary/5 text-primary")}>
-                            {isAccepted ? 'Contract Initialized' : 'Draft Ready'}
+                            {isAccepted ? 'Offer Accepted' : 'New Offer'}
                           </Badge>
-                          <h4 className="font-black text-3xl leading-tight uppercase tracking-tight text-slate-900">{job?.roleTitle || 'Strategic Lead'}</h4>
+                          <h4 className="font-black text-3xl leading-tight uppercase tracking-tight text-slate-900">{job?.roleTitle || 'Job Role'}</h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Building2 className="h-3 w-3 text-primary/50" /> {job?.companyName || 'Corporate Entity'}
+                            <Building2 className="h-3 w-3 text-primary/50" /> {job?.companyName || 'Company'}
                           </p>
                         </div>
                       </div>
@@ -155,12 +155,12 @@ ${job?.companyName || 'Corporate'} Global Talent Acquisition
                         <p className="text-lg font-black text-emerald-600">{ctc}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Target Deployment</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Joining Date</p>
                         <p className="text-lg font-black text-slate-900">{format(joiningDate, 'dd MMM yyyy')}</p>
                       </div>
                       <div className="space-y-1 sm:col-span-2 mt-2 pt-2 border-t border-slate-200">
-                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Assignment Locale</p>
-                        <p className="text-sm font-bold text-slate-700">{job?.locationType || 'Distributed Operations'}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1.5"><MapPin className="h-3 w-3" /> Job Location</p>
+                        <p className="text-sm font-bold text-slate-700">{job?.locationType || 'Remote / On-site'}</p>
                       </div>
                     </div>
 
@@ -172,14 +172,14 @@ ${job?.companyName || 'Corporate'} Global Talent Acquisition
                           disabled={acceptOfferMutation.isPending}
                         >
                           <CheckCircle2 className="h-6 w-6" />
-                          {acceptOfferMutation.isPending ? 'AUTHENTICATING...' : 'INITIALIZE CONTRACT'}
+                          {acceptOfferMutation.isPending ? 'ACCEPTING...' : 'ACCEPT OFFER'}
                         </Button>
                       ) : (
                         <Button
                           variant="outline"
                           className="w-full h-16 rounded-[1.5rem] font-black text-lg gap-2 border-slate-200 text-emerald-600 bg-emerald-50 cursor-default"
                         >
-                          <ShieldCheck className="h-6 w-6" /> ENGAGEMENT SECURED
+                          <ShieldCheck className="h-6 w-6" /> OFFER ACCEPTED
                         </Button>
                       )}
                       <Button
@@ -187,7 +187,7 @@ ${job?.companyName || 'Corporate'} Global Talent Acquisition
                         className="w-full h-16 rounded-[1.5rem] font-black text-slate-400 hover:bg-slate-50 gap-2 border border-slate-200"
                         onClick={() => handleDownloadOffer(offer)}
                       >
-                        <DownloadCloud className="h-6 w-6" /> ARCHIVE DECREE
+                        <DownloadCloud className="h-6 w-6" /> DOWNLOAD LETTER
                       </Button>
                     </div>
                   </CardContent>

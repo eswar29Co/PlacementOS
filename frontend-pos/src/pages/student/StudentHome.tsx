@@ -52,25 +52,25 @@ export default function StudentHome() {
   const activeApplications = myApplications.filter(a => !['rejected', 'offer_released', 'offer_accepted'].includes(a.status));
 
   const stats = [
-    { label: 'Tactical Tracks', value: activeApplications.length, icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Active Missions', value: myApplications.filter(a => a.status === 'assessment_pending' || a.status === 'ai_interview_pending').length, icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'Evaluations', value: myApplications.filter(a => a.status.includes('interview_pending')).length, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: 'Selection Decrees', value: myApplications.filter(a => (a.status === 'offer_released' || a.status === 'offer_accepted')).length, icon: Award, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+    { label: 'My Applications', value: activeApplications.length, icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Pending Tasks', value: myApplications.filter(a => a.status === 'assessment_pending' || a.status === 'ai_interview_pending').length, icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Interviews', value: myApplications.filter(a => a.status.includes('interview_pending')).length, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Offers', value: myApplications.filter(a => (a.status === 'offer_released' || a.status === 'offer_accepted')).length, icon: Award, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
   ];
 
   if (leadsLoading || jobsLoading) {
     return (
-      <DashboardLayout title="Universal Launchpad" subtitle="Calibrating sector metrics...">
+      <DashboardLayout title="Dashboard" subtitle="Loading your dashboard...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-xl shadow-primary/20" />
-          <p className="font-black text-primary animate-pulse text-[10px] uppercase tracking-[0.3em] italic">Synchronizing Neural Frequency...</p>
+          <p className="font-black text-primary animate-pulse text-[10px] uppercase tracking-[0.3em] italic">Loading data...</p>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="Universal Launchpad" subtitle={`Operational parameters and tactical overview for ${student?.name?.split(' ')[0]}`}>
+    <DashboardLayout title="Dashboard" subtitle={`Welcome back, ${student?.name?.split(' ')[0]}. Here is your progress overview.`}>
       <div className="space-y-10 max-w-[1500px] mx-auto pb-12 relative">
 
         {/* Animated Background Decor */}
@@ -102,7 +102,7 @@ export default function StudentHome() {
                       </h2>
                       <Badge className="bg-primary/10 text-primary border border-primary/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-[0.3em] flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                        PRIME CANDIDATE
+                        VERIFIED STUDENT
                       </Badge>
                     </div>
                     <p className="text-slate-400 font-bold text-sm flex items-center justify-center md:justify-start gap-3 uppercase tracking-[0.3em] italic">
@@ -112,10 +112,10 @@ export default function StudentHome() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                   <Button className="rounded-2xl h-16 px-10 font-black shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase text-xs tracking-widest gap-3 transition-all hover:scale-105 active:scale-95" onClick={() => navigate('/student/profile')}>
-                    SYNCHRONIZE DOSSIER <Zap className="h-5 w-5" />
+                    MY PROFILE <Zap className="h-5 w-5" />
                   </Button>
                   <Button variant="outline" className="rounded-2xl h-16 px-10 font-black border-slate-200 bg-white hover:bg-slate-50 text-slate-900 uppercase text-xs tracking-widest transition-all" onClick={() => navigate('/student/applications')}>
-                    TRACK TRAJECTORY
+                    MY APPLICATIONS
                   </Button>
                 </div>
               </div>
@@ -150,12 +150,12 @@ export default function StudentHome() {
               <CardContent className="p-12 flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
                 <div className="space-y-6 text-center md:text-left flex-1">
                   <Badge className="bg-primary/10 text-primary border border-primary/20 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] italic mb-2">
-                    <Activity className="h-3 w-3 mr-2" /> SECTOR INSIGHT
+                    <Activity className="h-3 w-3 mr-2" /> HIRING NEWS
                   </Badge>
-                  <h3 className="text-4xl font-black leading-none uppercase italic tracking-tighter text-slate-900">READY FOR A NEW <span className="text-primary">SIMULATION?</span></h3>
-                  <p className="text-slate-500 font-bold leading-relaxed max-w-sm italic">Global enterprises have launched high-fidelity tracks in your specialized sector this week. Calibrate your profile for optimal matching.</p>
+                  <h3 className="text-4xl font-black leading-none uppercase italic tracking-tighter text-slate-900">READY FOR A NEW <span className="text-primary">JOB?</span></h3>
+                  <p className="text-slate-500 font-bold leading-relaxed max-w-sm italic">New companies have posted job opportunities in your field this week. Check them out and apply now.</p>
                   <Button size="lg" className="bg-primary shadow-lg shadow-primary/20 text-white font-black rounded-2xl px-12 h-16 hover:bg-primary/90 gap-3 uppercase text-xs tracking-[0.2em] transition-all hover:translate-y-[-4px]" onClick={() => navigate('/student/browse-jobs')}>
-                    BROWSE MARKETPLACE <ArrowRight className="h-5 w-5" />
+                    EXPLORE JOBS <ArrowRight className="h-5 w-5" />
                   </Button>
                 </div>
                 <div className="relative group-hover:rotate-12 transition-transform duration-700 shrink-0">
@@ -173,12 +173,12 @@ export default function StudentHome() {
                 <div className="flex items-center justify-between relative z-10">
                   <div className="space-y-2">
                     <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                      <Activity className="h-8 w-8 text-primary" /> LIVE TRACK MONITOR
+                      <Activity className="h-8 w-8 text-primary" /> ACTIVE APPLICATIONS
                     </CardTitle>
-                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">REAL-TIME STATUS OF ACTIVE ENGAGEMENTS ACROSS THE GRID</CardDescription>
+                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">TRACK THE PROGRESS OF YOUR RECENTLY APPLIED JOBS</CardDescription>
                   </div>
                   <Button variant="ghost" className="font-black text-[10px] uppercase tracking-widest text-primary hover:bg-primary/5 px-6 h-12 rounded-xl" onClick={() => navigate('/student/applications')}>
-                    UNIVERSAL VIEW <ChevronRight className="ml-2 h-4 w-4" />
+                    VIEW ALL <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
@@ -188,8 +188,8 @@ export default function StudentHome() {
                     <div className="absolute inset-0 bg-primary/5 opacity-10" />
                     <Ghost className="h-20 w-20 text-slate-300 relative z-10" />
                     <div className="space-y-2 relative z-10">
-                      <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 italic">No Active Tracks Discovered</p>
-                      <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest" onClick={() => navigate('/student/browse-jobs')}>Initialize New Engagement</Button>
+                      <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 italic">No Active Applications Found</p>
+                      <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest" onClick={() => navigate('/student/browse-jobs')}>Apply for Jobs</Button>
                     </div>
                   </div>
                 ) : (
@@ -223,7 +223,7 @@ export default function StudentHome() {
                           </div>
                           <div className="space-y-4 relative z-10 px-1">
                             <div className="flex justify-between items-end">
-                              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">OPERATIONAL PROGRESS</p>
+                              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">PROGRESS</p>
                               <p className="text-xl font-black text-primary italic leading-none">{Math.round(progress)}%</p>
                             </div>
                             <div className="h-3 bg-slate-200 rounded-full overflow-hidden p-[1px] border border-slate-200 shadow-sm relative">
@@ -246,16 +246,16 @@ export default function StudentHome() {
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
               <CardHeader className="bg-slate-50 p-10 border-b border-slate-100 transition-colors group-hover:bg-slate-100">
                 <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                  <BarChart3 className="h-6 w-6 text-primary" /> SECTOR YIELD
+                  <BarChart3 className="h-6 w-6 text-primary" /> PLATFORM STATS
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-10">
                 <div className="space-y-8">
-                  <InsightMetricItem label="Platform Placement Rate" value="94.2%" trend="+2.4% YIELD" color="text-emerald-600" />
-                  <InsightMetricItem label="Live Simulation Load" value="1,248 PATHS" trend="HIGH DEMAND" color="text-amber-600" />
-                  <InsightMetricItem label="Average Compensation" value="₹12.4 LPA" trend="ALPHA" color="text-primary" />
+                  <InsightMetricItem label="Average Placement Rate" value="94.2%" trend="+2.4% SUCCESS" color="text-emerald-600" />
+                  <InsightMetricItem label="Active Job Posts" value="1,248 JOBS" trend="HIGH DEMAND" color="text-amber-600" />
+                  <InsightMetricItem label="Average Salary" value="₹12.4 LPA" trend="TOP" color="text-primary" />
                 </div>
-                <Button variant="outline" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest border-slate-200 bg-white hover:bg-slate-50 text-slate-600">FULL METRICS REPORT</Button>
+                <Button variant="outline" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest border-slate-200 bg-white hover:bg-slate-50 text-slate-600">VIEW MORE STATS</Button>
               </CardContent>
             </Card>
 
@@ -266,16 +266,16 @@ export default function StudentHome() {
               <div className="relative z-10 space-y-8">
                 <div className="space-y-1">
                   <h4 className="font-black text-xs uppercase tracking-[0.4em] flex items-center gap-3">
-                    <Clock className="h-4 w-4" /> NEXT CALIBRATION
+                    <Clock className="h-4 w-4" /> UPCOMING EVENTS
                   </h4>
-                  <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">TEMPORAL WINDOW AUDIT</p>
+                  <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">VIEW YOUR SCHEDULE</p>
                 </div>
                 <div className="p-8 bg-white/10 rounded-[2.5rem] border border-white/20 backdrop-blur-md">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">UPCOMING WINDOW</p>
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">UPCOMING</p>
                   <p className="text-2xl font-black italic uppercase tracking-tighter">NO EVENTS SCHEDULED</p>
                   <div className="mt-4 flex items-center gap-3 text-[10px] font-bold text-white/60 uppercase italic">
                     <div className="h-1.5 w-1.5 rounded-full bg-white/40 animate-pulse" />
-                    STANDBY MODE ACTIVE
+                    NO NEW EVENTS
                   </div>
                 </div>
                 <Button variant="secondary" className="w-full h-16 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest text-indigo-900 border-none bg-white hover:bg-white/90 transition-all hover:scale-105 active:scale-95" onClick={() => navigate('/student/interview-calendar')}>

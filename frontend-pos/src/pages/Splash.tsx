@@ -36,22 +36,22 @@ export default function Splash() {
             </h1>
             <div className="flex items-center justify-center gap-4 mt-2">
               <div className="h-px w-12 bg-slate-100" />
-              <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.6em] italic">Neural Interview Simulation Engine</p>
+              <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.6em] italic">Advanced Recruitment Platform</p>
               <div className="h-px w-12 bg-slate-100" />
             </div>
           </div>
 
           <h2 className="text-xl md:text-2xl text-slate-400 font-bold uppercase tracking-tight italic max-w-2xl mx-auto leading-relaxed">
-            The high-fidelity <span className="text-slate-600">calibration protocol</span> for the next generation of industry architects.
+            The next-generation <span className="text-slate-600">career platform</span> for students and top-tier companies.
           </h2>
         </div>
 
         {/* Tactical Badge Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-          <Badge icon={Target} text="Tactical Precision" />
-          <Badge icon={ShieldCheck} text="Expert Validation" />
-          <Badge icon={Cpu} text="AI Simulations" />
-          <Badge icon={Globe} text="Global Outreach" />
+          <Badge icon={Target} text="Smart Matching" />
+          <Badge icon={ShieldCheck} text="Expert Reviews" />
+          <Badge icon={Cpu} text="AI Interviews" />
+          <Badge icon={Globe} text="Global Careers" />
         </div>
 
         {/* CTA Section */}
@@ -60,19 +60,19 @@ export default function Splash() {
             onClick={() => navigate('/login')}
             className="group h-16 px-12 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-black uppercase text-sm tracking-[0.2em] shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-4"
           >
-            Initialize Protocol
+            Get Started
             <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
           </Button>
 
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-            <Users className="h-3 w-3" /> Secure Link Established <span className="text-primary">•</span> Operational v2.0
+            <Users className="h-3 w-3" /> Secure Global Platform <span className="text-primary">•</span> Official v2.0
           </p>
         </div>
       </div>
 
       {/* Footer Branding */}
       <div className="absolute bottom-8 left-0 right-0 flex justify-center opacity-30">
-        <p className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-500">Antigravity Intelligence Systems</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-500">PlacementOS Career Network</p>
       </div>
     </div>
   );

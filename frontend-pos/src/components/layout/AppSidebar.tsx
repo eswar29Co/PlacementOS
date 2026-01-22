@@ -30,28 +30,28 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const studentNavItems = [
-  { icon: Home, label: 'Home', path: '/student/home', tactical: 'Operation Center' },
-  { icon: Briefcase, label: 'Browse Jobs', path: '/student/browse-jobs', tactical: 'Marketplace' },
-  { icon: FileText, label: 'My Applications', path: '/student/applications', tactical: 'Mission Log' },
-  { icon: Calendar, label: 'Interview Calendar', path: '/student/interview-calendar', tactical: 'Timeline' },
-  { icon: Video, label: 'Interviews', path: '/student/interviews', tactical: 'Live Protocol' },
-  { icon: Award, label: 'Offers', path: '/student/offers', tactical: 'Enlistments' },
-  { icon: User, label: 'Profile', path: '/student/profile', tactical: 'Dossier' },
+  { icon: Home, label: 'Home', path: '/student/home', tactical: 'Overview' },
+  { icon: Briefcase, label: 'Browse Jobs', path: '/student/browse-jobs', tactical: 'Browse Jobs' },
+  { icon: FileText, label: 'My Applications', path: '/student/applications', tactical: 'My Applications' },
+  { icon: Calendar, label: 'Calendar', path: '/student/interview-calendar', tactical: 'Calendar' },
+  { icon: Video, label: 'Interviews', path: '/student/interviews', tactical: 'Interviews' },
+  { icon: Award, label: 'Offers', path: '/student/offers', tactical: 'My Offers' },
+  { icon: User, label: 'Profile', path: '/student/profile', tactical: 'Profile' },
 ];
 
 const professionalNavItems = [
-  { icon: Activity, label: 'Dashboard', path: '/professional/dashboard', tactical: 'Expert Nexus' },
-  { icon: Target, label: 'Pending Interviews', path: '/professional/interviews', tactical: 'Active Missions' },
-  { icon: CheckCircle, label: 'Completed', path: '/professional/history', tactical: 'Tactical Archive' },
-  { icon: User, label: 'Profile', path: '/professional/profile', tactical: 'Identity' },
+  { icon: Activity, label: 'Dashboard', path: '/professional/dashboard', tactical: 'Overview' },
+  { icon: Target, label: 'Interviews', path: '/professional/interviews', tactical: 'Interviews' },
+  { icon: CheckCircle, label: 'History', path: '/professional/history', tactical: 'Past Interviews' },
+  { icon: User, label: 'Profile', path: '/professional/profile', tactical: 'Profile' },
 ];
 
 const adminNavItems = [
-  { icon: Zap, label: 'Dashboard', path: '/admin/dashboard', tactical: 'Control Center' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', tactical: 'Telemetry' },
-  { icon: User, label: 'Students', path: '/admin/students', tactical: 'Initiates' },
-  { icon: Users, label: 'Professionals', path: '/admin/professionals', tactical: 'Vanguard' },
-  { icon: Briefcase, label: 'Jobs', path: '/admin/jobs', tactical: 'Deployments' },
+  { icon: Zap, label: 'Admin Panel', path: '/admin/dashboard', tactical: 'Admin Overview' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', tactical: 'Analytics' },
+  { icon: User, label: 'Students', path: '/admin/students', tactical: 'Manage Students' },
+  { icon: Users, label: 'Experts', path: '/admin/professionals', tactical: 'Manage Experts' },
+  { icon: Briefcase, label: 'Jobs', path: '/admin/jobs', tactical: 'Manage Jobs' },
 ];
 
 export function AppSidebar() {
@@ -99,7 +99,7 @@ export function AppSidebar() {
           {!isCollapsed && (
             <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
               <span className="text-xl font-black tracking-tighter text-slate-900 uppercase italic">Placement<span className="text-primary italic">OS</span></span>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">System Version 2.0</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">Career Platform</span>
             </div>
           )}
         </div>
@@ -117,10 +117,10 @@ export function AppSidebar() {
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
             ) : (
               <>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Identity Access</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Logged In As</p>
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm" />
-                  <p className="font-black text-[11px] uppercase tracking-tighter text-emerald-600">{role} LEVEL</p>
+                  <p className="font-black text-[11px] uppercase tracking-tighter text-emerald-600">{role} ACCESS</p>
                 </div>
               </>
             )}
@@ -191,7 +191,7 @@ export function AppSidebar() {
               </div>
               <div className="flex-1 min-w-0 animate-in fade-in duration-500">
                 <p className="truncate text-sm font-black text-slate-900 uppercase tracking-tight">{user?.name}</p>
-                <p className="truncate text-[10px] font-bold text-slate-400 tracking-tighter">SECURE UPLINK ESTABLISHED</p>
+                <p className="truncate text-[10px] font-bold text-slate-400 tracking-tighter">Logged in securely</p>
               </div>
             </div>
           )}
@@ -209,7 +209,7 @@ export function AppSidebar() {
             ) : (
               <>
                 <LogOut className="h-4 w-4 mr-3" />
-                Terminate Session
+                Log Out
               </>
             )}
           </Button>
