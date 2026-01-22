@@ -9,10 +9,10 @@ export interface IStudentDocument extends Omit<IStudent, '_id'>, Document {
 const studentSchema = new Schema<IStudentDocument>(
   {
     name: { type: String, required: true, trim: true },
-    email: { 
-      type: String, 
-      required: true, 
-      unique: true, 
+    email: {
+      type: String,
+      required: true,
+      unique: true,
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
@@ -21,7 +21,7 @@ const studentSchema = new Schema<IStudentDocument>(
     role: { type: String, default: 'student', enum: ['student'] },
     avatar: { type: String },
     phone: { type: String },
-    
+
     // Student specific fields
     college: { type: String, required: true },
     degree: { type: String, required: true },
@@ -33,10 +33,10 @@ const studentSchema = new Schema<IStudentDocument>(
     linkedinUrl: { type: String },
     githubUrl: { type: String },
   },
-  { 
+  {
     timestamps: true,
     toJSON: {
-      transform: function(_, ret) {
+      transform: function (_, ret) {
         ret.id = ret._id;
         delete (ret as any)._id;
         delete (ret as any).__v;
@@ -50,7 +50,7 @@ const studentSchema = new Schema<IStudentDocument>(
 // Hash password before saving
 studentSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -66,7 +66,6 @@ studentSchema.methods.comparePassword = async function (candidatePassword: strin
 };
 
 // Index for efficient queries
-studentSchema.index({ email: 1 });
 studentSchema.index({ skills: 1 });
 studentSchema.index({ graduationYear: 1 });
 

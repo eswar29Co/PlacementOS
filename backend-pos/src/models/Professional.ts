@@ -9,10 +9,10 @@ export interface IProfessionalDocument extends Omit<IProfessional, '_id'>, Docum
 const professionalSchema = new Schema<IProfessionalDocument>(
   {
     name: { type: String, required: true, trim: true },
-    email: { 
-      type: String, 
-      required: true, 
-      unique: true, 
+    email: {
+      type: String,
+      required: true,
+      unique: true,
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
@@ -21,10 +21,10 @@ const professionalSchema = new Schema<IProfessionalDocument>(
     role: { type: String, default: 'professional', enum: ['professional'] },
     avatar: { type: String },
     phone: { type: String },
-    
+
     // Professional specific fields
-    professionalRole: { 
-      type: String, 
+    professionalRole: {
+      type: String,
       enum: ['Technical', 'Manager', 'HR', 'Admin'],
       default: 'Technical'
     },
@@ -36,8 +36,8 @@ const professionalSchema = new Schema<IProfessionalDocument>(
     expertise: [{ type: String }],
     linkedinUrl: { type: String },
     bio: { type: String, maxlength: 500 },
-    status: { 
-      type: String, 
+    status: {
+      type: String,
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending'
     },
@@ -45,10 +45,10 @@ const professionalSchema = new Schema<IProfessionalDocument>(
     activeInterviewCount: { type: Number, default: 0 },
     rating: { type: Number, default: 0, min: 0, max: 5 },
   },
-  { 
+  {
     timestamps: true,
     toJSON: {
-      transform: function(_, ret) {
+      transform: function (_, ret) {
         ret.id = ret._id;
         delete (ret as any)._id;
         delete (ret as any).__v;
@@ -62,7 +62,7 @@ const professionalSchema = new Schema<IProfessionalDocument>(
 // Hash password before saving
 professionalSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -78,7 +78,6 @@ professionalSchema.methods.comparePassword = async function (candidatePassword: 
 };
 
 // Index for efficient queries
-professionalSchema.index({ email: 1 });
 professionalSchema.index({ status: 1 });
 professionalSchema.index({ professionalRole: 1 });
 professionalSchema.index({ techStack: 1 });

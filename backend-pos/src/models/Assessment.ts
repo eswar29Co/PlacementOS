@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { IAssessment } from '../types';
 
-export interface IAssessmentDocument extends Omit<IAssessment, '_id'>, Document {}
+export interface IAssessmentDocument extends Omit<IAssessment, '_id'>, Document { }
 
 const mcqQuestionSchema = new Schema({
   id: { type: String, required: true },
@@ -19,10 +19,10 @@ const codingQuestionSchema = new Schema({
     output: { type: String, required: true }
   }],
   constraints: [{ type: String }],
-  difficulty: { 
-    type: String, 
+  difficulty: {
+    type: String,
     enum: ['Easy', 'Medium', 'Hard'],
-    required: true 
+    required: true
   },
   testCases: [{
     input: { type: String, required: true },
@@ -32,15 +32,14 @@ const codingQuestionSchema = new Schema({
 
 const assessmentSchema = new Schema<IAssessmentDocument>(
   {
-    applicationId: { 
-      type: Schema.Types.ObjectId as any, 
+    applicationId: {
+      type: Schema.Types.ObjectId as any,
       ref: 'Application',
       required: true,
-      unique: true,
-      index: true
+      unique: true
     },
-    jobId: { 
-      type: Schema.Types.ObjectId as any, 
+    jobId: {
+      type: Schema.Types.ObjectId as any,
       ref: 'Job',
       required: true,
       index: true
@@ -49,8 +48,8 @@ const assessmentSchema = new Schema<IAssessmentDocument>(
     duration: { type: Number, required: true }, // in minutes
     mcqQuestions: [mcqQuestionSchema],
     codingQuestion: { type: codingQuestionSchema, required: true },
-    status: { 
-      type: String, 
+    status: {
+      type: String,
       enum: ['pending', 'in_progress', 'completed'],
       default: 'pending'
     },
@@ -62,10 +61,10 @@ const assessmentSchema = new Schema<IAssessmentDocument>(
       codingAnswer: { type: String }
     }
   },
-  { 
+  {
     timestamps: true,
     toJSON: {
-      transform: function(_, ret: any) {
+      transform: function (_, ret: any) {
         ret.id = ret._id;
         delete ret._id;
         delete ret.__v;
@@ -83,7 +82,6 @@ const assessmentSchema = new Schema<IAssessmentDocument>(
 );
 
 // Index
-assessmentSchema.index({ applicationId: 1 });
 assessmentSchema.index({ status: 1 });
 assessmentSchema.index({ deadline: 1 });
 
