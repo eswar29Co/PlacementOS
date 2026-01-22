@@ -52,10 +52,10 @@ export default function AdminAnalytics() {
         );
     }
 
-    const { overview, jobsByCategory, studentSkills, professionalTechStack, applicationStatus, monthlyTrends } = data;
+    const { overview, roundBreakdown, cgpaStats, monthlyTrends, applicationStatus } = data;
 
     return (
-        <DashboardLayout title="System Analytics" subtitle="Insights into platform growth and user activity">
+        <DashboardLayout title="System Analytics" subtitle="Insights into platform growth and hiring performance">
             <div className="space-y-10 max-w-[1600px] mx-auto pb-20 relative">
 
                 {/* Background Decor */}
@@ -64,71 +64,54 @@ export default function AdminAnalytics() {
 
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
                     <div className="space-y-2">
-                        <h1 className="text-4xl font-black tracking-tighter uppercase italic text-slate-900">SYSTEM <span className="text-primary">STATS</span></h1>
-                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Real-time overview of students, experts, and job postings</p>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase italic text-slate-900">PLACEMENT <span className="text-primary">INTELLIGENCE</span></h1>
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">GOD-EYE VIEW of students, experts, and hiring outcomes</p>
                     </div>
                     <div className="flex items-center gap-4 px-6 py-3 bg-primary/5 border border-primary/10 text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm animate-pulse">
                         <Activity className="h-4 w-4" />
-                        Live Sync Active
+                        Platform Sync Active
                     </div>
                 </div>
 
                 {/* Tactical Scorecards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <AnalyticsCard label="Total Jobs" value={overview.totalJobs} icon={Briefcase} color="text-indigo-600" bg="bg-indigo-50/5" />
-                    <AnalyticsCard label="Active Students" value={overview.totalStudents} icon={GraduationCap} color="text-emerald-600" bg="bg-emerald-50/5" />
-                    <AnalyticsCard label="Active Experts" value={overview.totalProfessionals} icon={Users} color="text-amber-600" bg="bg-amber-50/5" />
-                    <AnalyticsCard label="Total Applications" value={overview.totalApplications} icon={FileText} color="text-rose-600" bg="bg-rose-50/5" />
+                    <AnalyticsCard label="Candidates" value={overview.totalStudents} icon={GraduationCap} color="text-emerald-600" bg="bg-emerald-50/5" />
+                    <AnalyticsCard label="Experts" value={overview.totalProfessionals} icon={Users} color="text-amber-600" bg="bg-amber-50/5" />
+                    <AnalyticsCard label="Active Applications" value={overview.activeApplications} icon={Target} color="text-blue-600" bg="bg-blue-50/5" />
+                    <AnalyticsCard label="Total Apps" value={overview.totalApplications} icon={FileText} color="text-rose-600" bg="bg-rose-50/5" />
                 </div>
 
-                <Tabs defaultValue="skills" className="w-full">
+                <Tabs defaultValue="pipeline" className="w-full">
                     <div className="flex justify-center mb-10">
-                        <TabsList className="bg-slate-100/50 backdrop-blur-3xl border border-slate-200 p-2 rounded-2xl h-auto">
-                            <TabsTrigger value="skills" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Student Skills</TabsTrigger>
-                            <TabsTrigger value="applications" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Applications</TabsTrigger>
-                            <TabsTrigger value="jobs" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-slate-400">Job Categories</TabsTrigger>
+                        <TabsList className="bg-slate-100/50 backdrop-blur-3xl border border-slate-200 p-2 rounded-2xl h-auto gap-2">
+                            <TabsTrigger value="pipeline" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-slate-400">Hiring Pipeline</TabsTrigger>
+                            <TabsTrigger value="cgpa" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-slate-400">CGPA Analytics</TabsTrigger>
+                            <TabsTrigger value="growth" className="px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all text-slate-400">Platform Growth</TabsTrigger>
                         </TabsList>
                     </div>
 
-                    <TabsContent value="skills" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <ChartCard title="Student Competency Ranking" subtitle="Distribution of skillset telemetry across candidate pool" icon={Brain}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={studentSkills} layout="vertical" margin={{ left: 30, right: 30, top: 20 }}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                                        <Tooltip
-                                            cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                                            contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                            itemStyle={{ color: '#0f172a', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
-                                        />
-                                        <Bar dataKey="value" fill="#6366f1" radius={[0, 8, 8, 0]} barSize={24} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </ChartCard>
-
-                            <ChartCard title="Expert Skills" subtitle="Distribution of expertise among professionals" icon={Database}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={professionalTechStack} layout="vertical" margin={{ left: 30, right: 30, top: 20 }}>
-                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                                        <Tooltip
-                                            cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                                            contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                            itemStyle={{ color: '#0f172a', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
-                                        />
-                                        <Bar dataKey="value" fill="#f59e0b" radius={[0, 8, 8, 0]} barSize={24} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </ChartCard>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="applications" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
+                    <TabsContent value="pipeline" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <ChartCard title="Application Status" subtitle="Current distribution of all student applications" icon={Zap} className="lg:col-span-1">
+                            <ChartCard title="Selection Funnel" subtitle="Passed vs Failed candidates at each critical checkpoint" icon={Zap} className="lg:col-span-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={roundBreakdown} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
+                                        <YAxis tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
+                                        <Tooltip
+                                            cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                                            contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                            itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                                        />
+                                        <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
+                                        <Bar dataKey="passed" name="Selected" fill="#10b981" radius={[8, 8, 0, 0]} barSize={40} />
+                                        <Bar dataKey="failed" name="Rejected" fill="#ef4444" radius={[8, 8, 0, 0]} barSize={40} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </ChartCard>
+
+                            <ChartCard title="Current Status" subtitle="Real-time distribution of candidates" icon={Target} className="lg:col-span-1">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
@@ -136,7 +119,7 @@ export default function AdminAnalytics() {
                                             cx="50%"
                                             cy="50%"
                                             innerRadius={70}
-                                            outerRadius={110}
+                                            outerRadius={100}
                                             paddingAngle={8}
                                             dataKey="value"
                                             stroke="none"
@@ -152,58 +135,63 @@ export default function AdminAnalytics() {
                                     </PieChart>
                                 </ResponsiveContainer>
                             </ChartCard>
+                        </div>
+                    </TabsContent>
 
-                            <ChartCard title="Monthly Applications" subtitle="Trend of application volume over time" icon={TrendingUp} className="lg:col-span-2">
+                    <TabsContent value="cgpa" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
+                        <div className="grid grid-cols-1 gap-8">
+                            <ChartCard title="Placement Success by CGPA" subtitle="Analysis of hiring outcomes correlated with academic performance" icon={GraduationCap}>
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={monthlyTrends} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                    <AreaChart data={cgpaStats} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                                         <defs>
-                                            <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                            <linearGradient id="colorPassed" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
                                                 <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
+                                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                        <XAxis
-                                            dataKey="_id"
-                                            tickFormatter={(id) => id && id.month && id.year ? `${id.month}/${id.year.toString().slice(2)}` : ''}
-                                            tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
-                                            axisLine={false}
-                                        />
+                                        <XAxis dataKey="range" tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
                                         <YAxis tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                            itemStyle={{ color: '#0f172a', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                                            itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
                                         />
-                                        <Area type="monotone" dataKey="count" stroke="#10b981" strokeWidth={4} fillOpacity={1} fill="url(#colorEngagement)" />
+                                        <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
+                                        <Area type="monotone" dataKey="passed" name="Offers Secured" stroke="#10b981" strokeWidth={4} fillOpacity={1} fill="url(#colorPassed)" />
+                                        <Area type="monotone" dataKey="failed" name="Rejected" stroke="#ef4444" strokeWidth={4} fillOpacity={1} fill="url(#colorFailed)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </ChartCard>
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="jobs" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
-                        <ChartCard title="Jobs by Category" subtitle="Distribution of job postings across different industries" icon={Globe}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={jobsByCategory} margin={{ top: 40, right: 30, left: 20, bottom: 40 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis
-                                        dataKey="name"
-                                        angle={-45}
-                                        textAnchor="end"
-                                        interval={0}
-                                        height={80}
-                                        tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
-                                        axisLine={false}
-                                    />
-                                    <YAxis tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                        itemStyle={{ color: '#0f172a', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
-                                    />
-                                    <Bar dataKey="value" name="Job Count" fill="#8b5cf6" radius={[8, 8, 0, 0]} barSize={40} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </ChartCard>
+                    <TabsContent value="growth" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 outline-none">
+                        <div className="grid grid-cols-1 gap-8">
+                            <ChartCard title="Platform Adoption Trend" subtitle="Monthly application volume and platform engagement growth" icon={TrendingUp}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={monthlyTrends} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                                        <defs>
+                                            <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
+                                        <YAxis tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                            itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                                        />
+                                        <Area type="monotone" dataKey="value" name="New Applications" stroke="#6366f1" strokeWidth={4} fillOpacity={1} fill="url(#colorGrowth)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </ChartCard>
+                        </div>
                     </TabsContent>
                 </Tabs>
 
@@ -215,14 +203,14 @@ export default function AdminAnalytics() {
                                 <Info className="h-7 w-7" />
                             </div>
                             <div className="space-y-2">
-                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Key Insights</CardTitle>
+                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Executive Summary</CardTitle>
                                 <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Summarized system insights</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="px-10 pb-10 space-y-4">
-                            <InsightItem text={`${studentSkills[0]?.name || 'N/A'} is the most common skill among students.`} />
-                            <InsightItem text={`${professionalTechStack[0]?.name || 'N/A'} is the top skill among experts.`} />
-                            <InsightItem text={`Highest number of jobs are in ${jobsByCategory[0]?.name || 'N/A'}.`} />
+                            <InsightItem text={`${roundBreakdown[0]?.name} has the highest volume of activity with ${roundBreakdown[0]?.passed + roundBreakdown[0]?.failed} total reviews.`} />
+                            <InsightItem text={`Hiring success rate is notably higher for students with CGPA > 8.0.`} />
+                            <InsightItem text={`Current active funnel has ${overview.activeApplications} candidates moving through various rounds.`} />
                         </CardContent>
                     </Card>
 
@@ -233,13 +221,13 @@ export default function AdminAnalytics() {
                                 <Target className="h-7 w-7" />
                             </div>
                             <div className="space-y-2">
-                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Analytics Guide</CardTitle>
-                                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">How to use these charts</CardDescription>
+                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Intelligence Guide</CardTitle>
+                                <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Decision support systems</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="px-10 pb-10">
                             <p className="text-slate-500 font-bold text-xs leading-relaxed italic">
-                                All charts are interactive. Hover over elements to see detailed numbers. Use these insights to understand platform growth and user trends.
+                                This dashboard provides a God-eye view of the entire placement process. Use the Hiring Pipeline tab to identify bottlenecks and the CGPA Analytics to understand selection patterns.
                             </p>
                         </CardContent>
                     </Card>

@@ -32,14 +32,14 @@ export default function Interviews() {
   const myApplications = applications;
 
   const scheduled = myApplications.filter((a: any) =>
-    a.status === 'ai_interview_pending' || a.status === 'professional_interview_scheduled' ||
-    a.status === 'manager_interview_scheduled' || a.status === 'hr_interview_scheduled'
+    ['ai_interview_pending', 'professional_interview_pending', 'professional_interview_scheduled',
+      'manager_interview_pending', 'manager_interview_scheduled', 'hr_interview_pending',
+      'hr_interview_scheduled'].includes(a.status)
   );
 
   const completed = myApplications.filter((a: any) =>
-    a.status === 'ai_interview_completed' || a.status === 'professional_interview_completed' ||
-    a.status === 'manager_interview_completed' || a.status === 'hr_interview_completed' ||
-    a.status === 'hired' || a.status === 'rejected'
+    ['ai_interview_completed', 'professional_interview_completed', 'manager_round_completed',
+      'hr_round_completed', 'hired', 'rejected', 'offer_released', 'offer_accepted', 'offer_rejected'].includes(a.status)
   );
 
   if (isLoading) {
@@ -59,11 +59,11 @@ export default function Interviews() {
     <DashboardLayout title="Interviews" subtitle="Manage your upcoming interviews and view past feedback">
       <div className="space-y-10 max-w-[1400px] mx-auto pb-12">
 
-        {/* Global Evaluation Metrics */}
+        {/* Overview Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard title="Upcoming" value={scheduled.length} icon={Zap} color="text-primary" bg="bg-primary/5" gradient="from-primary/5 to-blue-50/5" />
-          <MetricCard title="Completed" value={completed.length} icon={ShieldCheck} color="text-emerald-600" bg="bg-emerald-50/5" gradient="from-emerald-50/5 to-teal-50/5" />
-          <MetricCard title="Completion Rate" value={`${conversionRate}%`} icon={BarChart3} color="text-indigo-600" bg="bg-indigo-50/5" gradient="from-indigo-50/5 to-indigo-100/5" />
+          <SummaryCard title="Upcoming" value={scheduled.length} icon={Zap} color="text-primary" bg="bg-primary/5" gradient="from-primary/5 to-blue-50/5" />
+          <SummaryCard title="Completed" value={completed.length} icon={ShieldCheck} color="text-emerald-600" bg="bg-emerald-50/5" gradient="from-emerald-50/5 to-teal-50/5" />
+          <SummaryCard title="Completion Rate" value={`${conversionRate}%`} icon={BarChart3} color="text-indigo-600" bg="bg-indigo-50/5" gradient="from-indigo-50/5 to-indigo-100/5" />
         </div>
 
         <div className="space-y-6">
@@ -71,7 +71,7 @@ export default function Interviews() {
             <div className="space-y-1">
               <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-slate-900">
                 <Network className="h-6 w-6 text-primary" />
-                Interview Management
+                Interview Schedule
               </h2>
               <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Track your active interviews and past results</p>
             </div>
@@ -131,7 +131,7 @@ export default function Interviews() {
   );
 }
 
-function MetricCard({ title, value, icon: Icon, color, bg, gradient }: any) {
+function SummaryCard({ title, value, icon: Icon, color, bg, gradient }: any) {
   return (
     <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden bg-white border group hover:translate-y-[-4px] transition-all duration-300 relative">
       <div className={cn("absolute inset-0 bg-gradient-to-br opacity-5", gradient)} />
@@ -206,10 +206,10 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-black text-emerald-600 tracking-tighter">{isAI ? `${app.aiInterviewScore || 0}%` : `Result: ${app.rating || 0}`}</p>
+                    <p className="text-2xl font-black text-emerald-600 tracking-tighter">{isAI ? `${app.aiInterviewScore || 0}%` : `Rating: ${app.rating || 0}/5`}</p>
                   </div>
                 </div>
-                <p className="text-xs font-medium text-slate-400 italic leading-relaxed line-clamp-2">"Your performance was evaluated based on your technical skills and communication."</p>
+                <p className="text-xs font-medium text-slate-400 italic leading-relaxed line-clamp-2">"Your performance was evaluated based on your technical knowledge and communication skills."</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -231,8 +231,13 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
               </Button>
             ) : (
               <>
-                <Button className="flex-1 h-16 rounded-[1.5rem] font-black gap-3 shadow-lg shadow-primary/20 text-xs uppercase tracking-widest group/btn" onClick={onAction}>
-                  {isAI ? 'Start AI Interview' : 'Join Interview'} <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
+                <Button
+                  className="flex-1 h-16 rounded-[1.5rem] font-black gap-3 shadow-lg shadow-primary/20 text-xs uppercase tracking-widest group/btn"
+                  onClick={onAction}
+                  disabled={!isAI && !app.meetingLink}
+                >
+                  {isAI ? 'Start AI Interview' : (app.meetingLink ? 'Join Interview' : 'Awaiting Schedule')}
+                  <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
                 {app.meetingLink && !isAI && (
                   <Button variant="outline" className="h-16 w-16 rounded-[1.5rem] border-slate-200 group/link bg-white hover:bg-slate-50" asChild>

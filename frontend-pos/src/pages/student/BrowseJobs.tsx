@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,16 +10,26 @@ import { Job, Student } from '@/types';
 import {
   Search, IndianRupee, Clock, Building2, Sparkles,
   TrendingUp, MapPin, Briefcase, ChevronRight, Filter,
-  Target, Zap, Star, Terminal, Globe
+  Target, Zap, Star, Terminal, Globe, Ghost, ArrowRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { jobService } from '@/services/jobService';
 import { cn } from '@/lib/utils';
 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 export default function BrowseJobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   // Fetch jobs from MongoDB
   const { data: jobsData, isLoading } = useQuery({
@@ -38,7 +48,7 @@ export default function BrowseJobs() {
   // Calculate job recommendations based on student skills
   const calculateMatchScore = (job: Job): number => {
     if (!student?.skills || student.skills.length === 0) return 40; // Base score
-    const jobSkills = [...job.skills, ...job.requiredTechStack];
+    const jobSkills = [...(job.skills || []), ...(job.requiredTechStack || [])];
     const matchingSkills = student.skills.filter(skill =>
       jobSkills.some(jobSkill => jobSkill.toLowerCase().includes(skill.toLowerCase()))
     );
@@ -63,11 +73,15 @@ export default function BrowseJobs() {
       <DashboardLayout title="Browse Jobs" subtitle="Finding the best career opportunities for you...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-2xl shadow-primary/20" />
-          <p className="font-black text-primary animate-pulse uppercase tracking-[0.4em] text-[10px] italic">Scanning Opportunities...</p>
+          <p className="font-black text-primary animate-pulse uppercase tracking-[0.4em] text-[10px] italic">Loading Jobs...</p>
         </div>
       </DashboardLayout>
     );
   }
+
+  const toggleExpand = (id: string) => {
+    setExpandedJobId(expandedJobId === id ? null : id);
+  };
 
   return (
     <DashboardLayout title="Browse Jobs" subtitle="Find and apply for the best career opportunities matching your profile">
@@ -103,7 +117,7 @@ export default function BrowseJobs() {
           </Card>
         </div>
 
-        {/* AI Recommendations */}
+        {/* AI Recommendations - Card Layout */}
         {!search && recommendedJobs.length > 0 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
             <div className="flex items-center justify-between">
@@ -119,18 +133,18 @@ export default function BrowseJobs() {
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {recommendedJobs.map(({ job, matchScore }) => (
                 <PremiumJobCard
-                  key={job.id}
+                  key={job.id || job._id}
                   job={job}
                   isRecommended
                   matchScore={matchScore}
-                  onApply={() => navigate(`/student/jobs/${job.id}`)}
+                  onApply={() => navigate(`/student/apply/${job.id || job._id}`)}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* Global Catalog */}
+        {/* Global Catalog - Tabular Layout */}
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -138,7 +152,7 @@ export default function BrowseJobs() {
                 <Globe className="h-7 w-7 text-primary" />
                 {search ? `SEARCH RESULTS FOR "${search.toUpperCase()}"` : "ALL AVAILABLE JOBS"}
               </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-11 italic">Access the full spectrum of available placement opportunities</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-11 italic">Access all available placement opportunities</p>
             </div>
             <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-slate-200 bg-slate-50 px-6 py-2 rounded-full shadow-none">
               <div className="h-1.5 w-1.5 rounded-full bg-primary mr-3 animate-pulse" />
@@ -146,29 +160,150 @@ export default function BrowseJobs() {
             </Badge>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredJobs.map((job) => (
-              <PremiumJobCard
-                key={job.id}
-                job={job}
-                onApply={() => navigate(`/student/jobs/${job.id}`)}
-              />
-            ))}
-          </div>
+          <Card className="border-slate-200 shadow-sm rounded-[2rem] overflow-hidden bg-white border">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent border-slate-100">
+                  <TableHead className="w-[300px] font-black text-[10px] uppercase tracking-widest text-slate-400 py-6 pl-10">Company & Role</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 py-6">Package (CTC)</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 py-6">Location</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 py-6">Deadline</TableHead>
+                  <TableHead className="text-right font-black text-[10px] uppercase tracking-widest text-slate-400 py-6 pr-10">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredJobs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-bold italic h-[300px]">
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <Ghost className="h-10 w-10 opacity-20" />
+                        No jobs found matching your search.
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredJobs.map((job) => {
+                    const isExpanded = expandedJobId === (job.id || job._id);
+                    return (
+                      <React.Fragment key={job.id || job._id}>
+                        <TableRow
+                          className={cn(
+                            "group cursor-pointer border-slate-100 transition-colors",
+                            isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/30"
+                          )}
+                          onClick={() => toggleExpand(job.id || job._id)}
+                        >
+                          <TableCell className="py-8 pl-10">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center font-black text-primary text-xl shrink-0 group-hover:scale-110 transition-transform">
+                                {job.companyName.charAt(0)}
+                              </div>
+                              <div className="space-y-1">
+                                <p className="font-black text-slate-900 leading-none uppercase tracking-tight">{job.roleTitle}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic">
+                                  <Building2 className="h-3 w-3" /> {job.companyName}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-8">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-black text-xs border border-emerald-100 italic">
+                              <IndianRupee className="h-3 w-3" /> {job.package || job.ctcBand}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-8">
+                            <div className="flex items-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest italic">
+                              <MapPin className="h-3.5 w-3.5 text-slate-300" /> {job.locationType || 'Remote'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-8">
+                            <div className="flex items-center gap-2 text-rose-500 font-black text-[10px] uppercase tracking-widest italic">
+                              <Clock className="h-3.5 w-3.5" /> {format(new Date(job.deadline), 'dd MMM yyyy')}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-8 pr-10 text-right">
+                            <div className="flex items-center justify-end gap-3">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400 group-hover:text-primary transition-colors"
+                              >
+                                {isExpanded ? 'CLOSE' : 'DETAILS'}
+                              </Button>
+                              <Button
+                                className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/student/apply/${job.id || job._id}`);
+                                }}
+                              >
+                                APPLY
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
 
-          {filteredJobs.length === 0 && (
-            <div className="py-32 flex flex-col items-center text-center space-y-8 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 relative overflow-hidden group/empty">
-              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/empty:opacity-100 transition-opacity" />
-              <div className="h-24 w-24 rounded-[2.5rem] bg-white flex items-center justify-center shadow-sm relative z-10 border border-slate-100">
-                <Briefcase className="h-12 w-12 text-slate-300" />
-              </div>
-              <div className="space-y-3 relative z-10">
-                <h3 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">No Results Found</h3>
-                <p className="text-slate-400 max-w-xs font-bold text-xs italic">We couldn't find any jobs matching your current search criteria.</p>
-              </div>
-              <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest relative z-10" onClick={() => setSearch('')}>CLEAR SEARCH</Button>
-            </div>
-          )}
+                        {/* Expanded details row */}
+                        {isExpanded && (
+                          <TableRow className="bg-slate-50/50 border-none hover:bg-slate-50/50">
+                            <TableCell colSpan={5} className="p-0 border-none">
+                              <div className="px-10 py-10 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                                  <div className="space-y-8">
+                                    <div className="space-y-3">
+                                      <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Job Description</h5>
+                                      <p className="text-slate-500 text-sm font-medium leading-relaxed italic">{job.description}</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Required Skills</h5>
+                                      <div className="flex flex-wrap gap-2">
+                                        {(job.skills || []).map((skill: string) => (
+                                          <Badge key={skill} variant="outline" className="rounded-lg border-slate-200 bg-white px-3 py-1 font-black text-[9px] uppercase tracking-widest text-slate-500 italic">
+                                            {skill}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-8">
+                                    <div className="grid grid-cols-2 gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                                      <div className="absolute top-0 right-0 h-24 w-24 bg-primary/5 rounded-full blur-2xl" />
+                                      <div className="space-y-1 relative">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Experience</p>
+                                        <p className="text-sm font-black text-slate-700 italic">{job.experienceRequired || 'Freshman'}</p>
+                                      </div>
+                                      <div className="space-y-1 relative">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Job Type</p>
+                                        <p className="text-sm font-black text-slate-700 italic">{job.jobType || 'Full-time'}</p>
+                                      </div>
+                                      <div className="space-y-1 relative">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Applicants</p>
+                                        <p className="text-sm font-black text-slate-700 italic">{job.applicationCount || 0} People Applied</p>
+                                      </div>
+                                      <div className="space-y-1 relative">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Selection Process</p>
+                                        <p className="text-sm font-black text-slate-700 italic">Resume + Assessment + Interview</p>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      className="w-full h-16 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest gap-3 shadow-xl shadow-indigo-100"
+                                      onClick={() => navigate(`/student/apply/${job.id || job._id}`)}
+                                    >
+                                      PROCEED TO APPLICATION <ArrowRight className="h-5 w-5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </React.Fragment >
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </Card>
         </div>
       </div>
     </DashboardLayout>
@@ -176,6 +311,7 @@ export default function BrowseJobs() {
 }
 
 function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
+  const navigate = useNavigate();
   return (
     <Card className={cn(
       "group relative border-slate-200 shadow-sm hover:shadow-lg transition-all duration-700 rounded-[3rem] overflow-hidden bg-white border",
@@ -231,9 +367,21 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
           </div>
         </div>
 
-        <Button className="w-full h-14 rounded-2xl font-black gap-3 shadow-lg shadow-primary/10 transition-all group-hover:translate-y-[-2px] group-hover:shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest" onClick={onApply}>
-          VIEW DETAILS <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            variant="outline"
+            className="flex-1 h-14 rounded-2xl font-black gap-3 border-slate-200 hover:bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"
+            onClick={() => navigate(`/student/jobs/${job.id || job._id}`)}
+          >
+            VIEW DETAILS
+          </Button>
+          <Button
+            className="flex-1 h-14 rounded-2xl font-black gap-3 shadow-lg shadow-primary/10 transition-all group-hover:translate-y-[-2px] group-hover:shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest"
+            onClick={onApply}
+          >
+            APPLY NOW <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

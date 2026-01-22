@@ -112,7 +112,7 @@ export default function ResumeATSAnalysis() {
           <AlertTriangle className="h-16 w-16 text-rose-500 mx-auto" />
           <p className="text-slate-400 font-bold italic">This application does not exist or has been archived.</p>
           <Button variant="link" className="font-black text-primary uppercase text-xs tracking-widest" onClick={() => navigate('/student/applications')}>
-            Back to Tactical Overview
+            Back to My Applications
           </Button>
         </div>
       </DashboardLayout>
@@ -131,7 +131,7 @@ export default function ResumeATSAnalysis() {
               <div className="absolute -inset-4 bg-primary rounded-full blur opacity-10 animate-pulse" />
               <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-lg" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse italic">Analyzing Neural Patterns...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse italic">Analyzing Resume...</p>
           </div>
         ) : atsAnalysis ? (
           <>
@@ -140,8 +140,8 @@ export default function ResumeATSAnalysis() {
               <CardHeader className="p-10 border-b border-slate-100 bg-slate-50/50">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900 italic">ATS Compatibility Index</CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Based on industry standards and role requirements</CardDescription>
+                    <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900 italic">Resume Match Score</CardTitle>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Based on industry standards and job requirements</CardDescription>
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-black text-primary italic tracking-tighter">
@@ -175,7 +175,7 @@ export default function ResumeATSAnalysis() {
                   <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
-                  System Strengths
+                  Resume Strengths
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-10 pb-10">
@@ -197,7 +197,7 @@ export default function ResumeATSAnalysis() {
                   <div className="h-10 w-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 border border-amber-200">
                     <TrendingUp className="h-5 w-5" />
                   </div>
-                  Neutral Optimizations
+                  Suggested Improvements
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-10">
@@ -215,8 +215,8 @@ export default function ResumeATSAnalysis() {
             {/* Keyword Analysis */}
             <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
               <CardHeader className="p-10 border-b border-slate-100 bg-slate-50/50">
-                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Keyword Spectrum Analysis</CardTitle>
-                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Technical keywords identified in your submission</CardDescription>
+                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Keyword Analysis</CardTitle>
+                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Skills identified in your resume</CardDescription>
               </CardHeader>
               <CardContent className="p-10 space-y-10">
                 <div>
@@ -244,7 +244,7 @@ export default function ResumeATSAnalysis() {
                 {atsAnalysis.missingKeywords.length > 0 && (
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 mb-6 flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Missing Spectral Patterns ({atsAnalysis.missingKeywords.length})
+                      <div className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Missing Keywords ({atsAnalysis.missingKeywords.length})
                     </h4>
                     <div className="flex flex-wrap gap-3">
                       {atsAnalysis.missingKeywords.map((keyword, idx) => (
@@ -262,7 +262,7 @@ export default function ResumeATSAnalysis() {
             {/* Readability Metrics */}
             <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
               <CardHeader className="p-10 pb-6">
-                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Structural Readability</CardTitle>
+                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Resume Formatting</CardTitle>
               </CardHeader>
               <CardContent className="px-10 pb-10">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -284,14 +284,14 @@ export default function ResumeATSAnalysis() {
             {/* Formatting Analysis */}
             <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-md transition-all duration-500">
               <CardHeader className="p-10 pb-6">
-                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Dossier Integrity</CardTitle>
+                <CardTitle className="text-lg font-black uppercase tracking-tight text-slate-900 italic">Resume Checklist</CardTitle>
               </CardHeader>
               <CardContent className="px-10 pb-10">
                 <div className="space-y-4">
                   {[
-                    { label: "Proper Protocol Structure", passed: atsAnalysis.formatting.hasProperStructure, label_passed: "Verified", label_failed: "Error" },
-                    { label: "Neural Contact Info", passed: atsAnalysis.formatting.hasContactInfo, label_passed: "Present", label_failed: "Missing" },
-                    { label: "Clear Segment Definition", passed: atsAnalysis.formatting.hasClearSections, label_passed: "Compliant", label_failed: "Incomplete" }
+                    { label: "Proper Structure", passed: atsAnalysis.formatting.hasProperStructure, label_passed: "Verified", label_failed: "Error" },
+                    { label: "Contact Info", passed: atsAnalysis.formatting.hasContactInfo, label_passed: "Present", label_failed: "Missing" },
+                    { label: "Clear Sections", passed: atsAnalysis.formatting.hasClearSections, label_passed: "Compliant", label_failed: "Incomplete" }
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-slate-200 transition-all">
                       <span className="text-xs font-black text-slate-500 uppercase tracking-tight italic">{item.label}</span>
@@ -313,18 +313,18 @@ export default function ResumeATSAnalysis() {
             {/* Next Steps */}
             <Card className="border-primary/20 shadow-sm rounded-[2.5rem] bg-primary/5 overflow-hidden">
               <CardHeader className="p-10 pb-6 border-b border-primary/10">
-                <CardTitle className="text-primary font-black uppercase italic tracking-tighter">Strategic Next Steps</CardTitle>
+                <CardTitle className="text-primary font-black uppercase italic tracking-tighter">Next Steps</CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-6">
                 <p className="text-sm font-bold text-slate-500 italic leading-relaxed">
-                  Based on this neural analysis, consider the following actions to optimize your technical profile:
+                  Based on this analysis, consider the following actions to improve your resume:
                 </p>
                 <ol className="space-y-4">
                   {[
                     "Incorporate the missing keywords naturally throughout your experience descriptions.",
                     "Implement the suggested quantitative metrics to demonstrate impact.",
                     "Strengthen achievements using industry-standard action verbs.",
-                    "Maintain the current structural integrity while adding missing spectral patterns."
+                    "Maintain the current structure while adding the missing keywords."
                   ].map((step, i) => (
                     <li key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white/50 border border-primary/5 group/step hover:bg-white transition-all">
                       <div className="h-6 w-6 rounded-lg bg-primary text-white flex items-center justify-center font-black text-[10px] shrink-0 italic shadow-md shadow-primary/20">0{i + 1}</div>
@@ -341,14 +341,14 @@ export default function ResumeATSAnalysis() {
                 className="h-14 px-10 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-3 italic border border-transparent hover:border-slate-100"
                 onClick={() => navigate('/student/applications')}
               >
-                Back to Tactical Overview
+                Back to My Applications
               </Button>
               {atsAnalysis.passed && (
                 <Button
                   onClick={() => navigate(`/student/assessment/${applicationId}`)}
                   className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all flex items-center gap-4 group/btn"
                 >
-                  Proceed to Neural Assessment
+                  Proceed to Assessment
                   <CheckCircle2 className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                 </Button>
               )}

@@ -59,7 +59,7 @@ export default function Profile() {
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[160px] -z-10" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50/5 rounded-full blur-[140px] -z-10" />
 
-        {/* Profile Hero Section (Tactical Command Header) */}
+        {/* Profile Summary */}
         <div className="relative group/hero">
           <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/5 via-primary/5 to-indigo-500/5 rounded-[3.5rem] blur-xl opacity-50 group-hover/hero:opacity-80 transition duration-1000"></div>
           <Card className="relative border-slate-200 shadow-sm rounded-[3rem] bg-white border overflow-hidden">
@@ -105,7 +105,7 @@ export default function Profile() {
                   <div className="flex flex-wrap justify-center lg:justify-start gap-4">
                     <MetricBadge icon={Target} label="CGPA" value={student?.cgpa || '9.0'} color="text-emerald-600" />
                     <MetricBadge icon={Zap} label="BATCH" value={student?.graduationYear || '2024'} color="text-amber-600" />
-                    <MetricBadge icon={MapPin} label="LOCATION" value="Remote Node" color="text-indigo-600" />
+                    <MetricBadge icon={MapPin} label="LOCATION" value="Remote" color="text-indigo-600" />
                   </div>
                 </div>
 
@@ -124,7 +124,7 @@ export default function Profile() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-          {/* Primary Identity Column */}
+          {/* Personal Info Column */}
           <div className="lg:col-span-8 space-y-10">
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50 relative overflow-hidden">
@@ -132,9 +132,9 @@ export default function Profile() {
                 <div className="flex items-center justify-between relative z-10">
                   <div className="space-y-2">
                     <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                      <Terminal className="h-8 w-8 text-primary" /> PERSONAL INFORMATION
+                      <Terminal className="h-8 w-8 text-primary" /> ACCOUNT INFORMATION
                     </CardTitle>
-                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">Manage your personal details and academic info</CardDescription>
+                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">Manage your basic details and academic info</CardDescription>
                   </div>
                   <Cpu className="h-10 w-10 text-primary animate-pulse opacity-20" />
                 </div>
@@ -198,12 +198,12 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Asset & Analysis Column */}
+          {/* Resume & Analysis Column */}
           <div className="lg:col-span-4 space-y-10">
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
                 <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                  <Briefcase className="h-6 w-6 text-primary" /> RESUME & ANALYSIS
+                  <Briefcase className="h-6 w-6 text-primary" /> RESUME & MATCHING
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-12 space-y-12">
@@ -227,7 +227,7 @@ export default function Profile() {
                         onClick={handleATSAnalysis}
                         disabled={analyzing}
                       >
-                        <Zap className="h-5 w-5 fill-current" /> {analyzing ? 'ANALYZING...' : 'RUN ATS SCORE CHECK'}
+                        <Zap className="h-5 w-5 fill-current" /> {analyzing ? 'ANALYZING...' : 'CHECK RESUME MATCH'}
                       </Button>
                     </div>
                     {student?.resumeUrl && (
@@ -245,8 +245,8 @@ export default function Profile() {
                     <div className="space-y-6">
                       <div className="flex justify-between items-end">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">ATS SCORE</p>
-                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic animate-pulse">Resume Optimization Good</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">RESUME SCORE</p>
+                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic animate-pulse">Good Profile Match</p>
                         </div>
                         <p className="text-5xl font-black text-primary italic leading-none">{atsAnalysis.atsScore}<span className="text-xs opacity-30 not-italic ml-1 font-bold">/100</span></p>
                       </div>

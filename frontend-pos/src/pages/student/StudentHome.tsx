@@ -15,14 +15,15 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '@/services/applicationService';
 import { jobService } from '@/services/jobService';
+import { dashboardService } from '@/services/dashboardService';
 import { cn } from '@/lib/utils';
 
 const statusOrder = [
-  'applied', 'resume_uploaded', 'resume_shortlisted', 'assessment_pending',
-  'assessment_completed', 'assessment_shortlisted', 'ai_interview_pending',
-  'ai_interview_completed', 'professional_interview_pending', 'professional_interview_completed',
-  'manager_round_pending', 'manager_round_completed', 'hr_round_pending',
-  'hr_round_completed', 'offer_released'
+  'applied', 'resume_uploaded', 'resume_under_review', 'resume_shortlisted', 'assessment_pending',
+  'assessment_completed', 'assessment_released', 'assessment_approved', 'assessment_shortlisted', 'ai_interview_pending',
+  'ai_interview_completed', 'professional_interview_pending', 'professional_interview_scheduled', 'professional_interview_completed',
+  'manager_interview_pending', 'manager_interview_scheduled', 'manager_round_completed', 'hr_interview_pending',
+  'hr_interview_scheduled', 'hr_round_completed', 'offer_released', 'offer_accepted'
 ];
 
 export default function StudentHome() {
@@ -30,7 +31,15 @@ export default function StudentHome() {
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
 
-  // Fetch applications
+  // Fetch dashboard stats
+  const { data: dashboardData, isLoading: statsLoading } = useQuery({
+    queryKey: ['student-dashboard-stats'],
+    queryFn: dashboardService.getDashboardStats,
+  });
+
+  const statsResponse = dashboardData?.data || {};
+
+  // Fetch applications (for the live track display)
   const { data: applicationsData, isLoading: leadsLoading } = useQuery({
     queryKey: ['my-applications'],
     queryFn: applicationService.getMyApplications,
@@ -48,17 +57,17 @@ export default function StudentHome() {
       ? jobsData.data.jobs
       : [];
 
-  const myApplications = applications.filter(a => a.studentId === student?.id);
-  const activeApplications = myApplications.filter(a => !['rejected', 'offer_released', 'offer_accepted'].includes(a.status));
+  const myApplications = applications;
+  const activeApplications = statsResponse.activeApplications || [];
 
   const stats = [
-    { label: 'My Applications', value: activeApplications.length, icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Pending Tasks', value: myApplications.filter(a => a.status === 'assessment_pending' || a.status === 'ai_interview_pending').length, icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'Interviews', value: myApplications.filter(a => a.status.includes('interview_pending')).length, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'My Applications', value: statsResponse.totalApplications || 0, icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Pending Tasks', value: myApplications.filter(a => ['assessment_pending', 'ai_interview_pending', 'professional_interview_scheduled'].includes(a.status)).length, icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Interviews', value: myApplications.filter(a => a.status.includes('interview_pending') || a.status.includes('interview_scheduled')).length, icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     { label: 'Offers', value: myApplications.filter(a => (a.status === 'offer_released' || a.status === 'offer_accepted')).length, icon: Award, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
   ];
 
-  if (leadsLoading || jobsLoading) {
+  if (statsLoading || leadsLoading || jobsLoading) {
     return (
       <DashboardLayout title="Dashboard" subtitle="Loading your dashboard...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
@@ -69,6 +78,13 @@ export default function StudentHome() {
     );
   }
 
+  // Calculate platform stats based on real data (if available) or more realistic simulations
+  const platformStats = [
+    { label: "Active Opportunities", value: jobs.length, trend: "REAL-TIME", color: "text-primary" },
+    { label: "Your Selection Rate", value: myApplications.length > 0 ? `${Math.round((myApplications.filter(a => ['offer_released', 'offer_accepted', 'hired'].includes(a.status)).length / myApplications.length) * 100)}%` : '0%', trend: "PERSONAL", color: "text-emerald-600" },
+    { label: "Completed Rounds", value: myApplications.reduce((acc, a) => acc + (a.timeline?.length || 0), 0), trend: "ACTIVITY", color: "text-amber-600" }
+  ];
+
   return (
     <DashboardLayout title="Dashboard" subtitle={`Welcome back, ${student?.name?.split(' ')[0]}. Here is your progress overview.`}>
       <div className="space-y-10 max-w-[1500px] mx-auto pb-12 relative">
@@ -77,7 +93,7 @@ export default function StudentHome() {
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[140px] -z-10" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/5 rounded-full blur-[120px] -z-10" />
 
-        {/* Hero Identity Card */}
+        {/* Profile Overview */}
         <div className="relative group/hero">
           <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-600/10 rounded-[3.5rem] blur-xl opacity-50 group-hover/hero:opacity-80 transition duration-1000"></div>
           <Card className="relative bg-white border border-slate-200 shadow-sm rounded-[3rem] overflow-hidden">
@@ -144,13 +160,13 @@ export default function StudentHome() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
           <div className="lg:col-span-8 space-y-10">
-            {/* Dynamic Engagement Banner */}
+            {/* Job Alerts Banner */}
             <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-slate-50 border overflow-hidden relative group/banner">
               <div className="absolute top-0 right-0 h-64 w-64 bg-primary/5 rounded-full blur-[100px] -z-10 group-hover/banner:scale-125 transition-transform duration-1000" />
               <CardContent className="p-12 flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
                 <div className="space-y-6 text-center md:text-left flex-1">
                   <Badge className="bg-primary/10 text-primary border border-primary/20 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] italic mb-2">
-                    <Activity className="h-3 w-3 mr-2" /> HIRING NEWS
+                    <Activity className="h-3 w-3 mr-2" /> JOB ALERTS
                   </Badge>
                   <h3 className="text-4xl font-black leading-none uppercase italic tracking-tighter text-slate-900">READY FOR A NEW <span className="text-primary">JOB?</span></h3>
                   <p className="text-slate-500 font-bold leading-relaxed max-w-sm italic">New companies have posted job opportunities in your field this week. Check them out and apply now.</p>
@@ -167,15 +183,15 @@ export default function StudentHome() {
               </CardContent>
             </Card>
 
-            {/* Live Track Monitor */}
+            {/* Application Tracker */}
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50 relative">
                 <div className="flex items-center justify-between relative z-10">
                   <div className="space-y-2">
                     <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
-                      <Activity className="h-8 w-8 text-primary" /> ACTIVE APPLICATIONS
+                      <Activity className="h-8 w-8 text-primary" /> MY APPLICATIONS
                     </CardTitle>
-                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">TRACK THE PROGRESS OF YOUR RECENTLY APPLIED JOBS</CardDescription>
+                    <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">TRACK THE STATUS OF YOUR APPLICATIONS</CardDescription>
                   </div>
                   <Button variant="ghost" className="font-black text-[10px] uppercase tracking-widest text-primary hover:bg-primary/5 px-6 h-12 rounded-xl" onClick={() => navigate('/student/applications')}>
                     VIEW ALL <ChevronRight className="ml-2 h-4 w-4" />
@@ -242,7 +258,7 @@ export default function StudentHome() {
           </div>
 
           <div className="lg:col-span-4 space-y-10">
-            {/* Prediction/Insight Card */}
+            {/* Platform Insights */}
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
               <CardHeader className="bg-slate-50 p-10 border-b border-slate-100 transition-colors group-hover:bg-slate-100">
                 <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
@@ -251,15 +267,21 @@ export default function StudentHome() {
               </CardHeader>
               <CardContent className="p-10 space-y-10">
                 <div className="space-y-8">
-                  <InsightMetricItem label="Average Placement Rate" value="94.2%" trend="+2.4% SUCCESS" color="text-emerald-600" />
-                  <InsightMetricItem label="Active Job Posts" value="1,248 JOBS" trend="HIGH DEMAND" color="text-amber-600" />
-                  <InsightMetricItem label="Average Salary" value="₹12.4 LPA" trend="TOP" color="text-primary" />
+                  {platformStats.map((stat, index) => (
+                    <InsightMetricItem
+                      key={index}
+                      label={stat.label}
+                      value={stat.value}
+                      trend={stat.trend}
+                      color={stat.color}
+                    />
+                  ))}
                 </div>
                 <Button variant="outline" className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest border-slate-200 bg-white hover:bg-slate-50 text-slate-600">VIEW MORE STATS</Button>
               </CardContent>
             </Card>
 
-            {/* Tactical Calendar Snapshot */}
+            {/* Interview Schedule Snapshot */}
             <Card className="border-none shadow-sm rounded-[3rem] bg-indigo-600 text-white p-12 relative overflow-hidden group/cal">
               <div className="absolute top-0 right-0 h-40 w-40 bg-white/5 rounded-full blur-[80px] -z-10 group-hover/cal:scale-150 transition-transform duration-1000" />
               <Calendar className="absolute -right-8 -top-8 h-40 w-40 opacity-10 group-hover/cal:rotate-12 transition-transform duration-700" />

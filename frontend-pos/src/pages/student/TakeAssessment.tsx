@@ -127,7 +127,7 @@ export default function TakeAssessment() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[120px]" />
       </div>
 
-      {/* Cinematic Tactical Header */}
+      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-3xl border-b border-slate-200 h-24">
         <div className="max-w-[1600px] mx-auto h-full flex items-center justify-between px-10">
           <div className="flex items-center gap-6">
@@ -138,7 +138,7 @@ export default function TakeAssessment() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">ONLINE <span className="text-primary">ASSESSMENT</span></h1>
+              <h1 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">STUDENT <span className="text-primary">ASSESSMENT</span></h1>
               <div className="flex items-center gap-3">
                 <div className="h-1 w-8 bg-primary rounded-full" />
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] italic">ASSESSMENT ID: {applicationId?.slice(-8).toUpperCase()}</p>
@@ -181,7 +181,7 @@ export default function TakeAssessment() {
         </div>
       </header>
 
-      {/* Main Simulation Workspace */}
+      {/* Question Area */}
       <main className="relative z-10 pt-40 pb-40 px-10">
         <div className="max-w-5xl mx-auto space-y-12">
 
@@ -257,7 +257,7 @@ export default function TakeAssessment() {
             </Card>
           ) : (
             <div className="space-y-12 animate-in slide-in-from-bottom-12 duration-1000">
-              {/* Problem Architecture */}
+              {/* Question Details */}
               <Card className="border-slate-200 shadow-sm rounded-[3.5rem] bg-white border overflow-hidden">
                 <CardHeader className="p-12 lg:p-16 pb-8">
                   <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -302,7 +302,7 @@ export default function TakeAssessment() {
                 </CardContent>
               </Card>
 
-              {/* Logic Synthesis Workspace */}
+              {/* Code Editor Area */}
               <Card className="border-slate-200 shadow-sm rounded-[3.5rem] overflow-hidden bg-white border">
                 <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
                   <div className="flex items-center justify-between">
@@ -359,7 +359,7 @@ export default function TakeAssessment() {
         </div>
       </main>
 
-      {/* Persistence Interface (Footer) */}
+      {/* Navigation Footer */}
       <footer className="fixed bottom-0 left-0 right-0 h-28 bg-white/90 backdrop-blur-3xl border-t border-slate-200 px-10 z-50">
         <div className="max-w-[1600px] mx-auto h-full flex justify-between items-center">
           <Button
@@ -373,7 +373,7 @@ export default function TakeAssessment() {
 
           <div className="flex items-center gap-6">
             <div className="hidden lg:flex items-center gap-3 px-6 py-2 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 italic">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Secure Test Mode
+              <ShieldCheck className="h-4 w-4 text-primary" /> Secure Assessment Mode
             </div>
             <Button
               className="h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20 flex items-center gap-4 group/btn transition-all duration-300"
@@ -392,7 +392,7 @@ export default function TakeAssessment() {
         </div>
       </footer>
 
-      {/* Filing Dialog */}
+      {/* Submit Confirmation Dialog */}
       <AlertDialog open={showSubmit} onOpenChange={setShowSubmit}>
         <AlertDialogContent className="bg-white border border-slate-200 rounded-[3.5rem] p-16 max-w-xl shadow-2xl">
           <AlertDialogHeader className="space-y-8">

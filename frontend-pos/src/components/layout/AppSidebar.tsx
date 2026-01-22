@@ -30,28 +30,28 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const studentNavItems = [
-  { icon: Home, label: 'Home', path: '/student/home', tactical: 'Overview' },
-  { icon: Briefcase, label: 'Browse Jobs', path: '/student/browse-jobs', tactical: 'Browse Jobs' },
-  { icon: FileText, label: 'My Applications', path: '/student/applications', tactical: 'My Applications' },
-  { icon: Calendar, label: 'Calendar', path: '/student/interview-calendar', tactical: 'Calendar' },
-  { icon: Video, label: 'Interviews', path: '/student/interviews', tactical: 'Interviews' },
-  { icon: Award, label: 'Offers', path: '/student/offers', tactical: 'My Offers' },
-  { icon: User, label: 'Profile', path: '/student/profile', tactical: 'Profile' },
+  { icon: Home, label: 'Home', path: '/student/home', subtitle: 'Overview' },
+  { icon: Briefcase, label: 'Browse Jobs', path: '/student/browse-jobs', subtitle: 'Find Jobs' },
+  { icon: FileText, label: 'My Applications', path: '/student/applications', subtitle: 'Track Progress' },
+  { icon: Calendar, label: 'Calendar', path: '/student/interview-calendar', subtitle: 'Schedule' },
+  { icon: Video, label: 'Interviews', path: '/student/interviews', subtitle: 'Interview Panel' },
+  { icon: Award, label: 'Offers', path: '/student/offers', subtitle: 'My Offers' },
+  { icon: User, label: 'Profile', path: '/student/profile', subtitle: 'My Profile' },
 ];
 
 const professionalNavItems = [
-  { icon: Activity, label: 'Dashboard', path: '/professional/dashboard', tactical: 'Overview' },
-  { icon: Target, label: 'Interviews', path: '/professional/interviews', tactical: 'Interviews' },
-  { icon: CheckCircle, label: 'History', path: '/professional/history', tactical: 'Past Interviews' },
-  { icon: User, label: 'Profile', path: '/professional/profile', tactical: 'Profile' },
+  { icon: Activity, label: 'Dashboard', path: '/professional/dashboard', subtitle: 'Overview' },
+  { icon: Target, label: 'Interviews', path: '/professional/interviews', subtitle: 'Upcoming' },
+  { icon: CheckCircle, label: 'History', path: '/professional/history', subtitle: 'Past Results' },
+  { icon: User, label: 'Profile', path: '/professional/profile', subtitle: 'My Settings' },
 ];
 
 const adminNavItems = [
-  { icon: Zap, label: 'Admin Panel', path: '/admin/dashboard', tactical: 'Admin Overview' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', tactical: 'Analytics' },
-  { icon: User, label: 'Students', path: '/admin/students', tactical: 'Manage Students' },
-  { icon: Users, label: 'Experts', path: '/admin/professionals', tactical: 'Manage Experts' },
-  { icon: Briefcase, label: 'Jobs', path: '/admin/jobs', tactical: 'Manage Jobs' },
+  { icon: Zap, label: 'Admin Panel', path: '/admin/dashboard', subtitle: 'Main Panel' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', subtitle: 'Reports' },
+  { icon: User, label: 'Students', path: '/admin/students', subtitle: 'Management' },
+  { icon: Users, label: 'Experts', path: '/admin/professionals', subtitle: 'Experts' },
+  { icon: Briefcase, label: 'Jobs', path: '/admin/jobs', subtitle: 'Job Portal' },
 ];
 
 export function AppSidebar() {
@@ -158,7 +158,7 @@ export function AppSidebar() {
                     <span className={cn(
                       "text-[9px] font-black uppercase tracking-widest",
                       isActive ? "text-white/60" : "text-slate-400"
-                    )}>{item.tactical}</span>
+                    )}>{item.subtitle}</span>
                   </div>
                 )}
               </NavLink>

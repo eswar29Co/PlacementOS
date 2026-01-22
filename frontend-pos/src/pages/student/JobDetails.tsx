@@ -25,7 +25,7 @@ export default function JobDetails() {
     queryFn: () => jobService.getAllJobs(),
   });
   const jobs = Array.isArray(jobsData?.data) ? jobsData.data : (jobsData?.data && 'jobs' in jobsData.data ? jobsData.data.jobs : []);
-  const job = jobs.find(j => j.id === id);
+  const job = jobs.find(j => (j.id === id || j._id === id));
 
   if (isLoading) {
     return (
@@ -44,7 +44,7 @@ export default function JobDetails() {
           <div className="h-20 w-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-sm border border-rose-100">
             <Zap className="h-10 w-10" />
           </div>
-          <Button variant="link" className="font-black text-primary" onClick={() => navigate('/student/jobs')}>RETURN TO JOBS</Button>
+          <Button variant="link" className="font-black text-primary" onClick={() => navigate('/student/browse-jobs')}>RETURN TO JOBS</Button>
         </div>
       </DashboardLayout>
     );
@@ -52,7 +52,7 @@ export default function JobDetails() {
 
   const handleApply = () => {
     toast.success('Loading application form...');
-    navigate(`/student/apply/${job.id}`);
+    navigate(`/student/apply/${job.id || job._id}`);
   };
 
   return (
@@ -60,17 +60,17 @@ export default function JobDetails() {
       <div className="max-w-[1400px] mx-auto space-y-10 pb-12">
 
         {/* Navigation Command */}
-        <Button variant="ghost" className="rounded-xl font-black text-xs uppercase hover:bg-slate-50 transition-all group text-slate-400 border border-transparent hover:border-slate-100" onClick={() => navigate('/student/jobs')}>
+        <Button variant="ghost" className="rounded-xl font-black text-xs uppercase hover:bg-slate-50 transition-all group text-slate-400 border border-transparent hover:border-slate-100" onClick={() => navigate('/student/browse-jobs')}>
           <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to Jobs List
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-          {/* Main Dossier Column */}
+          {/* Main Info Column */}
           <div className="lg:col-span-8 space-y-10">
 
-            {/* Mission Hero */}
+            {/* Job Header */}
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden group bg-white border">
               <div className="h-4 w-full bg-gradient-to-r from-primary via-blue-500 to-indigo-600" />
               <CardContent className="p-10">
@@ -102,7 +102,7 @@ export default function JobDetails() {
               </CardContent>
             </Card>
 
-            {/* Tactical Briefing */}
+            {/* Job Details */}
             <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden border">
               <CardHeader className="bg-slate-50 p-8 border-b border-slate-100">
                 <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-slate-900">
@@ -140,7 +140,7 @@ export default function JobDetails() {
               </CardContent>
             </Card>
 
-            {/* Selection Protocol */}
+            {/* Selection Process */}
             <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden border">
               <CardHeader className="bg-slate-50 p-8 border-b border-slate-100">
                 <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3 text-slate-900">
@@ -156,7 +156,7 @@ export default function JobDetails() {
                       </div>
                       <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-[2rem] bg-slate-50 border border-slate-100 group-hover:bg-primary/5 transition-colors">
                         <span className="text-xs font-black uppercase tracking-widest text-primary">{step}</span>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 italic">Status: Initialized</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 italic">Status: Started</p>
                       </div>
                     </div>
                   ))}
@@ -165,7 +165,7 @@ export default function JobDetails() {
             </Card>
           </div>
 
-          {/* Engagement Sidebar */}
+          {/* Action Sidebar */}
           <div className="lg:col-span-4 space-y-8 sticky top-24">
             <Card className="border-none shadow-lg rounded-[3rem] overflow-hidden bg-primary text-white p-10 relative">
               <Sparkles className="absolute -right-4 -top-4 h-24 w-24 opacity-10" />
@@ -187,7 +187,7 @@ export default function JobDetails() {
                     APPLY NOW <ChevronRight className="h-6 w-6" />
                   </Button>
                 </div>
-                <p className="text-center text-[10px] font-bold text-white/40 uppercase tracking-widest">Digital signatures required on next step</p>
+                <p className="text-center text-[10px] font-bold text-white/40 uppercase tracking-widest">Next step: Resume submission</p>
               </div>
             </Card>
 

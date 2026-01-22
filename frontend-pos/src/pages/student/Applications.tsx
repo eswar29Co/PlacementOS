@@ -38,9 +38,9 @@ import {
 // Define the journey stages
 const JOURNEY_STAGES = [
   { id: 'resume', label: 'Resume Review' },
-  { id: 'assessment', label: 'Tech Assessment' },
+  { id: 'assessment', label: 'Technical Assessment' },
   { id: 'ai', label: 'AI Interview' },
-  { id: 'interviews', label: 'Professional Rounds' },
+  { id: 'interviews', label: 'Interview Rounds' },
   { id: 'offer', label: 'Offer' }
 ];
 
@@ -100,15 +100,15 @@ export default function Applications() {
     <DashboardLayout title="My Applications" subtitle="View and track the status of all your job applications">
       <div className="space-y-10 max-w-[1400px] mx-auto pb-12">
 
-        {/* Tactical Intel Cards */}
+        {/* Application Status Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <IntelCard title="In Progress" value={activeCount} icon={TrendingUp} color="text-primary" bg="bg-primary/5" />
-          <IntelCard title="Interviews" value={interviewCount} icon={Zap} color="text-amber-600" bg="bg-amber-50/5" />
-          <IntelCard title="Offers" value={offerCount} icon={Trophy} color="text-emerald-600" bg="bg-emerald-50/5" />
-          <IntelCard title="Rejected" value={myApplications.filter(a => isRejected(a.status)).length} icon={XCircle} color="text-rose-600" bg="bg-rose-50/5" />
+          <StatusCard title="In Progress" value={activeCount} icon={TrendingUp} color="text-primary" bg="bg-primary/5" />
+          <StatusCard title="Interviews" value={interviewCount} icon={Zap} color="text-amber-600" bg="bg-amber-50/5" />
+          <StatusCard title="Offers" value={offerCount} icon={Trophy} color="text-emerald-600" bg="bg-emerald-50/5" />
+          <StatusCard title="Rejected" value={myApplications.filter(a => isRejected(a.status)).length} icon={XCircle} color="text-rose-600" bg="bg-rose-50/5" />
         </div>
 
-        {/* Transmission Tracker */}
+        {/* Application List */}
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
             <div>
@@ -140,7 +140,7 @@ export default function Applications() {
                 <p className="text-slate-400 max-w-sm font-medium">Start applying for jobs to see your progress here.</p>
               </div>
               <Button size="lg" className="rounded-2xl h-14 px-10 font-black shadow-lg shadow-primary/20" onClick={() => navigate('/student/browse-jobs')}>
-                Browse Marketplace <ArrowRight className="ml-2 h-5 w-5" />
+                Browse All Jobs <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Card>
           ) : (
@@ -162,7 +162,7 @@ export default function Applications() {
   );
 }
 
-function IntelCard({ title, value, icon: Icon, color, bg }: any) {
+function StatusCard({ title, value, icon: Icon, color, bg }: any) {
   return (
     <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden bg-white border group hover:translate-y-[-4px] transition-all duration-300">
       <CardContent className="p-8">
@@ -196,7 +196,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
       <CardContent className="p-0">
         <div className="p-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            {/* Left: Tactical Info */}
+            {/* Job Info */}
             <div className="flex items-start gap-6 flex-1">
               <div className="h-20 w-20 rounded-[1.5rem] bg-slate-50 shadow-sm flex flex-col items-center justify-center text-3xl font-black text-slate-300 border border-slate-100 shrink-0">
                 {job?.companyName.charAt(0)}
@@ -259,7 +259,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
         {isExpanded && (
           <div className="bg-slate-50/50 border-t border-slate-100 p-10 lg:p-14 animate-in fade-in slide-in-from-top-6 duration-500">
             <div className="flex items-center justify-between mb-16">
-              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-slate-300">Application Progress</h4>
+              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-slate-300">Tracking Progress</h4>
               <Badge className="bg-primary/5 text-primary border border-primary/10 text-[10px] font-bold shadow-none">Profile Verified</Badge>
             </div>
 
@@ -303,14 +303,14 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-              {/* Intel Feed */}
+              {/* Application Details */}
               <div className="space-y-6">
                 <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white p-10 border">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="h-12 w-12 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10">
                       <Info className="h-6 w-6 text-primary" />
                     </div>
-                    <h5 className="font-black text-lg uppercase text-slate-900">Status Notes</h5>
+                    <h5 className="font-black text-lg uppercase text-slate-900">Application Status</h5>
                   </div>
                   <p className="text-sm text-slate-500 leading-loose font-medium italic">
                     {isCurrentlyRejected
@@ -339,7 +339,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                             <p className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-2">
                               <User className="h-3 w-3 text-slate-400" /> {f.professionalName || 'Expert Interviewer'}
                             </p>
-                            <p className="text-xs text-slate-500 leading-relaxed font-medium">"{f.comments || f.feedback || 'Exceptional aptitude demonstrated in communication and technical calibration.'}"</p>
+                            <p className="text-xs text-slate-500 leading-relaxed font-medium">"{f.comments || f.feedback || 'Good performance in the technical interview.'}"</p>
                           </div>
                         ))}
                       </div>
@@ -348,7 +348,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                 </Card>
               </div>
 
-              {/* Simulation Context */}
+              {/* Job Details Sidebar */}
               <div className="space-y-6">
                 <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white p-10 border">
                   <div className="flex items-center justify-between mb-8">
@@ -391,7 +391,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                     </div>
 
                     <div className="space-y-4">
-                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Required Tech Spectrum</p>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Required Skills</p>
                       <div className="flex flex-wrap gap-2">
                         {(job?.skills || []).slice(0, 8).map((s: any, i: number) => (
                           <Badge key={i} className="bg-slate-50 text-slate-600 border border-slate-100 text-[9px] font-bold uppercase py-1 px-3 rounded-lg shadow-none">

@@ -1,14 +1,14 @@
 // User types
 export type UserRole = 'student' | 'professional' | 'admin';
-export type ApplicationStatus = 
-  | 'applied' 
+export type ApplicationStatus =
+  | 'applied'
   | 'resume_under_review'
-  | 'resume_approved' 
+  | 'resume_approved'
   | 'resume_shortlisted'
   | 'resume_rejected'
   | 'assessment_pending'
   | 'assessment_released'
-  | 'assessment_in_progress' 
+  | 'assessment_in_progress'
   | 'assessment_completed'
   | 'assessment_submitted'
   | 'assessment_under_review'
@@ -103,6 +103,9 @@ export interface Job {
   isActive: boolean;
   selectionProcess?: string[];
   package?: string;
+  experienceRequired?: string;
+  jobType?: string;
+  applicationCount?: number;
 }
 
 // Application types
@@ -114,14 +117,14 @@ export interface Application {
   student?: Student;
   status: ApplicationStatus;
   appliedAt: string | Date;
-  
+
   // Resume phase
   resumeUrl?: string;
   resumeScore?: number;
   resumeApproved?: boolean | null; // null = pending, true = approved, false = rejected
   resumeApprovedAt?: Date;
   resumeApprovedBy?: string;
-  
+
   // Assessment phase
   assessmentDeadline?: Date;
   assessmentCode?: string;
@@ -131,14 +134,14 @@ export interface Application {
   assessmentApproved?: boolean | null; // null = pending, true = approved, false = rejected
   assessmentApprovedAt?: Date;
   assessmentApprovedBy?: string;
-  
+
   // Interview phases
   aiInterviewScore?: number;
   aiInterviewAnswers?: string[];
   aiInterviewApproved?: boolean | null; // null = pending, true = approved, false = rejected
   aiInterviewApprovedAt?: Date;
   aiInterviewApprovedBy?: string;
-  
+
   // Professional assignment
   assignedProfessionalId?: string;
   assignedProfessional?: Professional;
@@ -147,20 +150,20 @@ export interface Application {
   assignedHRId?: string;
   assignedHR?: Professional;
   interviewRound?: InterviewRound;
-  
+
   // Meeting details
   meetingLink?: string;
   scheduledDate?: Date;
-  
+
   // Feedback tracking
   interviewFeedback?: InterviewFeedbackDetailed[];
-  
+
   // Scores
   professionalInterviewScore?: number;
   managerInterviewScore?: number;
   hrInterviewScore?: number;
   offerDetails?: any;
-  
+
   timeline: ApplicationEvent[];
 }
 
@@ -266,8 +269,8 @@ export interface Offer {
 }
 
 // Notification types
-export type NotificationType = 
-  | 'professional_approved' 
+export type NotificationType =
+  | 'professional_approved'
   | 'professional_rejected'
   | 'resume_approved'
   | 'resume_rejected'
