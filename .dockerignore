@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+.env
+.git
+.gitignore
+*.md
+frontend-pos/node_modules
+frontend-pos/dist
+backend-pos/node_modules
+backend-pos/dist

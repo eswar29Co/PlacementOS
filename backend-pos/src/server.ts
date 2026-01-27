@@ -1,4 +1,5 @@
 import express, { Application, Request, Response } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -79,15 +80,30 @@ app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/admin`, adminRoutes);
 
-// Welcome route
-app.get('/', (_: Request, res: Response) => {
-  res.json({
-    message: 'Welcome to PlacementOS API',
-    version: config.apiVersion,
-    documentation: '/api-docs',
-    health: '/health',
+// Static files and Client-side routing for production
+if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, '../public');
+  app.use(express.static(publicPath));
+
+  // Catch-all route for SPA
+  app.get('*', (req: Request, res: Response) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ success: false, message: 'API Route not found' });
+    }
+    res.sendFile(path.join(publicPath, 'index.html'));
   });
-});
+} else {
+  // Welcome route for development
+  app.get('/', (_: Request, res: Response) => {
+    res.json({
+      message: 'Welcome to PlacementOS API',
+      version: config.apiVersion,
+      documentation: '/api-docs',
+      health: '/health',
+    });
+  });
+}
 
 // Error handling
 app.use(notFound);

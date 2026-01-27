@@ -73,7 +73,7 @@ Create `.env.example` files to document required environment variables (actual `
 3. Click **"Build a Database"**
 4. Select **"M0 Free"** tier
 5. Choose a cloud provider and region (select closest to your users)
-6. Cluster Name: `PlacementOS-Cluster`
+6. Cluster Name: `   -Cluster`
 7. Click **"Create"**
 
 ### 2.2 Configure Database Access
@@ -168,17 +168,20 @@ Click **"Advanced"** → **"Add Environment Variable"** and add:
 | `NODE_ENV` | `production` | Environment mode |
 | `PORT` | `10000` | Render default port |
 | `MONGODB_URI` | `mongodb+srv://...` | Your MongoDB Atlas connection string |
-| `JWT_SECRET` | `[Generate random string]` | Use: `openssl rand -base64 32` |
-| `JWT_EXPIRE` | `7d` | Token expiration |
+| `JWT_SECRET` | `[Generate random string]` | Access token secret |
+| `JWT_EXPIRES_IN` | `7d` | Access token expiration |
+| `JWT_REFRESH_SECRET` | `[Generate random string]` | Refresh token secret |
+| `JWT_REFRESH_EXPIRES_IN`| `30d` | Refresh token expiration |
 | `CLOUDINARY_CLOUD_NAME` | `your_cloud_name` | From Cloudinary dashboard |
 | `CLOUDINARY_API_KEY` | `your_api_key` | From Cloudinary dashboard |
 | `CLOUDINARY_API_SECRET` | `your_api_secret` | From Cloudinary dashboard |
-| `EMAIL_HOST` | `smtp.gmail.com` | Email service (if using Gmail) |
-| `EMAIL_PORT` | `587` | SMTP port |
-| `EMAIL_USER` | `your-email@gmail.com` | Your email |
-| `EMAIL_PASSWORD` | `your-app-password` | Gmail app password |
+| `SMTP_HOST` | `smtp.gmail.com` | Email service (if using Gmail) |
+| `SMTP_PORT` | `587` | SMTP port |
+| `SMTP_USER` | `your-email@gmail.com` | Your email |
+| `SMTP_PASS` | `your-app-password` | Gmail app password |
 | `EMAIL_FROM` | `PlacementOS <noreply@placementos.com>` | From address |
 | `FRONTEND_URL` | `https://your-app.vercel.app` | Will update after frontend deployment |
+| `CORS_ORIGIN` | `https://your-app.vercel.app` | Same as FRONTEND_URL |
 
 > [!TIP]
 > To generate a secure JWT_SECRET on Windows PowerShell:
@@ -241,7 +244,7 @@ Click **"Environment Variables"** and add:
 
 | Key | Value | Notes |
 |-----|-------|-------|
-| `VITE_API_URL` | `https://placementos-backend.onrender.com/api` | Your Render backend URL |
+| `VITE_API_BASE_URL` | `https://placementos-backend.onrender.com/api/v1` | Your Render backend URL |
 | `VITE_APP_NAME` | `PlacementOS` | Application name |
 
 > [!IMPORTANT]
@@ -405,7 +408,7 @@ git push origin main
 - Ensure all environment variables are set
 
 ### Frontend can't connect to backend
-- Verify `VITE_API_URL` is correct
+- Verify `VITE_API_BASE_URL` is correct
 - Check CORS settings in backend
 - Check browser console for errors
 
