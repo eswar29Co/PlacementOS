@@ -1,46 +1,50 @@
-# Build stage for Frontend
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
-# Copy package files first for better caching
-COPY frontend-pos/package*.json ./
-RUN npm ci
-# Copy source and build
-COPY frontend-pos/ ./
-# Set production environment variables for build
-ENV VITE_API_BASE_URL=/api/v1
-ENV VITE_ENV=production
-RUN npm run build
+# Production Build Stage
+FROM node:20-alpine AS builder
 
-# Build stage for Backend
-FROM node:20-alpine AS backend-builder
-WORKDIR /app/backend
-# Copy package files
-COPY backend-pos/package*.json ./
-RUN npm ci
-# Copy source and build
-COPY backend-pos/ ./
-RUN npm run build
-# Remove dev dependencies to save space
-RUN npm prune --production
-
-# Final stage
-FROM node:20-alpine
 WORKDIR /app
 
+# Install backend dependencies
+COPY backend-pos/package*.json ./backend-pos/
+RUN cd backend-pos && npm install
+
+# Copy backend source
+COPY backend-pos/ ./backend-pos/
+RUN cd backend-pos && npm run build
+
+# Install frontend dependencies
+COPY frontend-pos/package*.json ./frontend-pos/
+RUN cd frontend-pos && npm install
+
+# Copy frontend source
+COPY frontend-pos/ ./frontend-pos/
+# Note: VITE_API_BASE_URL will be set via build-arg or env
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN cd frontend-pos && npm run build
+
+# Final Runtime Stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install Nginx
+RUN apk add --no-cache nginx
+
 # Copy built backend
-COPY --from=backend-builder /app/backend/dist ./dist
-COPY --from=backend-builder /app/backend/node_modules ./node_modules
-COPY --from=backend-builder /app/backend/package*.json ./
+COPY --from=builder /app/backend-pos/dist ./backend-pos/dist
+COPY --from=builder /app/backend-pos/node_modules ./backend-pos/node_modules
+COPY --from=builder /app/backend-pos/package.json ./backend-pos/package.json
 
-# Copy built frontend to a public folder that backend will serve
-COPY --from=frontend-builder /app/frontend/dist ./public
+# Copy built frontend to nginx public dir
+COPY --from=builder /app/frontend-pos/dist /usr/share/nginx/html
 
-# Set production environment
-ENV NODE_ENV=production
-ENV PORT=5000
+# Replace default nginx config
+COPY deployment/aws/nginx.conf /etc/nginx/http.d/default.conf
 
-# Railway will provide the PORT environment variable
-EXPOSE 5000
+# Start script
+COPY deployment/aws/start.sh .
+RUN chmod +x start.sh
 
-# Start the application
-CMD ["npm", "start"]
+EXPOSE 80
+
+CMD ["./start.sh"]

@@ -91,7 +91,7 @@ if (process.env.NODE_ENV === 'production') {
     if (req.path.startsWith('/api')) {
       return res.status(404).json({ success: false, message: 'API Route not found' });
     }
-    res.sendFile(path.join(publicPath, 'index.html'));
+    return res.sendFile(path.join(publicPath, 'index.html'));
   });
 } else {
   // Welcome route for development
