@@ -1,15 +1,15 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { IJob } from '../types';
 
-export interface IJobDocument extends Omit<IJob, '_id'>, Document {}
+export interface IJobDocument extends Omit<IJob, '_id'>, Document { }
 
 const jobSchema = new Schema<IJobDocument>(
   {
     companyName: { type: String, required: true, trim: true },
     roleTitle: { type: String, required: true, trim: true },
     ctcBand: { type: String, required: true },
-    locationType: { 
-      type: String, 
+    locationType: {
+      type: String,
       required: true,
       enum: ['Onsite', 'Hybrid', 'Remote']
     },
@@ -21,19 +21,23 @@ const jobSchema = new Schema<IJobDocument>(
     isActive: { type: Boolean, default: true },
     selectionProcess: [{ type: String }],
     package: { type: String },
-    createdBy: { 
-      type: Schema.Types.ObjectId, 
+    createdBy: {
+      type: Schema.Types.ObjectId,
       ref: 'Admin',
-      required: true 
+      required: true
+    },
+    collegeId: {
+      type: Schema.Types.ObjectId,
+      ref: 'College'
     },
   },
-  { 
+  {
     timestamps: true,
     toJSON: {
-      transform: function(_, ret) {
+      transform: function (_doc, ret: any) {
         ret.id = ret._id;
-        delete (ret as any)._id;
-        delete (ret as any).__v;
+        delete ret._id;
+        delete ret.__v;
         return ret;
       }
     }
@@ -48,7 +52,7 @@ jobSchema.index({ deadline: 1 });
 jobSchema.index({ createdAt: -1 });
 
 // Virtual for checking if job is expired
-jobSchema.virtual('isExpired').get(function() {
+jobSchema.virtual('isExpired').get(function (this: IJobDocument) {
   return this.deadline < new Date();
 });
 

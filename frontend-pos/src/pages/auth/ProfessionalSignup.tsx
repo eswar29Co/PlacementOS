@@ -107,13 +107,13 @@ export default function ProfessionalSignup() {
 
             <div className="space-y-4">
               <h2 className="text-4xl lg:text-5xl font-black uppercase tracking-tighter text-slate-900 leading-tight">
-                REGISTRATION <span className="text-emerald-500 italic">SUBMITTED</span>
+                REGISTRATION <span className="text-emerald-500">SUBMITTED</span>
               </h2>
-              <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-xs italic">Awaiting Admin Approval</p>
+              <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-xs">Awaiting Admin Approval</p>
             </div>
 
             <div className="max-w-md mx-auto">
-              <p className="text-slate-500 font-bold text-lg leading-relaxed italic">
+              <p className="text-slate-500 font-bold text-lg leading-relaxed">
                 Thank you for joining our expert network. Your credentials have been submitted for manual verification. You will receive an email once your account is approved.
               </p>
             </div>
@@ -125,7 +125,7 @@ export default function ProfessionalSignup() {
               BACK TO LOGIN <ChevronRight className="h-5 w-5 ml-3 group-hover:translate-x-2 transition-transform" />
             </Button>
 
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 italic">Approval time: 24-48 hours</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Approval time: 24-48 hours</p>
           </CardContent>
         </Card>
       </div>
@@ -163,10 +163,10 @@ export default function ProfessionalSignup() {
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-tight text-slate-900">
-                EXPERT <span className="text-indigo-600 italic">SIGN UP</span>
+              <h1 className="text-6xl font-black tracking-tighter uppercase leading-tight text-slate-900">
+                EXPERT <span className="text-indigo-600">SIGN UP</span>
               </h1>
-              <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs flex items-center justify-center gap-4 italic">
+              <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs flex items-center justify-center gap-4">
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
                 JOIN OUR NETWORK OF INDUSTRY PROFESSIONALS
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
@@ -180,7 +180,7 @@ export default function ProfessionalSignup() {
           <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
             <AlertTriangle className="h-6 w-6 text-amber-600" />
           </div>
-          <p className="text-[11px] font-black uppercase tracking-widest text-amber-600 leading-relaxed italic">
+          <p className="text-[11px] font-black uppercase tracking-widest text-amber-600 leading-relaxed">
             Verification Notice: All professional profiles undergo manual review (usually within 24-48 hours).
           </p>
         </div>
@@ -203,8 +203,8 @@ export default function ProfessionalSignup() {
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Personal Details</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Basic Identity Information</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900">Personal Details</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Basic Identity Information</p>
                   </div>
                 </div>
 
@@ -277,8 +277,8 @@ export default function ProfessionalSignup() {
                     <Landmark className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Work Experience</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Current Role & History</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900">Work Experience</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Current Role & History</p>
                   </div>
                 </div>
 
@@ -328,8 +328,8 @@ export default function ProfessionalSignup() {
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Skills & Expertise</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Technical Compentency Detail</p>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900">Skills & Expertise</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Technical Compentency Detail</p>
                       </div>
                     </div>
 
@@ -364,7 +364,7 @@ export default function ProfessionalSignup() {
                         {techStack.length === 0 && (
                           <div className="flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-dashed border-slate-100 w-full justify-center">
                             <Monitor className="h-4 w-4 text-slate-200" />
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200 italic">No skills added yet.</p>
+                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">No skills added yet.</p>
                           </div>
                         )}
                       </div>
@@ -376,7 +376,7 @@ export default function ProfessionalSignup() {
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-transparent pointer-events-none" />
                     <div className="relative z-10 space-y-10">
                       <div className="space-y-5">
-                        <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 italic">
+                        <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
                           <Linkedin className="h-4 w-4 text-indigo-400" /> LinkedIn Profile
                         </Label>
                         <Input
@@ -394,9 +394,9 @@ export default function ProfessionalSignup() {
                         </div>
                         <div className="flex items-center gap-3 text-indigo-400">
                           <Award className="h-5 w-5" />
-                          <span className="text-[11px] font-black uppercase tracking-widest italic">Success Tip</span>
+                          <span className="text-[11px] font-black uppercase tracking-widest">Success Tip</span>
                         </div>
-                        <p className="text-[10px] font-medium leading-relaxed italic text-slate-400 relative z-10">
+                        <p className="text-[10px] font-medium leading-relaxed text-slate-400 relative z-10">
                           Complete expert profiles receive more interview assignments. Make sure your LinkedIn profile is updated.
                         </p>
                       </div>
@@ -410,7 +410,7 @@ export default function ProfessionalSignup() {
                     <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm shrink-0">
                       <ShieldCheck className="h-6 w-6" />
                     </div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 max-w-sm leading-relaxed italic text-left">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 max-w-sm leading-relaxed text-left">
                       BY SIGNING UP, YOU AGREE TO OUR <span className="text-slate-900 underline cursor-pointer hover:text-indigo-600 transition-colors">CODE OF CONDUCT</span> AND <span className="text-slate-900 underline cursor-pointer hover:text-indigo-600 transition-colors">PRIVACY POLICY</span>.
                     </p>
                   </div>
@@ -433,7 +433,7 @@ export default function ProfessionalSignup() {
 
         {/* Tactical Footer */}
         <div className="mt-16 text-center space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
             SECURE REGISTRATION SYSTEM • PLACEMENT OS
           </p>
         </div>

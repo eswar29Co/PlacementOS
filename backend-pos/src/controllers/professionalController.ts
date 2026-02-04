@@ -106,12 +106,22 @@ export const getProfessionalStatistics = async (req: AuthRequest, res: Response)
     }
 
     // Get interview stats
-    const completedInterviews = await Application.countDocuments({
+    const totalInterviews = await Application.countDocuments({
       $or: [
-        { assignedProfessionalId: id, status: { $in: ['professional_interview_completed', 'manager_round_completed', 'hr_round_completed'] } },
-        { assignedManagerId: id, status: { $in: ['manager_round_completed', 'hr_round_completed'] } },
-        { assignedHRId: id, status: 'hr_round_completed' },
+        { assignedProfessionalId: id },
+        { assignedManagerId: id },
+        { assignedHRId: id },
       ],
+      status: { $regex: /completed/i }
+    });
+
+    const recommended = await Application.countDocuments({
+      $or: [
+        { assignedProfessionalId: id },
+        { assignedManagerId: id },
+        { assignedHRId: id },
+      ],
+      'interviewFeedback.recommendation': 'recommended'
     });
 
     const activeInterviews = await Application.countDocuments({
@@ -122,13 +132,21 @@ export const getProfessionalStatistics = async (req: AuthRequest, res: Response)
       ],
     });
 
+    const recommendationRate = totalInterviews > 0 ? (recommended / totalInterviews) * 100 : 0;
+
+    // Impact Rating could be a combination of interviews taken and average rating
+    const impactRating = (professional.rating * 0.7) + (Math.min(professional.interviewsTaken / 10, 1) * 1.5);
+
     return ApiResponse.success(res, {
       professional,
       statistics: {
-        completedInterviews,
+        completedInterviews: totalInterviews,
         activeInterviews,
         totalInterviews: professional.interviewsTaken,
         rating: professional.rating,
+        recommendationRate: Math.round(recommendationRate),
+        impactRating: Number(impactRating.toFixed(1)),
+        experienceYears: professional.yearsOfExperience
       },
     });
   } catch (error: any) {
@@ -158,6 +176,16 @@ export const updateProfessionalProfile = async (req: AuthRequest, res: Response)
     if (bio !== undefined) professional.bio = bio;
 
     await professional.save();
+
+    // Create notification
+    await Notification.create({
+      userId: professional._id,
+      type: 'professional_update',
+      title: 'Profile Updated',
+      message: 'Your professional profile details have been successfully updated.',
+      read: false,
+      createdAt: new Date(),
+    });
 
     return ApiResponse.success(res, professional, 'Profile updated successfully');
   } catch (error: any) {

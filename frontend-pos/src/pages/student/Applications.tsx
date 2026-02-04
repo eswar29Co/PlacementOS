@@ -312,7 +312,7 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                     </div>
                     <h5 className="font-black text-lg uppercase text-slate-900">Application Status</h5>
                   </div>
-                  <p className="text-sm text-slate-500 leading-loose font-medium italic">
+                  <p className="text-sm text-slate-500 leading-loose font-medium">
                     {isCurrentlyRejected
                       ? "Your application was not selected for this role. We recommend updating your profile and applying for other opportunities."
                       : app.status === 'applied'

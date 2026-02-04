@@ -86,7 +86,7 @@ export default function StudentsManagement() {
           <CardHeader className="bg-slate-50 p-12 border-b border-slate-100">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
               <div className="space-y-2">
-                <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                <CardTitle className="text-3xl font-black flex items-center gap-4 uppercase tracking-tighter text-slate-900">
                   <Fingerprint className="h-8 w-8 text-primary" />
                   Candidate Registry
                 </CardTitle>
@@ -120,7 +120,7 @@ export default function StudentsManagement() {
                       <TableCell colSpan={4} className="py-48 text-center">
                         <div className="flex flex-col items-center gap-6">
                           <Users className="h-12 w-12 text-slate-200" />
-                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Candidate Signatures Found</p>
+                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter">No Candidate Signatures Found</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -130,17 +130,17 @@ export default function StudentsManagement() {
                         <TableCell className="px-12 py-10">
                           <div className="flex items-center gap-8">
                             <Avatar className="h-16 w-16 rounded-[1.5rem] border-2 border-slate-100 shadow-sm group-hover:scale-110 duration-500">
-                              <AvatarFallback className="bg-slate-100 text-primary font-black text-xl italic">{student.name.charAt(0)}</AvatarFallback>
+                              <AvatarFallback className="bg-slate-100 text-primary font-black text-xl">{student.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="space-y-1">
-                              <p className="font-black text-xl leading-none italic uppercase tracking-tighter text-slate-900">{student.name}</p>
+                              <p className="font-black text-xl leading-none uppercase tracking-tighter text-slate-900">{student.name}</p>
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.email}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-3">
-                            <p className="font-black text-sm text-slate-700 uppercase tracking-tight italic flex items-center gap-2">
+                            <p className="font-black text-sm text-slate-700 uppercase tracking-tight flex items-center gap-2">
                               <School className="h-3.5 w-3.5 text-primary opacity-50" /> {student.college.split(' ')[0]} ...
                             </p>
                             <div className="flex gap-2">
@@ -152,7 +152,7 @@ export default function StudentsManagement() {
                         <TableCell className="text-center">
                           <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
                             <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-                            <span className="text-xl font-black text-slate-900 italic leading-none">{student.cgpa}</span>
+                            <span className="text-xl font-black text-slate-900 leading-none">{student.cgpa}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-12 text-right">
@@ -178,16 +178,16 @@ export default function StudentsManagement() {
             <DialogHeader className="p-12 bg-slate-50 border-b border-slate-100 shrink-0">
               <div className="flex items-center gap-10">
                 <Avatar className="h-24 w-24 rounded-[2rem] border-4 border-white shadow-xl">
-                  <AvatarFallback className="bg-primary text-white font-black text-3xl italic">
+                  <AvatarFallback className="bg-primary text-white font-black text-3xl">
                     {historyData?.data?.student?.name?.charAt(0) || 'C'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                  <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
+                  <DialogTitle className="text-4xl font-black uppercase tracking-tighter text-slate-900 leading-none">
                     {historyData?.data?.student?.name || 'Loading...'}
                   </DialogTitle>
                   <div className="flex items-center gap-6">
-                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em] italic">{historyData?.data?.student?.email}</p>
+                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em]">{historyData?.data?.student?.email}</p>
                     <Badge className="bg-white text-slate-600 border border-slate-200 font-black text-[9px] uppercase px-3 py-1 rounded-full">{historyData?.data?.student?.college}</Badge>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function StudentsManagement() {
 
                   {/* Skills Section */}
                   <div className="space-y-6">
-                    <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 italic">
+                    <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                       <Cpu className="h-4 w-4" /> TECH STACK TELEMETRY
                     </h5>
                     <div className="flex flex-wrap gap-3">
@@ -226,21 +226,21 @@ export default function StudentsManagement() {
 
                   {/* Application Timeline */}
                   <div className="space-y-8">
-                    <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 italic">
+                    <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                       <Calendar className="h-4 w-4" /> ENGAGEMENT HISTORY
                     </h5>
 
                     <div className="space-y-6">
                       {historyData?.data?.applications?.length === 0 ? (
                         <div className="bg-slate-50 rounded-3xl p-10 text-center border border-dashed border-slate-200">
-                          <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest italic">No recruitment engagements initialized.</p>
+                          <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest">No recruitment engagements initialized.</p>
                         </div>
                       ) : (
                         historyData?.data?.applications?.map((app: any) => (
                           <div key={app.id} className="bg-white border border-slate-200 rounded-[2.5rem] p-8 hover:bg-slate-50 transition-all duration-300 group/app">
                             <div className="flex justify-between items-start mb-6">
                               <div className="space-y-2">
-                                <p className="font-black text-xl italic uppercase tracking-tighter text-slate-900 leading-none">{app.jobId?.companyName}</p>
+                                <p className="font-black text-xl uppercase tracking-tighter text-slate-900 leading-none">{app.jobId?.companyName}</p>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{app.jobId?.roleTitle}</p>
                               </div>
                               <Badge className={cn(
@@ -257,7 +257,7 @@ export default function StudentsManagement() {
                               <RoundMetric label="Assessment" value={app.assessmentScore ? `${app.assessmentScore}%` : 'N/A'} icon={Zap} />
                               <div className="text-right">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Applied On</p>
-                                <p className="text-[11px] font-black text-slate-600 italic uppercase leading-none">{format(new Date(app.appliedAt), 'MMM dd, yyyy')}</p>
+                                <p className="text-[11px] font-black text-slate-600 uppercase leading-none">{format(new Date(app.appliedAt), 'MMM dd, yyyy')}</p>
                               </div>
                             </div>
                           </div>
@@ -270,7 +270,7 @@ export default function StudentsManagement() {
             </div>
 
             <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end shrink-0">
-              <Button className="rounded-2xl h-12 px-10 bg-slate-900 text-white font-black uppercase text-[10px] tracking-[0.3em] italic" onClick={() => setIsModalOpen(false)}>
+              <Button className="rounded-2xl h-12 px-10 bg-slate-900 text-white font-black uppercase text-[10px] tracking-[0.3em]" onClick={() => setIsModalOpen(false)}>
                 CLOSE PROFILE
               </Button>
             </div>
@@ -290,7 +290,7 @@ function StatCard({ label, value, icon: Icon, color }: any) {
             <Icon className="h-6 w-6" />
           </div>
           <div className="text-right">
-            <p className={cn("text-3xl font-black tracking-tighter italic leading-none", color)}>{value}</p>
+            <p className={cn("text-3xl font-black tracking-tighter leading-none", color)}>{value}</p>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-3 opacity-80">{label}</p>
           </div>
         </div>
@@ -307,7 +307,7 @@ function HistoryStat({ label, value, icon: Icon, color }: any) {
       </div>
       <div>
         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-xl font-black italic text-slate-900 leading-none">{value}</p>
+        <p className="text-xl font-black text-slate-900 leading-none">{value}</p>
       </div>
     </div>
   );
@@ -319,7 +319,7 @@ function RoundMetric({ label, value, icon: Icon }: any) {
       <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
         <Icon className="h-3 w-3" /> {label}
       </p>
-      <p className="text-sm font-black text-slate-700 italic uppercase leading-none">{value}</p>
+      <p className="text-sm font-black text-slate-700 uppercase leading-none">{value}</p>
     </div>
   );
 }

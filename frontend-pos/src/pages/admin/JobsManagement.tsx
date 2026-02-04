@@ -206,7 +206,7 @@ export default function JobsManagement() {
                     <stat.icon className="h-7 w-7" />
                   </div>
                   <div className="text-right">
-                    <p className={cn("text-4xl font-black tracking-tighter leading-none italic", stat.color)}>{stat.value}</p>
+                    <p className={cn("text-4xl font-black tracking-tighter leading-none", stat.color)}>{stat.value}</p>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 opacity-80">{stat.label}</p>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export default function JobsManagement() {
           <CardHeader className="bg-slate-50 p-12 border-b border-slate-100">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
               <div className="space-y-2">
-                <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                <CardTitle className="text-3xl font-black flex items-center gap-4 uppercase tracking-tighter text-slate-900">
                   <Target className="h-8 w-8 text-primary" />
                   Job Postings
                 </CardTitle>
@@ -246,7 +246,7 @@ export default function JobsManagement() {
                     <DialogHeader className="p-12 bg-primary text-white relative">
                       <div className="absolute top-0 right-0 h-40 w-40 bg-white/10 rounded-full blur-3xl" />
                       <div className="relative z-10">
-                        <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Job Details</DialogTitle>
+                        <DialogTitle className="text-3xl font-black uppercase tracking-tighter">Job Details</DialogTitle>
                         <DialogDescription className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-2">Fill in the parameters for the new job posting</DialogDescription>
                       </div>
                     </DialogHeader>
@@ -294,7 +294,7 @@ export default function JobsManagement() {
                         <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
                           <Sparkles className="h-6 w-6 text-primary" />
                         </div>
-                        <p className="text-xs font-bold text-slate-400 leading-relaxed italic">
+                        <p className="text-xs font-bold text-slate-400 leading-relaxed">
                           Standard selection process (AI Interview → Technical → HR) will be applied to this job.
                         </p>
                       </div>
@@ -327,7 +327,7 @@ export default function JobsManagement() {
                           <div className="h-24 w-24 rounded-[2rem] bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm">
                             <Briefcase className="h-12 w-12 text-slate-200" />
                           </div>
-                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Jobs Found</p>
+                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter">No Jobs Found</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -345,7 +345,7 @@ export default function JobsManagement() {
                                 <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
                               </div>
                               <div>
-                                <h4 className="font-black text-xl leading-none uppercase tracking-tighter text-slate-900 italic group-hover:text-primary transition-colors">{job.roleTitle}</h4>
+                                <h4 className="font-black text-xl leading-none uppercase tracking-tighter text-slate-900 group-hover:text-primary transition-colors">{job.roleTitle}</h4>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{job.companyName}</p>
                                 <div className="flex gap-2 mt-4">
                                   {job.skills?.slice(0, 3).map((s: string) => <Badge key={s} className="bg-slate-50 text-slate-500 border border-slate-100 font-black text-[8px] uppercase tracking-widest px-3 shadow-none">{s}</Badge>)}
@@ -358,14 +358,14 @@ export default function JobsManagement() {
                               <div className="flex items-center gap-4">
                                 <Users className="h-5 w-5 text-primary opacity-50" />
                                 <div className="text-center">
-                                  <p className="text-2xl font-black text-slate-900 italic leading-none">{stats.total}</p>
+                                  <p className="text-2xl font-black text-slate-900 leading-none">{stats.total}</p>
                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 block">Candidates</span>
                                 </div>
                               </div>
                               <div className="space-y-2 w-32">
                                 <div className="flex items-center justify-between px-1">
                                   <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">{stats.offers} Offers</span>
-                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">{Math.round((stats.offers / Math.max(stats.total, 1)) * 100)}%</span>
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{Math.round((stats.offers / Math.max(stats.total, 1)) * 100)}%</span>
                                 </div>
                                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                                   <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style={{ width: `${(stats.offers / Math.max(stats.total, 1)) * 100}%` }} />
@@ -445,7 +445,7 @@ export default function JobsManagement() {
             <div className="absolute top-0 right-0 h-40 w-40 bg-white/10 rounded-full blur-3xl" />
             <div className="relative z-10 flex items-center justify-between">
               <div className="space-y-1">
-                <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">Edit Job Posting</DialogTitle>
+                <DialogTitle className="text-3xl font-black uppercase tracking-tighter">Edit Job Posting</DialogTitle>
                 <DialogDescription className="text-white/80 font-bold uppercase tracking-widest text-[10px] mt-2">Update job details for {editingJob?.companyName}</DialogDescription>
               </div>
               <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
@@ -498,7 +498,7 @@ export default function JobsManagement() {
 
             <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-6">
               <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0 mt-1" />
-              <p className="text-xs font-bold text-slate-400 leading-relaxed italic">
+              <p className="text-xs font-bold text-slate-400 leading-relaxed">
                 Updating active jobs may affect current applicants. Use caution when modifying live opportunities.
               </p>
             </div>

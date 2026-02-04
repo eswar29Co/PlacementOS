@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '@/services';
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 
 export default function InterviewCalendar() {
+  const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -186,7 +188,11 @@ export default function InterviewCalendar() {
               <div className="relative z-10 space-y-4">
                 <h3 className="text-xl font-black leading-tight">Prepare for Success</h3>
                 <p className="text-white/70 text-xs font-medium leading-relaxed">Remember to review your core subjects before your next interview.</p>
-                <Button variant="secondary" className="w-full rounded-xl font-black text-primary shadow-xl">
+                <Button
+                  variant="secondary"
+                  className="w-full rounded-xl font-black text-primary shadow-xl"
+                  onClick={() => navigate('/student/roadmaps')}
+                >
                   Get Prepared
                 </Button>
               </div>

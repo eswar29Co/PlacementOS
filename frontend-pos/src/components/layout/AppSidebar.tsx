@@ -19,7 +19,13 @@ import {
   ShieldCheck,
   Activity,
   Globe,
-  Mail
+  Mail,
+  Terminal,
+  Database,
+  Brain,
+  Cpu,
+  Code,
+  Workflow
 } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,6 +34,8 @@ import { logout } from '@/store/slices/authSlice';
 import { toggleSidebar } from '@/store/slices/uiSlice';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useQuery } from '@tanstack/react-query';
+import { notificationService } from '@/services/notificationService';
 
 const studentNavItems = [
   { icon: Home, label: 'Home', path: '/student/home', subtitle: 'Overview' },
@@ -36,6 +44,7 @@ const studentNavItems = [
   { icon: Calendar, label: 'Calendar', path: '/student/interview-calendar', subtitle: 'Schedule' },
   { icon: Video, label: 'Interviews', path: '/student/interviews', subtitle: 'Interview Panel' },
   { icon: Award, label: 'Offers', path: '/student/offers', subtitle: 'My Offers' },
+  { icon: Workflow, label: 'Roadmaps', path: '/student/roadmaps', subtitle: 'Career Path' },
   { icon: User, label: 'Profile', path: '/student/profile', subtitle: 'My Profile' },
 ];
 
@@ -50,22 +59,49 @@ const adminNavItems = [
   { icon: Zap, label: 'Admin Panel', path: '/admin/dashboard', subtitle: 'Main Panel' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics', subtitle: 'Reports' },
   { icon: User, label: 'Students', path: '/admin/students', subtitle: 'Management' },
-  { icon: Users, label: 'Experts', path: '/admin/professionals', subtitle: 'Experts' },
   { icon: Briefcase, label: 'Jobs', path: '/admin/jobs', subtitle: 'Job Portal' },
+];
+
+const superAdminNavItems = [
+  { icon: Globe, label: 'Super Admin', path: '/super-admin/dashboard', subtitle: 'Global Oversight' },
+  // { icon: Zap, label: 'Admin Panel', path: '/admin/dashboard', subtitle: 'System Config' },
+  // { icon: User, label: 'Students', path: '/admin/students', subtitle: 'Global List' },
+  // { icon: Users, label: 'Experts', path: '/admin/professionals', subtitle: 'Global List' },
+  // { icon: Briefcase, label: 'Jobs', path: '/admin/jobs', subtitle: 'Global List' },
 ];
 
 export function AppSidebar() {
   const { user, role } = useAppSelector((state) => state.auth);
   const { sidebarCollapsed: isCollapsed } = useAppSelector((state) => state.ui);
+
+  const isSuperAdmin = (user as any)?.isSuperAdmin || role === 'superadmin';
+
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Fetch unread notifications for badges
+  const { data: notificationsData } = useQuery<{ success: boolean; data: { notifications: any[]; unreadCount: number } }>({
+    queryKey: ['notifications'],
+    queryFn: notificationService.getNotifications,
+    enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const notifications = Array.isArray(notificationsData?.data?.notifications)
+    ? notificationsData.data.notifications
+    : [];
+  const unreadNotifications = notifications.filter(n => !n.read);
+
+
 
   const navItems = role === 'student'
     ? studentNavItems
     : role === 'professional'
       ? professionalNavItems
-      : adminNavItems;
+      : isSuperAdmin
+        ? superAdminNavItems
+        : adminNavItems;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -80,7 +116,6 @@ export function AppSidebar() {
           isCollapsed ? "w-24" : "w-72"
         )}
       >
-        {/* Sidebar Toggle - Floating */}
         <button
           onClick={() => dispatch(toggleSidebar())}
           className="absolute -right-3 top-20 h-6 w-6 rounded-full bg-primary flex items-center justify-center text-white border-4 border-white shadow-lg z-50 hover:scale-110 transition-transform cursor-pointer"
@@ -88,7 +123,6 @@ export function AppSidebar() {
           {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </button>
 
-        {/* Brand Header */}
         <div className={cn(
           "flex h-24 items-center gap-4 border-b border-slate-100 transition-all duration-300",
           isCollapsed ? "justify-center px-0" : "px-8"
@@ -98,13 +132,12 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
-              <span className="text-xl font-black tracking-tighter text-slate-900 uppercase italic">Placement<span className="text-primary italic">OS</span></span>
+              <span className="text-xl font-black tracking-tighter text-slate-900 uppercase">Placement<span className="text-primary">OS</span></span>
               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/60">Career Platform</span>
             </div>
           )}
         </div>
 
-        {/* User Quick Info */}
         <div className={cn(
           "py-6 transition-all duration-300",
           isCollapsed ? "px-4" : "px-6"
@@ -127,7 +160,6 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-4 selection:bg-transparent custom-scrollbar">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path ||
@@ -153,33 +185,36 @@ export function AppSidebar() {
                   isActive ? 'text-white' : 'text-slate-400 group-hover/nav:text-primary'
                 )} />
                 {!isCollapsed && (
-                  <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
-                    <span className="text-[13px] font-bold tracking-tight">{item.label}</span>
-                    <span className={cn(
-                      "text-[9px] font-black uppercase tracking-widest",
-                      isActive ? "text-white/60" : "text-slate-400"
-                    )}>{item.subtitle}</span>
+                  <div className="flex-1 flex items-center justify-between">
+                    <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
+                      <span className="text-[13px] font-bold tracking-tight">{item.label}</span>
+                      <span className={cn(
+                        "text-[9px] font-black uppercase tracking-widest",
+                        isActive ? "text-white/60" : "text-slate-400"
+                      )}>{item.subtitle}</span>
+                    </div>
                   </div>
                 )}
               </NavLink>
             );
 
-            return isCollapsed ? (
-              <Tooltip key={item.path}>
-                <TooltipTrigger asChild>
-                  {NavLinkContent}
-                </TooltipTrigger>
-                <TooltipContent side="right" className="bg-slate-900 border-none font-black uppercase text-[10px] tracking-widest text-white shadow-xl">
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <div key={item.path}>{NavLinkContent}</div>
+            return (
+              <div key={item.path}>
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{NavLinkContent}</TooltipTrigger>
+                    <TooltipContent side="right" className="bg-slate-900 border-none font-black uppercase text-[10px] tracking-widest text-white shadow-xl">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  NavLinkContent
+                )}
+              </div>
             );
           })}
         </nav>
 
-        {/* Footer / Logout */}
         <div className={cn(
           "p-6 border-t border-slate-100 space-y-6 transition-all duration-300",
           isCollapsed ? "items-center" : ""

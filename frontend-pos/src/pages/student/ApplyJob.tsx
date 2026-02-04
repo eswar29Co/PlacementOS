@@ -136,8 +136,8 @@ export default function ApplyJob() {
                           <CheckCircle2 className="h-8 w-8" />
                         </div>
                         <div>
-                          <p className="font-black text-sm uppercase text-emerald-600 italic">{resumeFile.name}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Resume Received</p>
+                          <p className="font-black text-sm uppercase text-emerald-600">{resumeFile.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resume Received</p>
                         </div>
                       </div>
                     ) : (
@@ -145,7 +145,7 @@ export default function ApplyJob() {
                         <FileText className="h-16 w-16 text-slate-300 mx-auto" />
                         <div>
                           <p className="font-black text-xs uppercase tracking-widest text-slate-400">Select Resume File</p>
-                          <p className="text-[10px] font-bold text-slate-300 uppercase mt-1 italic">PDF / DOCX (MAX 5MB)</p>
+                          <p className="text-[10px] font-bold text-slate-300 uppercase mt-1">PDF / DOCX (MAX 5MB)</p>
                         </div>
                       </div>
                     )}
@@ -160,7 +160,7 @@ export default function ApplyJob() {
                       { step: "02", text: "AI skill verification" },
                       { step: "03", text: "Assessment invite" }
                     ].map(p => (
-                      <div key={p.step} className="flex items-center gap-4 text-xs font-bold text-slate-500 italic">
+                      <div key={p.step} className="flex items-center gap-4 text-xs font-bold text-slate-500">
                         <span className="text-primary font-black opacity-30">{p.step}</span>
                         {p.text}
                       </div>
@@ -185,8 +185,8 @@ export default function ApplyJob() {
               <Card className="border-none shadow-lg rounded-[2.5rem] bg-indigo-600 text-white p-10 overflow-hidden relative min-h-[400px] flex flex-col justify-center text-center">
                 <Sparkles className="absolute -right-8 -top-8 h-40 w-40 opacity-10 animate-pulse" />
                 <div className="relative z-10 space-y-6">
-                  <h3 className="text-3xl font-black uppercase leading-tight italic tracking-tighter">Resume Smart Match</h3>
-                  <p className="text-white/70 font-bold text-sm leading-relaxed mx-auto max-w-xs italic">Scan your resume against job requirements to see how you match up.</p>
+                  <h3 className="text-3xl font-black uppercase leading-tight tracking-tighter">Resume Smart Match</h3>
+                  <p className="text-white/70 font-bold text-sm leading-relaxed mx-auto max-w-xs">Scan your resume against job requirements to see how you match up.</p>
                   <Button
                     className="bg-white text-indigo-700 font-black rounded-2xl h-14 px-10 shadow-xl hover:bg-slate-50 w-full"
                     onClick={handleATSAnalysis}
@@ -210,7 +210,7 @@ export default function ApplyJob() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-end">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Match Score</p>
-                      <p className="text-4xl font-black text-primary italic leading-none">{atsAnalysis.atsScore}<span className="text-sm opacity-30">/100</span></p>
+                      <p className="text-4xl font-black text-primary leading-none">{atsAnalysis.atsScore}<span className="text-sm opacity-30">/100</span></p>
                     </div>
                     <Progress value={atsAnalysis.atsScore} className="h-4 rounded-full bg-slate-100 shadow-none border border-slate-200" />
                   </div>
@@ -219,7 +219,7 @@ export default function ApplyJob() {
                     "border-none rounded-[1.5rem] p-6 shadow-none",
                     atsAnalysis.passed ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                   )}>
-                    <AlertDescription className="flex items-start gap-4 font-bold text-xs leading-relaxed italic">
+                    <AlertDescription className="flex items-start gap-4 font-bold text-xs leading-relaxed">
                       {atsAnalysis.passed ? <ShieldCheck className="h-5 w-5 shrink-0" /> : <AlertTriangle className="h-5 w-5 shrink-0" />}
                       {atsAnalysis.summary}
                     </AlertDescription>
@@ -229,7 +229,7 @@ export default function ApplyJob() {
                     <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Key Skill Matches</h5>
                     <div className="flex flex-wrap gap-2">
                       {atsAnalysis.keywordMatches.slice(0, 8).map((m: any, i: number) => (
-                        <Badge key={i} className="bg-slate-50 border border-slate-100 shadow-none text-slate-600 font-black uppercase text-[9px] px-3 py-1 rounded-lg italic">
+                        <Badge key={i} className="bg-slate-50 border border-slate-100 shadow-none text-slate-600 font-black uppercase text-[9px] px-3 py-1 rounded-lg">
                           {m.keyword}
                         </Badge>
                       ))}
@@ -242,7 +242,7 @@ export default function ApplyJob() {
                     </h5>
                     <ul className="space-y-2">
                       {atsAnalysis.missingKeywords.slice(0, 3).map((k: string, i: number) => (
-                        <li key={i} className="text-xs font-bold text-amber-700/70 flex items-center gap-2 italic">
+                        <li key={i} className="text-xs font-bold text-amber-700/70 flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Integrate "{k}" into core experience
                         </li>
                       ))}
@@ -261,7 +261,7 @@ export default function ApplyJob() {
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-black text-sm uppercase tracking-tight text-slate-900">Next Steps</h4>
-                  <p className="text-xs font-bold text-slate-400 leading-relaxed italic">After submitting, your assessment link will be sent to you within 24 hours.</p>
+                  <p className="text-xs font-bold text-slate-400 leading-relaxed">After submitting, your assessment link will be sent to you within 24 hours.</p>
                 </div>
               </div>
             </Card>

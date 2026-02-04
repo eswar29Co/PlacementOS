@@ -100,7 +100,7 @@ export default function AssessmentRelease() {
           <div className="h-24 w-24 bg-slate-100 rounded-[2rem] flex items-center justify-center border border-slate-200 shadow-inner group">
             <Lock className="h-10 w-10 text-slate-300 group-hover:scale-110 transition-transform" />
           </div>
-          <p className="text-slate-400 font-black text-xs uppercase tracking-widest italic">No active assessment window detected</p>
+          <p className="text-slate-400 font-black text-xs uppercase tracking-widest">No active assessment window detected</p>
           <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest" onClick={() => navigate('/student/applications')}>Return to Journey Map</Button>
         </div>
       </DashboardLayout>
@@ -115,12 +115,12 @@ export default function AssessmentRelease() {
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-900 italic">Technical Calibration</h1>
-            <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-3 italic">
+            <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Technical Calibration</h1>
+            <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-3">
               <Monitor className="h-4 w-4 text-primary" /> System Readiness: <span className="text-emerald-500">OPTIMAL</span>
             </p>
           </div>
-          <div className="flex items-center gap-3 px-6 py-2.5 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 font-black text-[10px] uppercase tracking-widest italic shadow-sm">
+          <div className="flex items-center gap-3 px-6 py-2.5 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 font-black text-[10px] uppercase tracking-widest shadow-sm">
             <Activity className="h-4 w-4 animate-pulse" /> High Stakes Active
           </div>
         </div>
@@ -135,16 +135,16 @@ export default function AssessmentRelease() {
                   <div className="h-12 w-12 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
                     <Clock className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-500" />
                   </div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-900">Temporal Window</h3>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Temporal Window</h3>
                 </div>
 
                 <div className="space-y-6">
                   <div className="flex justify-between items-end">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Window Expiration</p>
-                    <p className="text-4xl font-black tracking-tighter text-primary italic">{timeLeftStr}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Window Expiration</p>
+                    <p className="text-4xl font-black tracking-tighter text-primary">{timeLeftStr}</p>
                   </div>
                   <Progress value={progress} className="h-3 rounded-full bg-slate-100 border border-slate-200 shadow-none" />
-                  <p className="text-[10px] font-black text-slate-300 uppercase text-center italic tracking-widest pt-2">
+                  <p className="text-[10px] font-black text-slate-300 uppercase text-center tracking-widest pt-2">
                     Deadline Synchronized: {myApplication.assessmentDeadline && format(new Date(myApplication.assessmentDeadline), 'dd MMM yyyy, HH:mm')}
                   </p>
                 </div>
@@ -153,7 +153,7 @@ export default function AssessmentRelease() {
 
             <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white overflow-hidden border">
               <CardHeader className="bg-slate-50/50 p-8 border-b border-slate-100">
-                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900 italic">
+                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900">
                   <Info className="h-6 w-6 text-primary" /> Calibration Parameters
                 </CardTitle>
               </CardHeader>
@@ -161,28 +161,28 @@ export default function AssessmentRelease() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:border-primary/20 hover:bg-white transition-all group/item duration-500">
                     <Database className="h-8 w-8 text-primary mb-6 group-hover:scale-110 transition-transform" />
-                    <h4 className="font-black text-xs uppercase mb-2 text-slate-900 tracking-tight italic">Knowledge Core</h4>
-                    <p className="text-xs text-slate-500 font-bold leading-relaxed italic">5 deep-dive conceptual patterns covering system design and core logic.</p>
+                    <h4 className="font-black text-xs uppercase mb-2 text-slate-900 tracking-tight">Knowledge Core</h4>
+                    <p className="text-xs text-slate-500 font-bold leading-relaxed">5 deep-dive conceptual patterns covering system design and core logic.</p>
                   </div>
                   <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:border-primary/20 hover:bg-white transition-all group/item duration-500">
                     <Code2 className="h-8 w-8 text-primary mb-6 group-hover:scale-110 transition-transform" />
-                    <h4 className="font-black text-xs uppercase mb-2 text-slate-900 tracking-tight italic">Algorithmic Load</h4>
-                    <p className="text-xs text-slate-500 font-bold leading-relaxed italic">2 complex code simulations to test structural implementation capacity.</p>
+                    <h4 className="font-black text-xs uppercase mb-2 text-slate-900 tracking-tight">Algorithmic Load</h4>
+                    <p className="text-xs text-slate-500 font-bold leading-relaxed">2 complex code simulations to test structural implementation capacity.</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-8 pt-10 border-t border-slate-100">
                   <div className="flex-1 space-y-2">
-                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Simulation Time</p>
-                    <p className="text-sm font-black uppercase text-slate-900 italic tracking-tighter">90 Minutes Fixed</p>
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Simulation Time</p>
+                    <p className="text-sm font-black uppercase text-slate-900 tracking-tighter">90 Minutes Fixed</p>
                   </div>
                   <div className="flex-1 space-y-2">
-                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Success Threshold</p>
-                    <p className="text-sm font-black uppercase text-emerald-600 italic tracking-tighter">60% Accuracy</p>
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Success Threshold</p>
+                    <p className="text-sm font-black uppercase text-emerald-600 tracking-tighter">60% Accuracy</p>
                   </div>
                   <div className="flex-1 space-y-2">
-                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] italic">Activation Status</p>
-                    <p className="text-sm font-black uppercase text-primary italic tracking-tighter">Live Buffer</p>
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Activation Status</p>
+                    <p className="text-sm font-black uppercase text-primary tracking-tighter">Live Buffer</p>
                   </div>
                 </div>
               </CardContent>
@@ -194,8 +194,8 @@ export default function AssessmentRelease() {
               <Sparkles className="absolute -right-6 -top-6 h-32 w-32 opacity-10 group-hover:scale-110 transition-transform duration-1000" />
               <div className="relative z-10 space-y-10">
                 <div className="space-y-4">
-                  <h4 className="text-2xl font-black uppercase leading-tight italic tracking-tighter">Initialize Protocol</h4>
-                  <p className="text-white/70 text-sm font-bold leading-relaxed italic">Enter the technical simulation environment. Ensure a stable neural link and quiet operating zone.</p>
+                  <h4 className="text-2xl font-black uppercase leading-tight tracking-tighter">Initialize Protocol</h4>
+                  <p className="text-white/70 text-sm font-bold leading-relaxed">Enter the technical simulation environment. Ensure a stable neural link and quiet operating zone.</p>
                 </div>
                 <Button
                   className="w-full h-20 rounded-[2rem] bg-white text-primary font-black text-xl shadow-2xl hover:bg-slate-50 gap-4 group/btn transition-all active:scale-95"
@@ -204,12 +204,12 @@ export default function AssessmentRelease() {
                 >
                   {myApplication.status === 'assessment_in_progress' ? 'CONT. SIMULATION' : 'INITIATE CALIBRATION'} <PlayCircle className="h-7 w-7 group-hover/btn:scale-110 transition-transform" />
                 </Button>
-                <p className="text-center text-[9px] font-black uppercase tracking-[0.4em] text-white/40 italic">Atomic submission enabled</p>
+                <p className="text-center text-[9px] font-black uppercase tracking-[0.4em] text-white/40">Atomic submission enabled</p>
               </div>
             </Card>
 
             <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white p-10 border space-y-8">
-              <h4 className="font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 text-slate-900 italic">
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 text-slate-900">
                 <ShieldCheck className="h-5 w-5 text-emerald-500" /> Secure Guidelines
               </h4>
               <ul className="space-y-6">
@@ -220,8 +220,8 @@ export default function AssessmentRelease() {
                   "Manual override not available post-activation"
                 ].map((g, i) => (
                   <li key={i} className="flex gap-5 group/tip">
-                    <span className="text-xs font-black text-primary/30 mt-0.5 group-hover/tip:text-primary transition-colors italic">{i + 1}</span>
-                    <span className="text-xs font-bold text-slate-500 leading-snug italic">{g}</span>
+                    <span className="text-xs font-black text-primary/30 mt-0.5 group-hover/tip:text-primary transition-colors">{i + 1}</span>
+                    <span className="text-xs font-bold text-slate-500 leading-snug">{g}</span>
                   </li>
                 ))}
               </ul>

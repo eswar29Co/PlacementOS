@@ -83,7 +83,7 @@ export default function JobDetails() {
                       <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900">{job.roleTitle}</h1>
                       <Badge className="bg-primary/5 text-primary border-primary/10 font-black px-4 py-1 rounded-full uppercase text-[10px] shadow-none">Featured Job</Badge>
                     </div>
-                    <p className="text-slate-400 font-black text-sm uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-2 italic">
+                    <p className="text-slate-400 font-black text-sm uppercase tracking-[0.4em] flex items-center justify-center md:justify-start gap-2">
                       <Building2 className="h-4 w-4 text-primary/50" /> {job.companyName}
                     </p>
                     <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-4">
@@ -112,7 +112,7 @@ export default function JobDetails() {
               <CardContent className="p-10 space-y-10">
                 <div className="space-y-4">
                   <h4 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Overview</h4>
-                  <p className="text-slate-500 leading-relaxed font-bold italic">{job.description}</p>
+                  <p className="text-slate-500 leading-relaxed font-bold">{job.description}</p>
                 </div>
 
                 <div className="space-y-6">
@@ -131,7 +131,7 @@ export default function JobDetails() {
                   <h4 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Required Skills</h4>
                   <div className="flex flex-wrap gap-3">
                     {job.skills.map(skill => (
-                      <Badge key={skill} variant="secondary" className="bg-white text-slate-900 border border-slate-100 shadow-sm font-black px-4 py-2 rounded-xl uppercase text-[10px] italic">
+                      <Badge key={skill} variant="secondary" className="bg-white text-slate-900 border border-slate-100 shadow-sm font-black px-4 py-2 rounded-xl uppercase text-[10px]">
                         {skill}
                       </Badge>
                     ))}
@@ -156,7 +156,7 @@ export default function JobDetails() {
                       </div>
                       <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-[2rem] bg-slate-50 border border-slate-100 group-hover:bg-primary/5 transition-colors">
                         <span className="text-xs font-black uppercase tracking-widest text-primary">{step}</span>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 italic">Status: Started</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Status: Started</p>
                       </div>
                     </div>
                   ))}
@@ -174,13 +174,13 @@ export default function JobDetails() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
                     <Clock className="h-3 w-3 text-white/50" /> Time Remaining
                   </p>
-                  <h3 className="text-2xl font-black italic tracking-tighter">{format(new Date(job.deadline), 'dd MMMM yyyy')}</h3>
+                  <h3 className="text-2xl font-black tracking-tighter">{format(new Date(job.deadline), 'dd MMMM yyyy')}</h3>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
                     <Target className="h-3 w-3 text-white/50" /> Hiring Status
                   </p>
-                  <h3 className="text-2xl font-black italic tracking-tighter">Actively Hiring</h3>
+                  <h3 className="text-2xl font-black tracking-tighter">Actively Hiring</h3>
                 </div>
                 <div className="pt-4">
                   <Button className="w-full h-16 rounded-2xl bg-white text-primary hover:bg-slate-50 font-black text-lg gap-2 shadow-xl shadow-black/10" onClick={handleApply}>

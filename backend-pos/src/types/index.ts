@@ -1,14 +1,14 @@
 // User types
-export type UserRole = 'student' | 'professional' | 'admin';
-export type ApplicationStatus = 
-  | 'applied' 
+export type UserRole = 'student' | 'professional' | 'admin' | 'superadmin';
+export type ApplicationStatus =
+  | 'applied'
   | 'resume_under_review'
-  | 'resume_approved' 
+  | 'resume_approved'
   | 'resume_shortlisted'
   | 'resume_rejected'
   | 'assessment_pending'
   | 'assessment_released'
-  | 'assessment_in_progress' 
+  | 'assessment_in_progress'
   | 'assessment_completed'
   | 'assessment_submitted'
   | 'assessment_under_review'
@@ -40,9 +40,11 @@ export type ProfessionalRole = 'Technical' | 'Manager' | 'HR' | 'Admin';
 export type InterviewRound = 'professional' | 'manager' | 'hr';
 export type LocationType = 'Onsite' | 'Hybrid' | 'Remote';
 export type InterviewType = 'ai' | 'professional' | 'manager' | 'hr';
-export type NotificationType = 
-  | 'professional_approved' 
+export type NotificationType =
+  | 'professional_approved'
   | 'professional_rejected'
+  | 'professional_signup'
+  | 'student_registered'
   | 'resume_approved'
   | 'resume_rejected'
   | 'assessment_released'
@@ -52,7 +54,9 @@ export type NotificationType =
   | 'interview_scheduled'
   | 'interview_completed'
   | 'application_update'
-  | 'offer_released';
+  | 'offer_released'
+  | 'new_job_posted'
+  | 'admin_note';
 
 export interface IUser {
   _id?: string;
@@ -69,6 +73,7 @@ export interface IUser {
 export interface IStudent extends IUser {
   role: 'student';
   college: string;
+  collegeId?: string;
   degree: string;
   branch?: string;
   cgpa: number;
@@ -111,6 +116,7 @@ export interface IJob {
   selectionProcess?: string[];
   package?: string;
   createdBy?: string;
+  collegeId?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -141,14 +147,15 @@ export interface IApplication {
   studentId: string;
   status: ApplicationStatus;
   appliedAt: Date;
-  
+
   // Resume phase
   resumeUrl?: string;
   resumeScore?: number;
+  atsAnalysis?: any;
   resumeApproved?: boolean | null; // null = pending, true = approved, false = rejected
   resumeApprovedAt?: Date;
   resumeApprovedBy?: string;
-  
+
   // Assessment phase
   assessmentDeadline?: Date;
   assessmentCode?: string;
@@ -158,33 +165,35 @@ export interface IApplication {
   assessmentApproved?: boolean | null; // null = pending, true = approved, false = rejected
   assessmentApprovedAt?: Date;
   assessmentApprovedBy?: string;
-  
+
   // Interview phases
   aiInterviewScore?: number;
   aiInterviewAnswers?: string[];
+  aiInterviewSummary?: string;
+  aiInterviewMetrics?: any;
   aiInterviewApproved?: boolean | null; // null = pending, true = approved, false = rejected
   aiInterviewApprovedAt?: Date;
   aiInterviewApprovedBy?: string;
-  
+
   // Professional assignment
   assignedProfessionalId?: string;
   assignedManagerId?: string;
   assignedHRId?: string;
   interviewRound?: InterviewRound;
-  
+
   // Meeting details
   meetingLink?: string;
   scheduledDate?: Date;
-  
+
   // Feedback tracking
   interviewFeedback?: IInterviewFeedbackDetailed[];
-  
+
   // Scores
   professionalInterviewScore?: number;
   managerInterviewScore?: number;
   hrInterviewScore?: number;
   offerDetails?: any;
-  
+
   timeline: IApplicationEvent[];
   createdAt?: Date;
   updatedAt?: Date;

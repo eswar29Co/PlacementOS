@@ -4,134 +4,14 @@ import { Application } from '../models/Application';
 import { Notification } from '../models/Notification';
 import { ApiResponse } from '../utils/ApiResponse';
 import { AuthRequest } from '../middleware/auth';
-import { config } from '../config';
 
-// Sample question bank
-const questionBank = {
-  mcq: [
-    {
-      id: 'mcq_1',
-      question: 'What is the time complexity of binary search?',
-      options: ['O(n)', 'O(log n)', 'O(n^2)', 'O(1)'],
-      correctOption: 1,
-    },
-    {
-      id: 'mcq_2',
-      question: 'Which data structure uses LIFO principle?',
-      options: ['Queue', 'Stack', 'Array', 'Tree'],
-      correctOption: 1,
-    },
-    {
-      id: 'mcq_3',
-      question: 'What does REST stand for?',
-      options: [
-        'Representational State Transfer',
-        'Remote State Transfer',
-        'Resource State Transfer',
-        'Representational System Transfer',
-      ],
-      correctOption: 0,
-    },
-    {
-      id: 'mcq_4',
-      question: 'Which HTTP method is used to update a resource?',
-      options: ['GET', 'POST', 'PUT', 'DELETE'],
-      correctOption: 2,
-    },
-    {
-      id: 'mcq_5',
-      question: 'What is the purpose of a primary key in a database?',
-      options: [
-        'To uniquely identify a record',
-        'To create an index',
-        'To define relationships',
-        'To encrypt data',
-      ],
-      correctOption: 0,
-    },
-    // Add more MCQ questions here (total 30+ for variety)
-    {
-      id: 'mcq_6',
-      question: 'What is polymorphism in OOP?',
-      options: [
-        'Ability to take many forms',
-        'Data hiding',
-        'Code reusability',
-        'Multiple inheritance',
-      ],
-      correctOption: 0,
-    },
-    {
-      id: 'mcq_7',
-      question: 'Which sorting algorithm has best average case time complexity?',
-      options: ['Bubble Sort', 'Quick Sort', 'Selection Sort', 'Insertion Sort'],
-      correctOption: 1,
-    },
-    {
-      id: 'mcq_8',
-      question: 'What is the default port for HTTPS?',
-      options: ['80', '443', '8080', '3000'],
-      correctOption: 1,
-    },
-  ],
-  coding: [
-    {
-      id: 'code_1',
-      title: 'Two Sum',
-      description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
-      examples: [
-        { input: 'nums = [2,7,11,15], target = 9', output: '[0,1]' },
-        { input: 'nums = [3,2,4], target = 6', output: '[1,2]' },
-      ],
-      constraints: [
-        '2 <= nums.length <= 10^4',
-        '-10^9 <= nums[i] <= 10^9',
-        'Only one valid answer exists',
-      ],
-      difficulty: 'Easy' as const,
-      testCases: [
-        { input: '[2,7,11,15]\n9', expectedOutput: '[0,1]' },
-        { input: '[3,2,4]\n6', expectedOutput: '[1,2]' },
-        { input: '[3,3]\n6', expectedOutput: '[0,1]' },
-      ],
-    },
-    {
-      id: 'code_2',
-      title: 'Reverse String',
-      description: 'Write a function that reverses a string. The input string is given as an array of characters.',
-      examples: [
-        { input: 's = ["h","e","l","l","o"]', output: '["o","l","l","e","h"]' },
-        { input: 's = ["H","a","n","n","a","h"]', output: '["h","a","n","n","a","H"]' },
-      ],
-      constraints: ['1 <= s.length <= 10^5'],
-      difficulty: 'Easy' as const,
-      testCases: [
-        { input: '["h","e","l","l","o"]', expectedOutput: '["o","l","l","e","h"]' },
-        { input: '["H","a","n","n","a","h"]', expectedOutput: '["h","a","n","n","a","H"]' },
-      ],
-    },
-    {
-      id: 'code_3',
-      title: 'Valid Palindrome',
-      description: 'A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.',
-      examples: [
-        { input: 's = "A man, a plan, a canal: Panama"', output: 'true' },
-        { input: 's = "race a car"', output: 'false' },
-      ],
-      constraints: ['1 <= s.length <= 2 * 10^5'],
-      difficulty: 'Easy' as const,
-      testCases: [
-        { input: '"A man, a plan, a canal: Panama"', expectedOutput: 'true' },
-        { input: '"race a car"', expectedOutput: 'false' },
-      ],
-    },
-  ],
-};
+import { createAssessmentRecord } from '../utils/assessmentHelper';
 
 // Admin: Release assessment for application
 export const releaseAssessment = async (req: AuthRequest, res: Response) => {
   try {
-    const { applicationId, duration = 60 } = req.body;
+    const applicationId = req.body.applicationId || req.params.applicationId;
+    const { duration = 60 } = req.body;
 
     const application = await Application.findById(applicationId)
       .populate('jobId')
@@ -141,7 +21,8 @@ export const releaseAssessment = async (req: AuthRequest, res: Response) => {
       return ApiResponse.notFound(res, 'Application not found');
     }
 
-    if (application.status !== 'resume_shortlisted') {
+    if (!['resume_shortlisted', 'resume_approved', 'assessment_released'].includes(application.status)) {
+      // Allow re-releasing or releasing from these states
       return ApiResponse.badRequest(res, 'Application is not in the correct stage for assessment');
     }
 
@@ -151,32 +32,12 @@ export const releaseAssessment = async (req: AuthRequest, res: Response) => {
       return ApiResponse.badRequest(res, 'Assessment already released for this application');
     }
 
-    // Select random MCQs
-    const shuffledMCQs = [...questionBank.mcq].sort(() => Math.random() - 0.5);
-    const selectedMCQs = shuffledMCQs.slice(0, config.assessment.mcqCount);
-
-    // Select random coding question
-    const randomCodingQuestion = questionBank.coding[
-      Math.floor(Math.random() * questionBank.coding.length)
-    ];
-
-    // Create assessment
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 3); // 3 days deadline
-
-    const assessment = await Assessment.create({
-      applicationId,
-      jobId: application.jobId,
-      deadline,
-      duration,
-      mcqQuestions: selectedMCQs,
-      codingQuestion: randomCodingQuestion,
-      status: 'pending',
-    });
+    // Create assessment using helper
+    const assessment = await createAssessmentRecord(applicationId, application.jobId as any, duration);
 
     // Update application
     application.status = 'assessment_pending';
-    application.assessmentDeadline = deadline;
+    application.assessmentDeadline = assessment.deadline;
     application.timeline.push({
       status: 'assessment_pending',
       timestamp: new Date(),
@@ -190,7 +51,7 @@ export const releaseAssessment = async (req: AuthRequest, res: Response) => {
       userId: application.studentId,
       type: 'assessment_released',
       title: 'Assessment Released',
-      message: `Your assessment for ${job.roleTitle} at ${job.companyName} is now available. Complete it before ${deadline.toLocaleDateString()}`,
+      message: `Your assessment for ${job.roleTitle} at ${job.companyName} is now available. Complete it before ${assessment.deadline.toLocaleDateString()}`,
       read: false,
       createdAt: new Date(),
       actionUrl: `/student/assessments/${assessment._id}`,
@@ -230,6 +91,34 @@ export const getAssessment = async (req: AuthRequest, res: Response) => {
     return ApiResponse.success(res, assessment);
   } catch (error: any) {
     console.error('Get assessment error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to fetch assessment');
+  }
+};
+
+// Student: Get assessment by application ID
+export const getAssessmentByApplicationId = async (req: AuthRequest, res: Response) => {
+  try {
+    const { applicationId } = req.params;
+    const studentId = req.user!.userId;
+
+    const assessment = await Assessment.findOne({ applicationId })
+      .populate('jobId', 'companyName roleTitle');
+
+    if (!assessment) {
+      return ApiResponse.notFound(res, 'Assessment not found for this application');
+    }
+
+    // Verify student is authorized OR user is admin
+    if (req.user!.role === 'student') {
+      const application = await Application.findById(assessment.applicationId);
+      if (!application || application.studentId.toString() !== studentId) {
+        return ApiResponse.forbidden(res, 'Not authorized to view this assessment');
+      }
+    }
+
+    return ApiResponse.success(res, assessment);
+  } catch (error: any) {
+    console.error('Get assessment by application ID error:', error);
     return ApiResponse.error(res, error.message || 'Failed to fetch assessment');
   }
 };
@@ -298,7 +187,7 @@ export const submitAssessment = async (req: AuthRequest, res: Response) => {
     // Verify student
     const application = await Application.findById(assessment.applicationId)
       .populate('jobId', 'companyName roleTitle');
-      
+
     if (!application || application.studentId.toString() !== studentId) {
       return ApiResponse.forbidden(res, 'Not authorized');
     }
@@ -317,12 +206,25 @@ export const submitAssessment = async (req: AuthRequest, res: Response) => {
 
     const mcqScore = (correctAnswers / assessment.mcqQuestions.length) * 100;
 
-    // For coding, we'll use a simple check (in production, use proper test case execution)
-    // For now, give 100 if answered, 0 if not
-    const codingScore = codingAnswer && codingAnswer.trim().length > 50 ? 100 : 0;
+    // Improved Coding Score Algorithm
+    // Evaluates length, technical keywords, and structure
+    let codingScore = 0;
+    if (codingAnswer && codingAnswer.trim().length > 50) {
+      const code = codingAnswer.trim();
+      const lengthScore = Math.min(code.length / 500 * 40, 40); // Max 40 points for length up to 500 chars
 
-    // Overall score (70% MCQ, 30% Coding)
-    const finalScore = Math.round(mcqScore * 0.7 + codingScore * 0.3);
+      const technicalKeywords = ['function', 'const', 'let', 'return', 'if', 'else', 'for', 'while', 'class', 'import', 'export', '=>', 'async', 'await', 'try', 'catch'];
+      const keywordMatches = technicalKeywords.filter(kw => code.includes(kw)).length;
+      const kwScore = Math.min((keywordMatches / technicalKeywords.length) * 40, 40); // Max 40 points for technical structure
+
+      const logicDensity = (code.match(/[\{\}\(\)\[\];=<>!]/g) || []).length;
+      const logicScore = Math.min((logicDensity / 20) * 20, 20); // Max 20 points for logical symbols
+
+      codingScore = Math.round(lengthScore + kwScore + logicScore);
+    }
+
+    // Overall score (60% MCQ, 40% Coding for more focus on technical depth)
+    const finalScore = Math.round(mcqScore * 0.6 + codingScore * 0.4);
 
     // Update assessment
     assessment.status = 'completed';
@@ -335,13 +237,14 @@ export const submitAssessment = async (req: AuthRequest, res: Response) => {
     await assessment.save();
 
     // Update application
-    application.status = 'assessment_submitted';
+    application.status = 'assessment_completed';
     application.assessmentScore = finalScore;
+    application.assessmentCode = codingAnswer;
     application.submittedAt = new Date();
     application.timeline.push({
-      status: 'assessment_submitted',
+      status: 'assessment_completed',
       timestamp: new Date(),
-      notes: `Assessment submitted with score: ${finalScore}`,
+      notes: `Assessment completed with score: ${finalScore}`,
     });
     await application.save();
 
@@ -432,6 +335,71 @@ export const reviewAssessmentResults = async (req: AuthRequest, res: Response) =
   } catch (error: any) {
     console.error('Review assessment error:', error);
     return ApiResponse.error(res, error.message || 'Failed to review assessments');
+  }
+};
+
+// Admin: Review single assessment result
+export const reviewSingleAssessment = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { passed, notes } = req.body;
+
+    const assessment = await Assessment.findById(id).populate('applicationId');
+    if (!assessment) {
+      return ApiResponse.notFound(res, 'Assessment not found');
+    }
+
+    const application = await Application.findById(assessment.applicationId)
+      .populate('jobId', 'companyName roleTitle')
+      .populate('studentId', 'name email');
+
+    if (!application) {
+      return ApiResponse.notFound(res, 'Application not found');
+    }
+
+    const job = application.jobId as any;
+
+    if (passed) {
+      application.status = 'assessment_approved';
+      application.timeline.push({
+        status: 'assessment_approved',
+        timestamp: new Date(),
+        notes: notes || `Assessment passed with score: ${assessment.score}`,
+      });
+
+      await Notification.create({
+        userId: application.studentId,
+        type: 'assessment_approved',
+        title: 'Assessment Passed',
+        message: `Congratulations! You passed the assessment for ${job.roleTitle} at ${job.companyName}`,
+        read: false,
+        createdAt: new Date(),
+        actionUrl: `/student/applications/${application._id}`
+      });
+    } else {
+      application.status = 'assessment_rejected';
+      application.timeline.push({
+        status: 'assessment_rejected',
+        timestamp: new Date(),
+        notes: notes || `Assessment failed. Score: ${assessment.score}`,
+      });
+
+      await Notification.create({
+        userId: application.studentId,
+        type: 'assessment_rejected',
+        title: 'Assessment Result',
+        message: `Your assessment for ${job.roleTitle} at ${job.companyName} did not meet the criteria`,
+        read: false,
+        createdAt: new Date(),
+        actionUrl: `/student/applications/${application._id}`
+      });
+    }
+
+    await application.save();
+    return ApiResponse.success(res, application, 'Assessment reviewed successfully');
+  } catch (error: any) {
+    console.error('Review single assessment error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to review assessment');
   }
 };
 

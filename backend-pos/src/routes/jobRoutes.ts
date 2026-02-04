@@ -8,7 +8,7 @@ import {
   getRecommendedJobs,
   getJobStatistics,
 } from '../controllers/jobController';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, authorize, optionalAuthenticate } from '../middleware/auth';
 
 const router = Router();
 
@@ -17,14 +17,14 @@ const router = Router();
  * @desc    Get all jobs with optional filters
  * @access  Public/Private
  */
-router.get('/', getJobs);
+router.get('/', optionalAuthenticate, getJobs);
 
 /**
  * @route   GET /api/v1/jobs/statistics
  * @desc    Get job statistics
  * @access  Private (Admin)
  */
-router.get('/statistics', authenticate, authorize('admin'), getJobStatistics);
+router.get('/statistics', authenticate, authorize('admin', 'superadmin'), getJobStatistics);
 
 /**
  * @route   GET /api/v1/jobs/recommended
@@ -45,20 +45,20 @@ router.get('/:id', getJobById);
  * @desc    Create a new job
  * @access  Private (Admin)
  */
-router.post('/', authenticate, authorize('admin'), createJob);
+router.post('/', authenticate, authorize('admin', 'superadmin'), createJob);
 
 /**
  * @route   PUT /api/v1/jobs/:id
  * @desc    Update a job
  * @access  Private (Admin)
  */
-router.put('/:id', authenticate, authorize('admin'), updateJob);
+router.put('/:id', authenticate, authorize('admin', 'superadmin'), updateJob);
 
 /**
  * @route   DELETE /api/v1/jobs/:id
  * @desc    Delete a job
  * @access  Private (Admin)
  */
-router.delete('/:id', authenticate, authorize('admin'), deleteJob);
+router.delete('/:id', authenticate, authorize('admin', 'superadmin'), deleteJob);
 
 export default router;

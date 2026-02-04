@@ -6,17 +6,26 @@ import { Notification } from '../models/Notification';
 import { ApiResponse } from '../utils/ApiResponse';
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
+import { Admin } from '../models/Admin';
 
 export const getDashboardStats = async (req: AuthRequest, res: Response) => {
   try {
-    const role = req.user!.role;
-    const userId = req.user!.userId;
+    const { userId, role } = req.user!;
 
     let stats: any = {};
+    let collegeId;
+
+    if (role === 'admin') {
+      const admin = await Admin.findById(userId);
+      collegeId = admin?.collegeId;
+    }
 
     switch (role) {
-      case 'admin':
+      case 'superadmin':
         stats = await getAdminStats();
+        break;
+      case 'admin':
+        stats = await getAdminStats(collegeId);
         break;
       case 'student':
         stats = await getStudentStats(userId);
@@ -33,17 +42,32 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
   }
 };
 
-const getAdminStats = async () => {
-  const totalJobs = await Job.countDocuments();
-  const activeJobs = await Job.countDocuments({ isActive: true });
-  const totalApplications = await Application.countDocuments();
-  const totalStudents = await Student.countDocuments();
-  const totalProfessionals = await Professional.countDocuments();
+const getAdminStats = async (collegeId?: any) => {
+  let filter: any = {};
+  if (collegeId) {
+    filter.collegeId = collegeId;
+  }
+
+  const totalJobs = await Job.countDocuments(filter);
+  const activeJobs = await Job.countDocuments({ ...filter, isActive: true });
+
+  // Application filter
+  let appFilter: any = {};
+  if (collegeId) {
+    const studentsInCollege = await Student.find({ collegeId }).select('_id');
+    const studentIds = studentsInCollege.map((s: any) => s._id);
+    appFilter.studentId = { $in: studentIds };
+  }
+
+  const totalApplications = await Application.countDocuments(appFilter);
+  const totalStudents = await Student.countDocuments(collegeId ? { collegeId } : {});
+  const totalProfessionals = await Professional.countDocuments(); // Professionals are global
   const pendingProfessionals = await Professional.countDocuments({ status: 'pending' });
   const approvedProfessionals = await Professional.countDocuments({ status: 'approved' });
 
   // Application status breakdown
   const applicationsByStatus = await Application.aggregate([
+    { $match: appFilter },
     {
       $group: {
         _id: '$status',
@@ -53,7 +77,7 @@ const getAdminStats = async () => {
   ]);
 
   // Recent applications
-  const recentApplications = await Application.find()
+  const recentApplications = await Application.find(appFilter)
     .sort({ appliedAt: -1 })
     .limit(5)
     .populate('jobId', 'companyName roleTitle')
@@ -76,7 +100,12 @@ const getAdminStats = async () => {
 
 const getStudentStats = async (studentId: string) => {
   const totalApplications = await Application.countDocuments({ studentId });
-  
+
+  // Platform wide stats
+  const activeJobs = await Job.countDocuments({ isActive: true });
+  const totalStudents = await Student.countDocuments();
+  const totalOffers = await Application.countDocuments({ status: { $in: ['offer_released', 'offer_accepted', 'hired'] } });
+
   const applicationsByStatus = await Application.aggregate([
     { $match: { studentId: studentId as any } },
     {
@@ -96,6 +125,10 @@ const getStudentStats = async (studentId: string) => {
     .sort({ appliedAt: -1 })
     .populate('jobId', 'companyName roleTitle locationType ctcBand');
 
+  // Calculate completed rounds for this specific student
+  const studentApplications = await Application.find({ studentId });
+  const completedRounds = studentApplications.reduce((acc, app) => acc + (app.timeline?.length || 0), 0);
+
   const unreadNotifications = await Notification.countDocuments({
     userId: studentId,
     read: false,
@@ -103,6 +136,12 @@ const getStudentStats = async (studentId: string) => {
 
   return {
     totalApplications,
+    platformStats: {
+      activeJobs,
+      totalStudents,
+      totalOffers,
+      completedRounds
+    },
     applicationsByStatus,
     activeApplications,
     unreadNotifications,

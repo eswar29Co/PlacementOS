@@ -54,14 +54,11 @@ nano .env
 
 Paste and fill your production variables:
 ```env
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=your_secret
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-# Use your EC2 IP here
-CORS_ORIGIN=http://your-ec2-ip
-FRONTEND_URL=http://your-ec2-ip
+MONGODB_URI=mongodb+srv://placementos-admin:placeOSAdmin%404945@placementos-cluster.zviwjef.mongodb.net/placementos?appName=PlacementOS-Cluster
+JWT_SECRET=9f7a2b8c4d1e6f3a5b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a
+CORS_ORIGIN=http://13.211.190.255
+FRONTEND_URL=http://13.211.190.255
+# Add Cloudinary and SMTP keys as well
 ```
 
 ---
@@ -69,13 +66,15 @@ FRONTEND_URL=http://your-ec2-ip
 ## 4️⃣ Build & Run with Docker
 
 1.  **Clone your repo**:
+    *If you already created a .env file, you must move it first:*
     ```bash
-    git clone https://github.com/YOUR_REPO.git .
+    mv .env ../.env_bak
+    git clone https://github.com/eswar29Co/PlacementOS.git .
+    mv ../.env_bak .env
     ```
 2.  **Build the Image**:
-    *Replace `your-ec2-ip` with your actual EC2 IP address.*
     ```bash
-    docker build --build-arg VITE_API_BASE_URL=http://your-ec2-ip/api/v1 -t placementos .
+    docker build --build-arg VITE_API_BASE_URL=http://13.211.190.255/api/v1 -t placementos .
     ```
 3.  **Run the Container**:
     ```bash

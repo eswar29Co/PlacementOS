@@ -37,7 +37,7 @@ router.post('/apply', authenticate, authorize('student'), applyForJob);
  * @desc    Get all applications (Admin)
  * @access  Private (Admin)
  */
-router.get('/', authenticate, authorize('admin'), getAllApplications);
+router.get('/', authenticate, authorize('admin', 'superadmin'), getAllApplications);
 
 /**
  * @route   GET /api/v1/applications/my-applications
@@ -65,21 +65,21 @@ router.get('/:id', authenticate, getApplicationById);
  * @desc    Update application status
  * @access  Private (Admin)
  */
-router.put('/:id/status', authenticate, authorize('admin'), updateApplicationStatus);
+router.put('/:id/status', authenticate, authorize('admin', 'superadmin'), updateApplicationStatus);
 
 /**
  * @route   POST /api/v1/applications/shortlist-resumes
  * @desc    Shortlist resumes based on ATS score
  * @access  Private (Admin)
  */
-router.post('/shortlist-resumes', authenticate, authorize('admin'), shortlistResumes);
+router.post('/shortlist-resumes', authenticate, authorize('admin', 'superadmin'), shortlistResumes);
 
 /**
  * @route   POST /api/v1/applications/:id/assign-professional
  * @desc    Assign professional to application
  * @access  Private (Admin)
  */
-router.post('/:id/assign-professional', authenticate, authorize('admin'), assignProfessional);
+router.post('/:id/assign-professional', authenticate, authorize('admin', 'superadmin'), assignProfessional);
 
 /**
  * @route   POST /api/v1/applications/:id/schedule-interview
@@ -114,42 +114,42 @@ router.post('/submit-ai-interview', authenticate, authorize('student'), submitAI
  * @desc    Approve resume
  * @access  Private (Admin)
  */
-router.post('/:id/approve-resume', authenticate, authorize('admin'), approveResume);
+router.post('/:id/approve-resume', authenticate, authorize('admin', 'superadmin'), approveResume);
 
 /**
  * @route   POST /api/v1/applications/:id/reject-resume
  * @desc    Reject resume
  * @access  Private (Admin)
  */
-router.post('/:id/reject-resume', authenticate, authorize('admin'), rejectResume);
+router.post('/:id/reject-resume', authenticate, authorize('admin', 'superadmin'), rejectResume);
 
 /**
  * @route   POST /api/v1/applications/:id/approve-assessment
  * @desc    Approve assessment
  * @access  Private (Admin)
  */
-router.post('/:id/approve-assessment', authenticate, authorize('admin'), approveAssessment);
+router.post('/:id/approve-assessment', authenticate, authorize('admin', 'superadmin'), approveAssessment);
 
 /**
  * @route   POST /api/v1/applications/:id/reject-assessment
  * @desc    Reject assessment
  * @access  Private (Admin)
  */
-router.post('/:id/reject-assessment', authenticate, authorize('admin'), rejectAssessment);
+router.post('/:id/reject-assessment', authenticate, authorize('admin', 'superadmin'), rejectAssessment);
 
 /**
  * @route   POST /api/v1/applications/:id/approve-ai-interview
  * @desc    Approve AI interview
  * @access  Private (Admin)
  */
-router.post('/:id/approve-ai-interview', authenticate, authorize('admin'), approveAIInterview);
+router.post('/:id/approve-ai-interview', authenticate, authorize('admin', 'superadmin'), approveAIInterview);
 
 /**
  * @route   POST /api/v1/applications/:id/reject-ai-interview
  * @desc    Reject AI interview
  * @access  Private (Admin)
  */
-router.post('/:id/reject-ai-interview', authenticate, authorize('admin'), rejectAIInterview);
+router.post('/:id/reject-ai-interview', authenticate, authorize('admin', 'superadmin'), rejectAIInterview);
 
 /**
  * @route   POST /api/v1/applications/:id/accept-offer

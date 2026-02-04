@@ -157,52 +157,57 @@ export default function ConductInterview() {
 
           <div className="lg:col-span-8 space-y-8">
 
-            {/* Candidate Intelligence Dossier */}
-            <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-background/50 backdrop-blur-xl border border-muted group">
-              <CardHeader className="p-10 pb-4 border-b bg-muted/20">
-                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-4">
-                  <Fingerprint className="h-6 w-6 text-primary" /> Candidate Profile
-                </CardTitle>
-                <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground/60">Review student details before feedback</CardDescription>
-              </CardHeader>
-              <CardContent className="p-10">
-                <div className="flex flex-col md:flex-row gap-10">
-                  <div className="h-28 w-28 rounded-3xl bg-primary/5 flex items-center justify-center text-4xl font-black text-primary border-4 border-white shadow-2xl shrink-0">
-                    {student?.name?.charAt(0) || '?'}
-                  </div>
-                  <div className="flex-1 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      <DossierItem label="Student Name" value={student?.name || 'N/A'} icon={User} />
-                      <DossierItem label="Applied Job" value={job?.roleTitle || 'N/A'} icon={Briefcase} />
-                      <DossierItem label="College" value={student?.college || 'N/A'} icon={Building2} />
-                      <DossierItem label="CGPA" value={student?.cgpa || 'N/A'} icon={Activity} />
-                      <DossierItem label="Company" value={job?.companyName || 'N/A'} icon={Building2} />
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Skills</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {student?.skills?.map((skill: string) => (
-                          <Badge key={skill} className="bg-primary/5 text-primary border-none font-black text-[10px] uppercase py-1 px-3 rounded-lg">
-                            {skill}
-                          </Badge>
-                        )) || <p className="text-xs text-muted-foreground italic">No skills listed.</p>}
-                      </div>
-                    </div>
-
-                    {student?.resumeUrl && (
-                      <div className="pt-4 border-t border-muted">
-                        <Button variant="outline" size="lg" className="h-14 rounded-2xl border-2 font-black text-xs uppercase tracking-widest gap-2 hover:bg-muted" asChild>
-                          <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
-                            View Resume <FileText className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+            {/* Candidate Intelligence Briefing */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-indigo-600 text-white p-8 relative overflow-hidden group">
+                <div className="absolute -right-4 -top-4 h-24 w-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">ATS SCANNING RESULT</p>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-4xl font-black">{application.resumeScore || 0}</span>
+                  <span className="text-xs font-bold opacity-40">/100</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-white rounded-full transition-all" style={{ width: `${application.resumeScore || 0}%` }} />
+                </div>
+                <p className="text-[10px] font-bold mt-4 opacity-70 line-clamp-2 italic">
+                  "{application.atsAnalysis?.summary || "Semantic profile alignment verified via NLP processing."}"
+                </p>
+              </Card>
+
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-slate-900 text-white p-8 relative overflow-hidden group">
+                <div className="absolute -right-4 -top-4 h-24 w-24 bg-primary/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">ASSESSMENT DEPTH</p>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-4xl font-black">{application.assessmentScore || 0}</span>
+                  <span className="text-xs font-bold opacity-40">/100</span>
+                </div>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <div key={s} className={cn(
+                      "h-1.5 flex-1 rounded-full transition-all",
+                      s <= (application.assessmentScore / 20) ? "bg-primary" : "bg-white/10"
+                    )} />
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-[10px] font-black tracking-widest text-primary uppercase">Elite Tier Candidate</p>
+                  <Zap className="h-3 w-3 text-primary animate-pulse" />
+                </div>
+              </Card>
+
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white border border-slate-200 p-8 relative overflow-hidden group">
+                <div className="absolute -right-4 -top-4 h-24 w-24 bg-rose-50 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">BEHAVIORAL AI SUMMARY</p>
+                <div className="relative z-10 space-y-3">
+                  <div className="h-10 w-10 bg-rose-50 rounded-xl flex items-center justify-center border border-rose-100 mb-2">
+                    <Sparkles className="h-5 w-5 text-rose-500" />
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-500 leading-relaxed italic line-clamp-4">
+                    "{application.aiInterviewSummary || "Psychometric evaluation pending or in terminal processing state."}"
+                  </p>
+                </div>
+              </Card>
+            </div>
 
             {/* Feedback Interface */}
             <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-background/50 backdrop-blur-xl border border-muted ring-1 ring-primary/5">
@@ -229,16 +234,16 @@ export default function ConductInterview() {
                       step={1}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mt-3 italic">
+                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mt-3">
                       <span>Needs Improvement</span>
                       <span>Excellent</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Recommendation Radio Hub */}
+                {/* Recommendation Hub */}
                 <div className="space-y-6">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Strategic Recommendation</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Overall Recommendation</Label>
                   <RadioGroup value={recommendation} onValueChange={(value: any) => setRecommendation(value)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className={cn(
                       "flex items-center space-x-4 p-8 rounded-[2rem] border-2 cursor-pointer transition-all duration-300",
@@ -294,9 +299,9 @@ export default function ConductInterview() {
                   </div>
                 </div>
 
-                {/* Detailed Briefing */}
+                {/* Feedback Comments */}
                 <div className="space-y-4">
-                  <Label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Detailed Feedback</Label>
+                  <Label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Evaluation Comments</Label>
                   <Textarea
                     id="comments"
                     placeholder="Enter your detailed feedback here..."
@@ -305,7 +310,7 @@ export default function ConductInterview() {
                     rows={8}
                     className="rounded-[2.5rem] border-2 p-10 font-bold text-base focus-visible:ring-primary/20 bg-muted/10 border-muted placeholder:text-muted-foreground/30 shadow-inner resize-none leading-relaxed"
                   />
-                  <p className="text-[9px] font-black uppercase text-muted-foreground/40 text-center tracking-widest italic flex items-center justify-center gap-2">
+                  <p className="text-[9px] font-black uppercase text-muted-foreground/40 text-center tracking-widest flex items-center justify-center gap-2">
                     <MessageSquare className="h-3 w-3" /> Please provide clear and constructive comments.
                   </p>
                 </div>
@@ -321,7 +326,7 @@ export default function ConductInterview() {
               <ShieldCheck className="absolute -right-6 -top-6 h-32 w-32 opacity-10 group-hover:scale-110 transition-transform duration-1000" />
               <div className="relative z-10 space-y-10">
                 <div className="space-y-4">
-                  <h4 className="text-2xl font-black uppercase leading-tight italic">Submit Evaluation</h4>
+                  <h4 className="text-2xl font-black uppercase leading-tight">Submit Evaluation</h4>
                   <p className="text-white/70 text-xs font-medium leading-relaxed">By submitting, you formally save this evaluation. This action cannot be undone.</p>
                 </div>
 
@@ -367,7 +372,7 @@ export default function ConductInterview() {
                         <Badge className="bg-primary/5 text-primary border-none font-black text-[8px] uppercase">{f.round} Round</Badge>
                         <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">{f.rating}/5</span>
                       </div>
-                      <p className="text-[11px] font-medium text-muted-foreground/80 leading-relaxed italic line-clamp-3">"{f.feedback || f.comments}"</p>
+                      <p className="text-[11px] font-medium text-muted-foreground/80 leading-relaxed line-clamp-3">"{f.feedback || f.comments}"</p>
                     </div>
                   ))}
                 </div>
@@ -389,7 +394,7 @@ export default function ConductInterview() {
   );
 }
 
-function DossierItem({ label, value, icon: Icon }: any) {
+function ProfileItem({ label, value, icon: Icon }: any) {
   return (
     <div className="space-y-1 group">
       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity">{label}</p>

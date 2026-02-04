@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Briefcase, ArrowLeft, Plus, X,
@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppDispatch } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
 import { toast } from 'sonner';
-import { authService } from '@/services/authService';
+import { authService, collegeService } from '@/services';
 import { cn } from '@/lib/utils';
 
 export default function StudentSignup() {
@@ -39,6 +39,51 @@ export default function StudentSignup() {
     linkedinUrl: '',
     githubUrl: '',
   });
+
+  const [isCollegeFixed, setIsCollegeFixed] = useState(false);
+  const [colleges, setColleges] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const response = await collegeService.getColleges();
+        if (response.success) {
+          setColleges(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch colleges", error);
+      }
+    };
+    fetchColleges();
+
+    const savedCollege = localStorage.getItem('selected_college');
+    if (savedCollege) {
+      try {
+        const collegeData = JSON.parse(savedCollege);
+        setFormData(prev => ({ ...prev, college: collegeData.name }));
+        setIsCollegeFixed(true);
+      } catch (e) {
+        console.error("Error parsing saved college", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (formData.email.includes('@')) {
+      const domain = formData.email.split('@')[1];
+      const matchedCollege = colleges.find(c => c.domain === domain);
+      if (matchedCollege) {
+        setFormData(prev => ({ ...prev, college: matchedCollege.name }));
+        setIsCollegeFixed(true);
+      } else {
+        // Only unlock if it wasn't pre-selected from localStorage
+        const savedCollege = localStorage.getItem('selected_college');
+        if (!savedCollege) {
+          setIsCollegeFixed(false);
+        }
+      }
+    }
+  }, [formData.email, colleges]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,10 +170,10 @@ export default function StudentSignup() {
             </div>
 
             <div className="space-y-3">
-              <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-tight text-slate-900">
+              <h1 className="text-6xl font-black tracking-tighter uppercase leading-tight text-slate-900">
                 STUDENT <span className="text-primary">SIGN UP</span>
               </h1>
-              <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs flex items-center justify-center gap-3 italic">
+              <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs flex items-center justify-center gap-3">
                 <div className="h-1 w-12 bg-primary/20 rounded-full" />
                 START YOUR PROFESSIONAL JOURNEY WITH US
                 <div className="h-1 w-12 bg-primary/20 rounded-full" />
@@ -155,8 +200,8 @@ export default function StudentSignup() {
                     <User className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Personal Details</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Basic Identity Information</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900">Personal Details</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Basic Identity Information</p>
                   </div>
                 </div>
 
@@ -186,6 +231,11 @@ export default function StudentSignup() {
                       value={formData.email}
                       onChange={(e) => updateField('email', e.target.value)}
                     />
+                    {isCollegeFixed && (
+                      <p className="text-[10px] text-primary font-black uppercase tracking-widest ml-4 animate-pulse">
+                        Note: Use your official college email ID
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -233,8 +283,8 @@ export default function StudentSignup() {
                     <School className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Education Details</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">University & Graduation Information</p>
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900">Education Details</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">University & Graduation Information</p>
                   </div>
                 </div>
 
@@ -243,10 +293,14 @@ export default function StudentSignup() {
                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">College / University Name</Label>
                     <Input
                       required
-                      className="h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-primary/20 px-8 font-bold text-base shadow-sm"
+                      className={cn(
+                        "h-16 rounded-[1.5rem] bg-white border-slate-200 focus:ring-primary/20 px-8 font-bold text-base shadow-sm",
+                        isCollegeFixed && "bg-slate-100 cursor-not-allowed opacity-70"
+                      )}
                       placeholder="Your Institution of Excellence"
                       value={formData.college}
                       onChange={(e) => updateField('college', e.target.value)}
+                      readOnly={isCollegeFixed}
                     />
                   </div>
 
@@ -313,8 +367,8 @@ export default function StudentSignup() {
                         <Zap className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 italic">Skills & Interests</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Technical & Professional Skills</p>
+                        <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900">Skills & Interests</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Technical & Professional Skills</p>
                       </div>
                     </div>
 
@@ -349,7 +403,7 @@ export default function StudentSignup() {
                         {skills.length === 0 && (
                           <div className="flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-dashed border-slate-100 w-full justify-center">
                             <Monitor className="h-4 w-4 text-slate-200" />
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200 italic">No skills added yet.</p>
+                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-200">No skills added yet.</p>
                           </div>
                         )}
                       </div>
@@ -361,7 +415,7 @@ export default function StudentSignup() {
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-transparent pointer-events-none" />
                     <div className="relative z-10 space-y-10">
                       <div className="space-y-5">
-                        <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 italic">
+                        <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
                           <Linkedin className="h-4 w-4 text-primary" /> LinkedIn Profile
                         </Label>
                         <Input
@@ -373,7 +427,7 @@ export default function StudentSignup() {
                       </div>
 
                       <div className="space-y-5">
-                        <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 italic">
+                        <Label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
                           <Github className="h-4 w-4 text-primary" /> GitHub Profile
                         </Label>
                         <Input
@@ -387,9 +441,9 @@ export default function StudentSignup() {
                       <div className="p-6 bg-white/5 rounded-2xl border border-white/10 space-y-4">
                         <div className="flex items-center gap-3 text-primary">
                           <ShieldCheck className="h-5 w-5" />
-                          <span className="text-[11px] font-black uppercase tracking-widest italic">Secure Storage</span>
+                          <span className="text-[11px] font-black uppercase tracking-widest">Secure Storage</span>
                         </div>
-                        <p className="text-[10px] font-medium leading-relaxed italic text-slate-400">
+                        <p className="text-[10px] font-medium leading-relaxed text-slate-400">
                           Your data is stored securely and only shared with verified employers during your applications.
                         </p>
                       </div>
@@ -403,7 +457,7 @@ export default function StudentSignup() {
                     <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm shrink-0">
                       <ShieldCheck className="h-6 w-6" />
                     </div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 max-w-sm leading-relaxed italic">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 max-w-sm leading-relaxed">
                       BY SIGNING UP, YOU AGREE TO OUR <span className="text-slate-900 underline cursor-pointer hover:text-primary transition-colors">SECURITY POLICY</span> AND <span className="text-slate-900 underline cursor-pointer hover:text-primary transition-colors">PRIVACY TERMS</span>.
                     </p>
                   </div>
@@ -426,7 +480,7 @@ export default function StudentSignup() {
 
         {/* Tactical Footer */}
         <div className="mt-16 text-center space-y-4 animate-in fade-in duration-1000 delay-500">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 italic">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
             SECURE REGISTRATION SYSTEM ACTIVE • PLACEMENT OS
           </p>
         </div>

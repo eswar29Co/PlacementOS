@@ -62,4 +62,7 @@ export const config = {
     mcqCount: parseInt(process.env.MCQ_COUNT || '20', 10),
     codingQuestionCount: parseInt(process.env.CODING_QUESTION_COUNT || '1', 10),
   },
+
+  // AI Service
+  aiServiceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000',
 };

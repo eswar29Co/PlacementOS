@@ -1,5 +1,5 @@
 // User types
-export type UserRole = 'student' | 'professional' | 'admin';
+export type UserRole = 'student' | 'professional' | 'admin' | 'superadmin';
 export type ApplicationStatus =
   | 'applied'
   | 'resume_under_review'
@@ -46,6 +46,8 @@ export interface User {
   role: UserRole;
   avatar?: string;
   phone?: string;
+  isSuperAdmin?: boolean;
+  collegeId?: string;
   createdAt: Date;
 }
 
@@ -82,7 +84,9 @@ export interface Professional extends User {
 }
 
 export interface Admin extends User {
-  role: 'admin';
+  role: 'admin' | 'superadmin';
+  isSuperAdmin?: boolean;
+  collegeId?: string;
 }
 
 // Job types
@@ -121,6 +125,7 @@ export interface Application {
   // Resume phase
   resumeUrl?: string;
   resumeScore?: number;
+  atsAnalysis?: any;
   resumeApproved?: boolean | null; // null = pending, true = approved, false = rejected
   resumeApprovedAt?: Date;
   resumeApprovedBy?: string;
@@ -138,6 +143,8 @@ export interface Application {
   // Interview phases
   aiInterviewScore?: number;
   aiInterviewAnswers?: string[];
+  aiInterviewSummary?: string;
+  aiInterviewMetrics?: any;
   aiInterviewApproved?: boolean | null; // null = pending, true = approved, false = rejected
   aiInterviewApprovedAt?: Date;
   aiInterviewApprovedBy?: string;
@@ -186,6 +193,12 @@ export interface Assessment {
   score?: number;
   startedAt?: Date;
   completedAt?: Date;
+  mcqQuestions: MCQQuestion[];
+  codingQuestion: CodingQuestion;
+  answers?: {
+    mcqAnswers: number[];
+    codingAnswer?: string;
+  };
 }
 
 export interface MCQQuestion {
@@ -272,6 +285,8 @@ export interface Offer {
 export type NotificationType =
   | 'professional_approved'
   | 'professional_rejected'
+  | 'professional_signup'
+  | 'student_registered'
   | 'resume_approved'
   | 'resume_rejected'
   | 'assessment_released'
@@ -281,7 +296,10 @@ export type NotificationType =
   | 'interview_scheduled'
   | 'interview_completed'
   | 'application_update'
-  | 'offer_released';
+  | 'offer_released'
+  | 'new_application'
+  | 'new_job_posted'
+  | 'admin_note';
 
 export interface Notification {
   id: string;

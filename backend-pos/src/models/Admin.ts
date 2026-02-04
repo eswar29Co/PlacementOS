@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import { IUser } from '../types';
 
 export interface IAdminDocument extends Omit<IUser, '_id'>, Document {
+  collegeId?: mongoose.Types.ObjectId;
+  isSuperAdmin: boolean;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -18,7 +20,9 @@ const adminSchema = new Schema<IAdminDocument>(
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
     },
     password: { type: String, required: true, minlength: 6 },
-    role: { type: String, default: 'admin', enum: ['admin'] },
+    role: { type: String, default: 'admin', enum: ['admin', 'superadmin'] },
+    isSuperAdmin: { type: Boolean, default: false },
+    collegeId: { type: Schema.Types.ObjectId, ref: 'College' },
     avatar: { type: String },
     phone: { type: String },
   },

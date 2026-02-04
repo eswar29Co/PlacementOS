@@ -189,7 +189,7 @@ export default function InterviewHistory() {
                       <div className="px-8 pb-6 group-hover:pb-8 transition-all">
                         <div className="p-4 bg-slate-50 border-2 border-dashed border-slate-100 rounded-[1.5rem] relative overflow-hidden group-hover:bg-slate-100 transition-all">
                           <MessageSquare className="absolute -right-2 -bottom-2 h-16 w-16 text-slate-200 opacity-40 rotate-12" />
-                          <p className="text-xs font-medium text-slate-500 italic line-clamp-1 relative z-10">"{myFeedback.comments}"</p>
+                          <p className="text-xs font-medium text-slate-500 line-clamp-1 relative z-10">"{myFeedback.comments}"</p>
                         </div>
                       </div>
                     </CardContent>

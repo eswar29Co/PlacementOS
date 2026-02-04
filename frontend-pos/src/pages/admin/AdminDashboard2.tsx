@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { professionalService, applicationService, jobService, studentService } from '@/services';
+import { useAppSelector } from '@/store/hooks';
+import { professionalService, applicationService, jobService, studentService, assessmentService } from '@/services';
 import {
   Users, UserCheck, Briefcase, TrendingUp, CheckCircle2, XCircle,
   Clock, Calendar as CalendarIcon, ShieldCheck, Zap, ArrowRight, Star, FileText,
@@ -24,6 +25,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -78,8 +80,12 @@ export default function AdminDashboard() {
   });
   const students = Array.isArray(studentsData?.data) ? studentsData.data : [];
 
+  const { user, role } = useAppSelector((state) => state.auth);
+  const isAdminTPO = role === 'admin';
+  const isSuperAdmin = (user as any)?.isSuperAdmin || role === 'superadmin';
+
   const [professionalRoles, setProfessionalRoles] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState('professionals');
+  const [activeTab, setActiveTab] = useState('resumes');
 
   // Mutations
   const approveResumeMutation = useMutation({
@@ -151,6 +157,21 @@ export default function AdminDashboard() {
     setSelectedAppIdForAssignment(appId);
     setSelectedProfessional(null);
     setIsAssignDialogOpen(true);
+  };
+
+  // Assessment Review Dialog State
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [selectedAppForReview, setSelectedAppForReview] = useState<any>(null);
+
+  const { data: currentAssessment, isLoading: isAssessmentLoading } = useQuery({
+    queryKey: ['assessment', selectedAppForReview?._id || selectedAppForReview?.id],
+    queryFn: () => assessmentService.getAssessmentByApplicationId(selectedAppForReview?._id || selectedAppForReview?.id),
+    enabled: !!selectedAppForReview && isReviewDialogOpen,
+  });
+
+  const handleOpenReviewDialog = (app: any) => {
+    setSelectedAppForReview(app);
+    setIsReviewDialogOpen(true);
   };
 
   const handleAssignProfessional = (profId: string) => {
@@ -258,15 +279,17 @@ export default function AdminDashboard() {
         {/* Hero Welcome */}
         <div className="relative overflow-hidden rounded-[3rem] bg-slate-50 border border-slate-200 px-12 py-12 text-slate-900 shadow-sm">
           <div className="relative z-10 space-y-4">
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Admin <span className="text-primary italic">Dashboard</span></h1>
+            <h1 className="text-4xl font-black tracking-tighter uppercase">Admin <span className="text-primary">Dashboard</span></h1>
             <p className="max-w-xl text-slate-500 font-bold uppercase tracking-widest text-[10px] leading-relaxed">
               Applications to review: {resumeReviewApps.length + assessmentReviewApps.length} pending.
               System Status: <span className="text-primary">Healthy</span>.
             </p>
             <div className="flex gap-4 pt-6">
-              <Button className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white" onClick={() => setActiveTab('professionals')}>
-                Review Experts
-              </Button>
+              {isAdminTPO && (
+                <Button className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white" onClick={() => setActiveTab('resumes')}>
+                  Review Applications
+                </Button>
+              )}
               <Button variant="outline" className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] border-slate-200 bg-white hover:bg-slate-50 text-slate-900" onClick={() => setActiveTab('overview')}>
                 Platform Vitals
               </Button>
@@ -285,7 +308,7 @@ export default function AdminDashboard() {
                     <stat.icon className="h-6 w-6" />
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-black tracking-tighter italic leading-none text-slate-900">{stat.value}</p>
+                    <p className="text-3xl font-black tracking-tighter leading-none text-slate-900">{stat.value}</p>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3 opacity-80">{stat.label}</p>
                   </div>
                 </div>
@@ -299,7 +322,6 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-center mb-6">
             <TabsList className="bg-slate-100 border border-slate-200 p-2 rounded-2xl h-auto gap-2">
               {[
-                { value: 'professionals', label: 'EXPERTS', count: pendingProfessionals.length, icon: UserCheck },
                 { value: 'resumes', label: 'RESUMES', count: resumeReviewApps.length, icon: FileText },
                 { value: 'assessments', label: 'ASSESSMENTS', count: assessmentReviewApps.length, icon: Zap },
                 { value: 'ai-interviews', label: 'AI INTERVIEWS', count: aiInterviewReviewApps.length, icon: MessageSquare },
@@ -325,74 +347,6 @@ export default function AdminDashboard() {
             </TabsList>
           </div>
 
-          {/* Expert Approvals Content */}
-          <TabsContent value="professionals" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {pendingProfessionals.length === 0 ? (
-                <EmptyState icon={UserCheck} title="No Pending Approvals" description="You have no new expert registrations to review at this moment." />
-              ) : (
-                pendingProfessionals.map((prof: any) => (
-                  <Card key={(prof._id || prof.id)} className="overflow-hidden border-slate-200 shadow-sm rounded-[3rem] bg-white border group hover:bg-slate-50 transition-all duration-500">
-                    <CardHeader className="p-10 pb-0 flex flex-row items-center justify-between gap-6">
-                      <div className="flex items-center gap-6">
-                        <Avatar className="h-16 w-16 rounded-2xl border-2 border-primary/20 p-0.5">
-                          <AvatarFallback className="bg-slate-100 text-primary font-black text-xl">
-                            {prof.name.split(' ').map((n: string) => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{prof.name}</CardTitle>
-                          <CardDescription className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest text-slate-400"><Clock className="h-3 w-3" /> REGISTERED TODAY</CardDescription>
-                        </div>
-                      </div>
-                      <Badge className="bg-primary/10 text-primary border border-primary/20 px-4 py-1 font-black uppercase text-[8px] tracking-[0.2em]">PENDING REVIEW</Badge>
-                    </CardHeader>
-                    <CardContent className="p-10 space-y-8">
-                      <div className="grid grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Company & Experience</span>
-                          <p className="text-sm font-black text-slate-700 italic uppercase">{prof.company} • {prof.yearsOfExperience}Y Experience</p>
-                        </div>
-                        <div className="space-y-2">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest opacity-60">Skills</span>
-                          <div className="flex flex-wrap gap-2">
-                            {prof.techStack?.slice(0, 3).map((tech: string) => <Badge key={tech} className="bg-slate-100 text-slate-600 text-[9px] py-1 px-3 border border-slate-200 font-black uppercase tracking-widest">{tech}</Badge>)}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-end gap-5 pt-8 border-t border-slate-100">
-                        <div className="flex-1 space-y-3">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assign Operations Round</Label>
-                          <Select
-                            value={professionalRoles[prof._id || prof.id] || ''}
-                            onValueChange={(value) => setProfessionalRoles({ ...professionalRoles, [prof._id || prof.id]: value })}
-                          >
-                            <SelectTrigger className="rounded-2xl h-14 border-slate-200 bg-slate-50 font-black text-[10px] uppercase tracking-widest text-slate-600">
-                              <SelectValue placeholder="SELECT ROLE..." />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-slate-200 bg-white shadow-xl">
-                              <SelectItem value="Technical" className="font-bold text-[10px] uppercase">Technical Expert</SelectItem>
-                              <SelectItem value="Manager" className="font-bold text-[10px] uppercase">Managerial Lead</SelectItem>
-                              <SelectItem value="HR" className="font-bold text-[10px] uppercase">HR Specialist</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex gap-3">
-                          <Button className="rounded-2xl h-14 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black uppercase text-[10px] tracking-widest text-white" onClick={() => handleApproveProfessional(prof._id || prof.id)}>
-                            APPROVE
-                          </Button>
-                          <Button variant="ghost" className="rounded-2xl h-14 w-14 p-0 text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100 transition-all" onClick={() => handleRejectProfessional(prof._id || prof.id)}>
-                            <XCircle className="h-6 w-6" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </TabsContent>
 
           {/* Resume Review Content */}
           <TabsContent value="resumes" className="animate-in fade-in slide-in-from-bottom-4 duration-500 outline-none">
@@ -409,17 +363,17 @@ export default function AdminDashboard() {
                       <CardContent className="p-10 space-y-8">
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-6">
-                            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-black text-2xl italic">
+                            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-black text-2xl">
                               {student?.name?.charAt(0)}
                             </div>
                             <div>
-                              <h4 className="font-black text-xl italic uppercase tracking-tighter text-slate-900">{student?.name}</h4>
+                              <h4 className="font-black text-xl uppercase tracking-tighter text-slate-900">{student?.name}</h4>
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student?.college}</p>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className={cn(
-                              "text-4xl font-black tracking-tighter italic",
+                              "text-4xl font-black tracking-tighter",
                               atsScore >= 75 ? "text-emerald-500" : atsScore >= 50 ? "text-primary" : "text-rose-500"
                             )}>
                               {atsScore}%
@@ -432,7 +386,7 @@ export default function AdminDashboard() {
                           <div className="absolute top-0 right-0 h-20 w-20 bg-primary/5 rounded-full blur-[40px] -z-10" />
                           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mb-3">Applied Job</p>
                           <div className="flex items-center justify-between">
-                            <p className="font-black text-sm text-slate-300 italic uppercase">{job?.companyName} — {job?.roleTitle}</p>
+                            <p className="font-black text-sm text-slate-300 uppercase">{job?.companyName} — {job?.roleTitle}</p>
                             <Badge className="bg-primary/20 text-primary border border-primary/30 text-[8px] font-black uppercase tracking-widest px-2">HIGH INTENT</Badge>
                           </div>
                         </div>
@@ -450,19 +404,38 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        <div className="flex gap-4 pt-4">
-                          <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveResume(app._id || app.id)}>
-                            APPROVE RESUME
-                          </Button>
-                          {app.resumeUrl && (
-                            <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest" asChild>
-                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">VIEW RESUME</a>
+                        {app.atsAnalysis?.summary && (
+                          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 relative overflow-hidden group/feedback">
+                            <div className="absolute -right-4 -top-4 h-16 w-16 bg-primary/5 rounded-full blur-[30px]" />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3 leading-none">AI MATCH ANALYSIS</p>
+                            <p className="text-[10px] font-bold text-slate-600 leading-relaxed relative z-10 italic">
+                              "{app.atsAnalysis.summary}"
+                            </p>
+                          </div>
+                        )}
+
+                        {isAdminTPO && (
+                          <div className="flex gap-4 pt-4">
+                            <Button className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveResume(app._id || app.id)}>
+                              APPROVE RESUME
                             </Button>
-                          )}
-                          <Button variant="ghost" className="h-14 w-14 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100" onClick={() => handleRejectResume(app._id || app.id)}>
-                            <XCircle className="h-6 w-6" />
-                          </Button>
-                        </div>
+                            {app.resumeUrl && (
+                              <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest" asChild>
+                                <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">VIEW RESUME</a>
+                              </Button>
+                            )}
+                            <Button variant="ghost" className="h-14 w-14 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100" onClick={() => handleRejectResume(app._id || app.id)}>
+                              <XCircle className="h-6 w-6" />
+                            </Button>
+                          </div>
+                        )}
+                        {!isAdminTPO && app.resumeUrl && (
+                          <div className="pt-4">
+                            <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-black uppercase text-[10px] tracking-widest" asChild>
+                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">VIEW RESUME (READ ONLY)</a>
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -482,11 +455,11 @@ export default function AdminDashboard() {
                     <div className="p-12 flex-1 space-y-10">
                       <div className="flex items-center gap-8">
                         <Avatar className="h-20 w-20 rounded-[1.5rem] border-2 border-slate-100 p-0.5">
-                          <AvatarFallback className="bg-slate-50 text-blue-500 font-black text-2xl italic">{getStudentById(app.studentId)?.name?.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="bg-slate-50 text-blue-500 font-black text-2xl">{getStudentById(app.studentId)?.name?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">
-                          <h4 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">{getJobById(app.jobId)?.companyName} <span className="text-primary mx-2">•</span> {getJobById(app.jobId)?.roleTitle}</p>
+                          <h4 className="text-2xl font-black uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{getJobById(app.jobId)?.companyName} <span className="text-primary mx-2">•</span> {getJobById(app.jobId)?.roleTitle}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-10">
@@ -495,16 +468,23 @@ export default function AdminDashboard() {
                         <MetricBlock label="Submitted At" value="TODAY, 10:45 AM" />
                         <MetricBlock label="Integrity" value="PASSED" color="text-emerald-500" />
                       </div>
-                      <div className="flex gap-4 pt-6">
-                        <Button className="rounded-2xl h-14 px-12 bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleApproveAssessment(app._id || app.id)}>APPROVE ASSESSMENT</Button>
-                        <Button variant="ghost" className="rounded-2xl h-14 px-8 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-slate-100 font-black uppercase text-[10px] tracking-widest" onClick={() => handleRejectAssessment(app._id || app.id)}>REJECT ASSESSMENT</Button>
-                      </div>
+                      {isAdminTPO && (
+                        <div className="flex gap-4 pt-6">
+                          <Button className="rounded-2xl h-14 px-12 bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-primary/20" onClick={() => handleOpenReviewDialog(app)}>REVIEW RESULTS</Button>
+                          <Button variant="ghost" className="rounded-2xl h-14 px-8 text-slate-400 hover:text-slate-600 hover:bg-slate-50 border border-slate-100 font-black uppercase text-[10px] tracking-widest" onClick={() => handleRejectAssessment(app._id || app.id)}>REJECT ASSESSMENT</Button>
+                        </div>
+                      )}
+                      {!isAdminTPO && (
+                        <div className="flex gap-4 pt-6">
+                          <Button className="flex-1 rounded-2xl h-14 px-12 bg-slate-100 text-slate-600 font-black uppercase text-[10px] tracking-[0.2em] shadow-sm" onClick={() => handleOpenReviewDialog(app)}>VIEW ASSESSMENT DATA</Button>
+                        </div>
+                      )}
                     </div>
                     <div className="bg-slate-50 w-full md:w-1/3 p-12 border-l border-slate-100 relative group/code overflow-hidden">
                       <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover/code:scale-150 transition-transform duration-1000" />
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6 flex items-center gap-3"> <Terminal className="h-4 w-4" /> CODE PREVIEW</p>
                       <div className="bg-white rounded-3xl p-6 border border-slate-200 font-mono text-[11px] overflow-hidden h-[200px] relative shadow-sm">
-                        <pre className="text-slate-600 opacity-80 leading-relaxed italic">{app.assessmentCode || '// SECURE DATA STREAM EMPTY'}</pre>
+                        <pre className="text-slate-600 opacity-80 leading-relaxed">{app.assessmentCode || '// SECURE DATA STREAM EMPTY'}</pre>
                         <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
                       </div>
                       <Button variant="ghost" className="w-full mt-6 h-12 rounded-2xl hover:bg-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest transition-all">VIEW FULL CODE <ChevronRight className="ml-2 h-3.5 w-3.5" /></Button>
@@ -530,27 +510,97 @@ export default function AdminDashboard() {
                             <Brain className="h-7 w-7" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 italic">AI INTERVIEW LOGS</p>
+                            <h4 className="text-xl font-black uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">AI INTERVIEW LOGS</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge className="bg-purple-50 text-purple-500 border border-purple-100 px-6 py-2 rounded-full font-black text-[12px] italic shadow-sm">SCORE: {app.aiInterviewScore}</Badge>
+                          <Badge className="bg-purple-50 text-purple-500 border border-purple-100 px-6 py-2 rounded-full font-black text-[12px] shadow-sm">SCORE: {app.aiInterviewScore}</Badge>
                         </div>
                       </div>
-                      <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group/feedback">
-                        <div className="absolute -right-4 -top-4 h-20 w-20 bg-purple-50 rounded-full blur-[40px]" />
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">AI FEEDBACK SUMMARY</p>
-                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic relative z-10">
-                          "Candidate demonstrated high linguistic fluidity and adaptive reasoning. Recommended for specialist technical deep-dive protocols..."
+                      <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 relative overflow-hidden group/feedback">
+                        <div className="absolute -right-4 -top-4 h-32 w-32 bg-purple-50 rounded-full blur-[60px]" />
+                        <div className="flex items-center justify-between mb-6">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Intelligence Report</p>
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Verified</span>
+                          </div>
+                        </div>
+
+                        <p className="text-sm font-bold text-slate-700 leading-relaxed relative z-10 italic">
+                          "{app.aiInterviewSummary || "Natural language analysis pending for this candidate's behavioral stream..."}"
                         </p>
+
+                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border-t border-slate-200/50 pt-8">
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase text-slate-400">Tone</p>
+                            <p className="text-xs font-black text-purple-600 uppercase tracking-tight">{app.aiInterviewMetrics?.tone || 'Neutral'}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase text-slate-400">Response Depth</p>
+                            <p className="text-xs font-black text-purple-600 uppercase tracking-tight">{app.aiInterviewMetrics?.depth || 'Moderate'}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase text-slate-400">Word Density</p>
+                            <p className="text-xs font-black text-purple-600 uppercase tracking-tight">{app.aiInterviewMetrics?.avg_length || 0} WPQ</p>
+                          </div>
+                        </div>
+
+                        {app.aiInterviewMetrics?.key_topics && app.aiInterviewMetrics.key_topics.length > 0 && (
+                          <div className="mt-6 space-y-3">
+                            <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Extracted Topics</p>
+                            <div className="flex flex-wrap gap-2">
+                              {app.aiInterviewMetrics.key_topics.map((topic: string, i: number) => (
+                                <Badge key={i} variant="outline" className="bg-white border-purple-100 text-purple-500 rounded-lg font-black text-[9px] uppercase px-3 py-1">
+                                  {topic}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex gap-4 pt-2">
-                        <Button className="flex-1 h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-purple-600/20" onClick={() => handleProgressAfterAIInterview(app._id || app.id)}>
-                          APPROVE & ASSIGN EXPERT
-                        </Button>
-                        <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white text-slate-700 font-black uppercase text-[10px] tracking-widest">TRANSCRIPT</Button>
-                      </div>
+                      {isAdminTPO && (
+                        <div className="flex gap-4 pt-2">
+                          <Button
+                            className="flex-1 h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-purple-600/20"
+                            onClick={() => handleProgressAfterAIInterview(app._id || app.id)}
+                          >
+                            APPROVE & ASSIGN EXPERT
+                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 bg-white text-slate-700 font-black uppercase text-[10px] tracking-widest">
+                                VIEW TRANSCRIPT
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl rounded-[2.5rem] p-12">
+                              <DialogHeader>
+                                <DialogTitle className="text-2xl font-black uppercase tracking-tight">Interview <span className="text-purple-600">Transcript</span></DialogTitle>
+                                <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">Speech-to-text conversion of candidate responses</DialogDescription>
+                              </DialogHeader>
+                              <div className="mt-8 space-y-8 max-h-[60vh] overflow-y-auto pr-6 custom-scrollbar">
+                                {app.aiInterviewAnswers?.map((ans: string, idx: number) => (
+                                  <div key={idx} className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-6 w-6 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-[10px]">Q</div>
+                                      <p className="font-bold text-xs text-slate-400 uppercase tracking-widest">Question {idx + 1}</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 italic text-sm text-slate-700 leading-relaxed">
+                                      "{ans || "No response captured for this question."}"
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
+                      {!isAdminTPO && (
+                        <div className="flex gap-4 pt-2">
+                          <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 bg-white text-slate-700 font-black uppercase text-[10px] tracking-widest">VIEW AI ANALYTICS</Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
@@ -579,8 +629,8 @@ export default function AdminDashboard() {
                               <User className="h-7 w-7" />
                             </div>
                             <div className="space-y-1">
-                              <h4 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">{student?.name}</h4>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{job?.companyName}</p>
+                              <h4 className="text-xl font-black uppercase tracking-tighter text-slate-900">{student?.name}</h4>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{job?.companyName}</p>
                             </div>
                           </div>
                           <Badge className={cn(
@@ -598,12 +648,12 @@ export default function AdminDashboard() {
                           <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2 relative overflow-hidden group/round">
                             <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-full blur-[30px]" />
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Interview Round</p>
-                            <p className="text-sm font-black uppercase text-primary italic leading-none">{currentStage}</p>
+                            <p className="text-sm font-black uppercase text-primary leading-none">{currentStage}</p>
                           </div>
                           <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2 text-right relative overflow-hidden group/expert">
                             <div className="absolute top-0 left-0 h-16 w-16 bg-indigo-500/5 rounded-full blur-[30px]" />
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Assigned Expert</p>
-                            <p className="text-sm font-black uppercase text-slate-600 italic truncate leading-none">
+                            <p className="text-sm font-black uppercase text-slate-600 truncate leading-none">
                               {app.timeline?.find((t: any) => t.notes?.includes('Assigned'))?.notes?.split('to ')[1]?.split(' for')[0] || 'UNASSIGNED'}
                             </p>
                           </div>
@@ -614,7 +664,7 @@ export default function AdminDashboard() {
                             <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover/cal:text-primary transition-colors">
                               <CalendarIcon className="h-4.5 w-4.5" />
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 group-hover/cal:text-slate-600 transition-colors uppercase tracking-widest italic">
+                            <span className="text-[10px] font-black text-slate-400 group-hover/cal:text-slate-600 transition-colors uppercase tracking-widest">
                               {app.scheduledDate ? format(new Date(app.scheduledDate), 'PPP p') : 'PENDING SCHEDULE'}
                             </span>
                           </div>
@@ -648,29 +698,36 @@ export default function AdminDashboard() {
                           <Sparkles className="absolute -top-3 -right-3 h-8 w-8 text-primary animate-pulse" />
                         </div>
                         <div className="space-y-2">
-                          <CardTitle className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{student?.name}</CardTitle>
-                          <CardDescription className="font-black text-emerald-600 uppercase tracking-[0.3em] text-[10px] italic">{job?.companyName}</CardDescription>
+                          <CardTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900">{student?.name}</CardTitle>
+                          <CardDescription className="font-black text-emerald-600 uppercase tracking-[0.3em] text-[10px]">{job?.companyName}</CardDescription>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-8 p-10 pt-0">
                         <div className="flex flex-col items-center gap-2">
                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-60">OFFER FOR POSITION</span>
-                          <p className="font-black text-base text-center leading-tight uppercase italic text-slate-700">{job?.roleTitle}</p>
+                          <p className="font-black text-base text-center leading-tight uppercase text-slate-700">{job?.roleTitle}</p>
                         </div>
                         <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 flex justify-around shadow-inner">
                           <div className="text-center">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">CONTRACT</p>
-                            <p className="font-black text-emerald-600 italic text-sm">{job?.package}</p>
+                            <p className="font-black text-emerald-600 text-sm">{job?.package}</p>
                           </div>
                           <div className="w-px bg-slate-200 h-full" />
                           <div className="text-center">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">ZONE</p>
-                            <p className="font-black text-slate-600 italic text-sm uppercase">{job?.locationType}</p>
+                            <p className="font-black text-slate-600 text-sm uppercase">{job?.locationType}</p>
                           </div>
                         </div>
-                        <Button className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 shadow-sm font-black uppercase text-[11px] tracking-[0.3em] transition-all group-hover:translate-y-[-4px] text-white" onClick={() => handleReleaseOffer(app._id || app.id)}>
-                          RELEASE OFFER LETTER
-                        </Button>
+                        {isAdminTPO && (
+                          <Button className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 shadow-sm font-black uppercase text-[11px] tracking-[0.3em] transition-all group-hover:translate-y-[-4px] text-white" onClick={() => handleReleaseOffer(app._id || app.id)}>
+                            RELEASE OFFER LETTER
+                          </Button>
+                        )}
+                        {!isAdminTPO && (
+                          <div className="w-full h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center font-black uppercase text-[10px] tracking-widest text-emerald-600">
+                            Final Verification Complete
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -685,11 +742,11 @@ export default function AdminDashboard() {
               <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
                 <CardHeader className="bg-slate-50 p-12 border-b border-slate-100 flex flex-row items-center justify-between">
                   <div className="space-y-2">
-                    <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                    <CardTitle className="text-3xl font-black flex items-center gap-4 uppercase tracking-tighter text-slate-900">
                       <Cpu className="h-8 w-8 text-primary" />
                       Application Pipeline
                     </CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Real-time candidate progress across all rounds</CardDescription>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Real-time candidate progress across all rounds</CardDescription>
                   </div>
                   <AppWindow className="h-10 w-10 text-primary opacity-10" />
                 </CardHeader>
@@ -705,11 +762,11 @@ export default function AdminDashboard() {
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent -z-10" />
                 <CardHeader className="bg-slate-50 p-12 border-b border-slate-100 flex flex-row items-center justify-between">
                   <div className="space-y-2">
-                    <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                    <CardTitle className="text-3xl font-black flex items-center gap-4 uppercase tracking-tighter text-slate-900">
                       <MousePointer2 className="h-8 w-8 text-emerald-500" />
                       Platform Success
                     </CardTitle>
-                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Overview of successful placements and candidate status</CardDescription>
+                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Overview of successful placements and candidate status</CardDescription>
                   </div>
                   <TrendingUp className="h-10 w-10 text-emerald-500 opacity-10" />
                 </CardHeader>
@@ -721,12 +778,12 @@ export default function AdminDashboard() {
                         <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray={Math.PI * 2 * 58} strokeDashoffset={Math.PI * 2 * 58 * (1 - (offerReadyApps.length / Math.max(applications.length, 1)))} className="text-emerald-500 transition-all duration-1000" strokeLinecap="round" />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black italic text-slate-900">{((offerReadyApps.length / Math.max(applications.length, 1)) * 100).toFixed(0)}%</span>
+                        <span className="text-3xl font-black text-slate-900">{((offerReadyApps.length / Math.max(applications.length, 1)) * 100).toFixed(0)}%</span>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h4 className="font-black text-2xl uppercase tracking-tighter italic text-slate-900 leading-tight">Placement <span className="text-emerald-500">Rate</span></h4>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed italic">PERCENTAGE OF CANDIDATES WHO HAVE SUCCESSFULLY RECEIVED OFFERS.</p>
+                      <h4 className="font-black text-2xl uppercase tracking-tighter text-slate-900 leading-tight">Placement <span className="text-emerald-500">Rate</span></h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">PERCENTAGE OF CANDIDATES WHO HAVE SUCCESSFULLY RECEIVED OFFERS.</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-8">
@@ -744,7 +801,7 @@ export default function AdminDashboard() {
         <DialogContent className="max-w-5xl rounded-[3rem] p-0 overflow-hidden border border-slate-200 bg-white shadow-2xl outline-none">
           <DialogHeader className="p-12 bg-slate-50 border-b border-slate-100 relative overflow-hidden">
             <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px]" />
-            <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-slate-900">Assign <span className="text-primary">Expert</span></DialogTitle>
+            <DialogTitle className="text-4xl font-black uppercase tracking-tighter text-slate-900">Assign <span className="text-primary">Expert</span></DialogTitle>
             <DialogDescription className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em] mt-3">Assign an industry professional to conduct the technical interview round.</DialogDescription>
           </DialogHeader>
 
@@ -766,7 +823,7 @@ export default function AdminDashboard() {
                       <TableCell colSpan={5} className="text-center py-24">
                         <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700 opacity-20">
                           <Users className="h-16 w-16" />
-                          <p className="font-black text-xl uppercase italic">No Available Professionals</p>
+                          <p className="font-black text-xl uppercase">No Available Professionals</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -778,7 +835,7 @@ export default function AdminDashboard() {
                             <Avatar className="h-10 w-10 rounded-xl border border-slate-200 shadow-sm">
                               <AvatarFallback className="text-[11px] bg-slate-100 text-primary font-black">{prof.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                             </Avatar>
-                            <span className="font-black text-xs text-slate-900 italic uppercase tracking-tighter">{prof.name}</span>
+                            <span className="font-black text-xs text-slate-900 uppercase tracking-tighter">{prof.name}</span>
                           </div>
                         </TableCell>
                         <TableCell className="font-bold text-[10px] text-slate-500 uppercase tracking-widest">{prof.company}</TableCell>
@@ -805,7 +862,118 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+
+      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+        <DialogContent className="max-w-4xl rounded-[3rem] p-0 overflow-hidden border border-slate-200 bg-white shadow-2xl outline-none max-h-[90vh] flex flex-col">
+          <DialogHeader className="p-12 bg-slate-50 border-b border-slate-100 relative shrink-0">
+            <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px]" />
+            <DialogTitle className="text-4xl font-black uppercase tracking-tighter text-slate-900 leading-none">Review <span className="text-primary">Results</span></DialogTitle>
+            <DialogDescription className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em] mt-3">Examine candidate's technical responses and code quality.</DialogDescription>
+          </DialogHeader>
+
+          <div className="p-12 flex-1 overflow-y-auto space-y-10 custom-scrollbar">
+            {isAssessmentLoading ? (
+              <div className="flex flex-col items-center justify-center p-20 gap-4">
+                <div className="h-10 w-10 border-4 border-primary border-t-transparent animate-spin rounded-xl" />
+                <p className="font-black text-[10px] text-primary uppercase tracking-widest">Fetching Assessment Data...</p>
+              </div>
+            ) : currentAssessment?.data ? (
+              <div className="space-y-12">
+                <div className="grid grid-cols-3 gap-8">
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">MCQ SCORE</p>
+                    <p className="text-3xl font-black text-primary">{currentAssessment.data.score || 0}%</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">TIME TAKEN</p>
+                    <p className="text-2xl font-black text-slate-900 uppercase">
+                      {currentAssessment.data.startedAt && currentAssessment.data.completedAt
+                        ? `${Math.round((new Date(currentAssessment.data.completedAt).getTime() - new Date(currentAssessment.data.startedAt).getTime()) / 60000)}M`
+                        : "N/A"
+                      }
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">STATUS</p>
+                    <Badge className="bg-emerald-50 text-emerald-500 border border-emerald-100 font-black uppercase text-[9px] px-3">COMPLETED</Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                    <Zap className="h-4 w-4" /> TECHNICAL RESPONSES
+                  </h5>
+                  <div className="space-y-4">
+                    {currentAssessment.data.mcqQuestions?.map((q: any, i: number) => {
+                      const studentAnswer = currentAssessment.data.answers?.mcqAnswers[i];
+                      const isCorrect = studentAnswer === q.correctOption;
+                      return (
+                        <div key={i} className="p-6 rounded-[2rem] border border-slate-100 bg-white shadow-sm space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <p className="font-bold text-sm text-slate-700 leading-relaxed">{i + 1}. {q.question}</p>
+                            {isCorrect ? <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" /> : <XCircle className="h-5 w-5 text-rose-500 shrink-0" />}
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {q.options.map((opt: string, optIdx: number) => (
+                              <div
+                                key={optIdx}
+                                className={cn(
+                                  "p-3 rounded-xl border text-[10px] font-bold uppercase tracking-widest text-center",
+                                  optIdx === q.correctOption ? "bg-emerald-50 border-emerald-200 text-emerald-600" :
+                                    optIdx === studentAnswer ? "bg-rose-50 border-rose-200 text-rose-600" : "bg-slate-50 border-slate-100 text-slate-400"
+                                )}
+                              >
+                                {opt}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                    <Terminal className="h-4 w-4" /> SOLUTION ENGINE
+                  </h5>
+                  <div className="bg-slate-900 rounded-[2.5rem] p-10 border border-slate-800 shadow-2xl relative group/code overflow-hidden">
+                    <div className="absolute top-0 right-0 h-40 w-40 bg-primary/20 rounded-full blur-[80px]" />
+                    <pre className="font-mono text-xs text-blue-400 leading-relaxed">
+                      {currentAssessment.data.answers?.codingAnswer || '// NO CODE SIGNATURE RECEIVED'}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-20 text-center opacity-40">
+                <FileText className="h-12 w-12 mx-auto mb-4" />
+                <p className="font-bold uppercase tracking-widest text-[10px]">No assessment data available for this application.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4 shrink-0">
+            <Button
+              className="rounded-2xl h-14 px-10 bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20"
+              onClick={() => {
+                handleApproveAssessment(selectedAppForReview?._id || selectedAppForReview?.id);
+                setIsReviewDialogOpen(false);
+              }}
+            >
+              APPROVE APPLICATION
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-2xl h-14 px-10 border-slate-200 bg-white text-slate-600 font-black uppercase text-[10px] tracking-widest"
+              onClick={() => setIsReviewDialogOpen(false)}
+            >
+              CLOSE PREVIEW
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout >
   );
 }
 
@@ -816,8 +984,8 @@ function EmptyState({ icon: Icon, title, description }: any) {
       <div className="mx-auto h-24 w-24 rounded-[2rem] bg-slate-50 flex items-center justify-center border border-slate-100 mb-8">
         <Icon className="h-12 w-12 text-slate-300" />
       </div>
-      <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 mb-2">{title}</h3>
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed italic">{description}</p>
+      <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-2">{title}</h3>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{description}</p>
     </Card>
   );
 }
@@ -826,7 +994,7 @@ function MetricBlock({ label, value, color = "text-slate-600" }: any) {
   return (
     <div className="space-y-1">
       <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em]">{label}</p>
-      <p className={cn("text-sm font-black italic uppercase leading-tight", color)}>{value}</p>
+      <p className={cn("text-sm font-black uppercase leading-tight", color)}>{value}</p>
     </div>
   );
 }
@@ -851,7 +1019,7 @@ function DetailedMetric({ label, value, sub, color }: any) {
       <div className={cn("absolute top-0 right-0 h-16 w-16 opacity-10 rounded-full blur-[30px]", color === "primary" ? "bg-primary" : "bg-emerald-500")} />
       <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">{label}</p>
       <div className="flex items-baseline gap-3">
-        <span className="text-3xl font-black italic text-slate-900 leading-none">{value}</span>
+        <span className="text-3xl font-black text-slate-900 leading-none">{value}</span>
         <span className={cn("text-[9px] font-black uppercase tracking-widest", color === "primary" ? "text-primary" : "text-emerald-500")}>{sub}</span>
       </div>
     </div>

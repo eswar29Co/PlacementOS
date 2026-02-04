@@ -17,7 +17,7 @@ export default function PendingInterviews() {
                 </div>
 
                 <div className="text-center space-y-3">
-                    <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 italic">Check Out <span className="text-primary italic">Soon</span></h2>
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900">Check Out <span className="text-primary">Soon</span></h2>
                     <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-loose">
                         Neural mission routing is currently calibrating new evaluation tracks.
                     </p>

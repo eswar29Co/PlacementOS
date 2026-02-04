@@ -4,7 +4,7 @@ import { Notification } from '@/types';
 // Notification API Service
 export const notificationService = {
   // Get all notifications for current user
-  async getNotifications(): Promise<{ success: boolean; data: Notification[] }> {
+  async getNotifications(): Promise<{ success: boolean; data: { notifications: Notification[]; unreadCount: number } }> {
     try {
       const response = await apiClient.get('/notifications');
       return response.data;

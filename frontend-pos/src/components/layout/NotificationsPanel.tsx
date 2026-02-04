@@ -8,20 +8,52 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { notificationService } from '@/services/notificationService';
 
 export function NotificationsPanel() {
     const [isOpen, setIsOpen] = useState(false);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { user } = useAppSelector((state) => state.auth);
-    const { notifications } = useAppSelector((state) => state.notifications);
 
-    // Filter notifications for current user
-    const userNotifications = notifications.filter((n) => n.userId === user?.id);
-    const unreadCount = userNotifications.filter((n) => !n.read).length;
+    // Fetch notifications using React Query
+    const { data: notificationsData } = useQuery({
+        queryKey: ['notifications'],
+        queryFn: notificationService.getNotifications,
+        enabled: !!user,
+        refetchInterval: 30000,
+    });
 
-    const handleMarkAsRead = (id: string, actionUrl?: string) => {
-        dispatch(markAsRead(id));
+    const notifications = notificationsData?.data?.notifications || [];
+    const unreadCount = notificationsData?.data?.unreadCount || 0;
+    const userNotifications = notifications;
+
+    const markReadMutation = useMutation({
+        mutationFn: notificationService.markAsRead,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        },
+    });
+
+    const markAllReadMutation = useMutation({
+        mutationFn: notificationService.markAllAsRead,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: notificationService.deleteNotification,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        },
+    });
+
+    const handleMarkAsRead = async (id: string, actionUrl?: string) => {
+        markReadMutation.mutate(id);
+        dispatch(markAsRead(id)); // Keep Redux in sync if needed
         if (actionUrl) {
             navigate(actionUrl);
             setIsOpen(false);
@@ -29,6 +61,7 @@ export function NotificationsPanel() {
     };
 
     const handleMarkAllAsRead = () => {
+        markAllReadMutation.mutate();
         if (user?.id) {
             dispatch(markAllAsRead(user.id));
         }
@@ -36,6 +69,7 @@ export function NotificationsPanel() {
 
     const handleRemove = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
+        deleteMutation.mutate(id);
         dispatch(removeNotification(id));
     };
 
@@ -60,6 +94,14 @@ export function NotificationsPanel() {
                 return '🎉';
             case 'application_update':
                 return '📢';
+            case 'new_job_posted':
+                return '🏢';
+            case 'student_registered':
+                return '🎓';
+            case 'professional_signup':
+                return '💼';
+            case 'admin_note':
+                return '📝';
             default:
                 return '🔔';
         }

@@ -14,43 +14,64 @@ import {
   AlertCircle, Zap, ShieldCheck, PlayCircle,
   Database, Activity, Terminal, Send,
   Brain, Cpu, Target, Sparkles, AlertTriangle,
-  Fingerprint, Command, CheckCircle2
+  Fingerprint, Command, CheckCircle2, ListFilter, Eye, Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { canTakeAssessment } from '@/lib/flowHelpers';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { applicationService } from '@/services/applicationService';
+import { assessmentService } from '@/services/assessmentService';
 import { jobService } from '@/services/jobService';
 import { cn } from '@/lib/utils';
+import { Assessment, MCQQuestion, CodingQuestion } from '@/types';
 
 export default function TakeAssessment() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
 
   // Fetch application
-  const { data: applicationData, isLoading } = useQuery({
+  const { data: applicationData, isLoading: isAppLoading } = useQuery({
     queryKey: ['application', applicationId],
     queryFn: () => applicationService.getApplicationById(applicationId!),
     enabled: !!applicationId,
   });
   const application = applicationData?.data;
 
-  const jobId = typeof application?.jobId === 'string'
-    ? application.jobId
-    : (application?.jobId as any)?._id || (application?.jobId as any)?.id;
-
-  const { user } = useAppSelector((state) => state.auth);
+  // Fetch assessment
+  const { data: assessmentData, isLoading: isAssessmentLoading } = useQuery({
+    queryKey: ['assessment', applicationId],
+    queryFn: () => assessmentService.getAssessmentByApplicationId(applicationId!),
+    enabled: !!applicationId && !!application,
+  });
+  const assessment = assessmentData?.data;
 
   const submitMutation = useMutation({
-    mutationFn: (data: { applicationId: string; assessmentCode?: string; assessmentAnswers?: any[] }) =>
-      applicationService.submitAssessment(data),
+    mutationFn: (data: { assessmentId: string; mcqAnswers: number[]; codingAnswer: string }) =>
+      assessmentService.submitAssessment(data.assessmentId, {
+        mcqAnswers: data.mcqAnswers,
+        codingAnswer: data.codingAnswer
+      }),
     onSuccess: () => {
       toast.success('Assessment submitted successfully.');
       navigate('/student/applications');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Submission failed');
+    },
+  });
+
+  const startMutation = useMutation({
+    mutationFn: (id: string) => assessmentService.startAssessment(id),
+    onSuccess: () => {
+      toast.success('Assessment started!');
     },
   });
 
@@ -61,16 +82,38 @@ export default function TakeAssessment() {
     }
   }, [application]);
 
+  useEffect(() => {
+    if (assessment && assessment.status === 'pending') {
+      startMutation.mutate(assessment.id || (assessment as any)._id);
+    }
+    if (assessment && assessment.duration) {
+      setTimeLeft(assessment.duration * 60);
+    }
+    if (assessment && assessment.answers) {
+      // Pre-fill answers if any (in case of resume)
+      const prepped: Record<string, string> = {};
+      assessment.answers.mcqAnswers?.forEach((ans: number, idx: number) => {
+        if (ans !== null && ans !== undefined) prepped[idx.toString()] = ans.toString();
+      });
+      setAnswers(prepped);
+      if (assessment.answers.codingAnswer) setCode(assessment.answers.codingAnswer);
+    }
+  }, [assessment]);
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flagged, setFlagged] = useState<Record<string, boolean>>({});
   const [code, setCode] = useState('// Write your solution here\n\nfunction solution(input) {\n  // Your code here\n}');
   const [timeLeft, setTimeLeft] = useState(90 * 60);
   const [showSubmit, setShowSubmit] = useState(false);
+  const [showFullCode, setShowFullCode] = useState(false);
   const [output, setOutput] = useState('');
 
-  const totalQuestions = mockMCQQuestions.length + mockCodingQuestions.length;
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
-  const isCodingQuestion = currentQuestion >= mockMCQQuestions.length;
+  const mcqQuestions = assessment?.mcqQuestions || [];
+  const codingQuestion = assessment?.codingQuestion;
+  const totalQuestions = mcqQuestions.length + (codingQuestion ? 1 : 0);
+  const progress = totalQuestions > 0 ? ((Object.keys(answers).length) / totalQuestions) * 100 : 0;
+  const isCodingQuestion = currentQuestion >= mcqQuestions.length;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -98,28 +141,46 @@ export default function TakeAssessment() {
   };
 
   const handleSubmit = () => {
-    if (!application) return;
+    if (!assessment) return;
+
+    const mcqAnswersArray = mcqQuestions.map((_, idx) => {
+      const ans = answers[idx.toString()];
+      return ans !== undefined ? parseInt(ans) : -1;
+    });
+
     submitMutation.mutate({
-      applicationId: (application as any)._id || (application as any).id,
-      assessmentCode: code,
-      assessmentAnswers: Object.entries(answers).map(([qId, ans]) => ({
-        questionId: qId,
-        answer: ans
-      })),
+      assessmentId: assessment.id || (assessment as any)._id,
+      mcqAnswers: mcqAnswersArray,
+      codingAnswer: code
     });
   };
 
-  if (isLoading) {
+  const toggleFlag = () => {
+    setFlagged(prev => ({ ...prev, [currentQuestion.toString()]: !prev[currentQuestion.toString()] }));
+    toast.info(flagged[currentQuestion.toString()] ? 'Removed from review' : 'Marked for review');
+  };
+
+  if (isAppLoading || isAssessmentLoading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center space-y-6">
         <div className="h-16 w-16 border-4 border-primary border-t-transparent animate-spin rounded-2xl shadow-xl shadow-primary/20" />
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse italic">Starting Assessment...</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary animate-pulse">Starting Assessment...</p>
+      </div>
+    );
+  }
+
+  if (!assessment) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center space-y-6">
+        <AlertCircle className="h-16 w-16 text-rose-500" />
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-rose-500">Assessment Not Yet Released</p>
+        <Button onClick={() => navigate('/student/applications')}>Go Back</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-primary selection:text-white overflow-x-hidden font-sans relative">
+    <div className="h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans relative flex flex-col">
 
       {/* Background Decor */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -128,269 +189,286 @@ export default function TakeAssessment() {
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-3xl border-b border-slate-200 h-24">
-        <div className="max-w-[1600px] mx-auto h-full flex items-center justify-between px-10">
-          <div className="flex items-center gap-6">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-primary rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-500" />
-              <div className="relative h-12 w-12 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm transition-transform group-hover:rotate-6">
-                <Brain className="h-6 w-6 text-primary" />
-              </div>
+      <header className="relative z-50 bg-white border-b border-slate-200 h-20 shrink-0">
+        <div className="max-w-[1800px] mx-auto h-full flex items-center justify-between px-8">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+              <Brain className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">STUDENT <span className="text-primary">ASSESSMENT</span></h1>
-              <div className="flex items-center gap-3">
-                <div className="h-1 w-8 bg-primary rounded-full" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] italic">ASSESSMENT ID: {applicationId?.slice(-8).toUpperCase()}</p>
-              </div>
+              <h1 className="text-lg font-black uppercase tracking-tighter text-slate-900 leading-none">PLACEMENT<span className="text-primary">OS</span></h1>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">Assessment Session</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-12">
-            <div className="hidden xl:flex flex-col items-end">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 italic">Assessment Progress</p>
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-black text-slate-900">{Math.round(progress)}%</span>
-                <div className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                  <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-            </div>
-
+          <div className="flex items-center gap-8">
             <div className={cn(
-              "relative px-8 py-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-4 group transition-all duration-500",
+              "px-6 py-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-4 transition-all duration-500",
               timeLeft < 300 ? "border-rose-500/30 bg-rose-50 animate-pulse" : ""
             )}>
-              <Clock className={cn("h-5 w-5", timeLeft < 300 ? "text-rose-500" : "text-primary")} />
+              <Clock className={cn("h-4 w-4", timeLeft < 300 ? "text-rose-500" : "text-primary")} />
               <span className={cn(
-                "font-mono text-2xl font-black tracking-tighter",
+                "font-mono text-xl font-black tracking-tighter",
                 timeLeft < 300 ? "text-rose-500" : "text-slate-900"
               )}>
                 {formatTime(timeLeft)}
               </span>
-              <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary animate-ping opacity-75" />
             </div>
-
             <Button
-              className="h-14 px-8 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-2xl uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-rose-600/20 group"
+              className="h-12 px-6 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl uppercase text-[10px] tracking-widest shadow-lg shadow-rose-600/20"
               onClick={() => setShowSubmit(true)}
             >
-              FINISH & SUBMIT <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              FINISH TEST
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Question Area */}
-      <main className="relative z-10 pt-40 pb-40 px-10">
-        <div className="max-w-5xl mx-auto space-y-12">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Navigation Sidebar */}
+        <aside className="w-80 border-r border-slate-200 bg-white flex flex-col z-40">
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-6 flex items-center gap-2">
+              <ListFilter className="h-3 w-3" /> QUESTION NAVIGATION
+            </h3>
+            <div className="grid grid-cols-5 gap-3">
+              {Array.from({ length: totalQuestions }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentQuestion(i)}
+                  className={cn(
+                    "h-10 w-10 rounded-xl font-black text-xs transition-all duration-300 relative group/bubble",
+                    currentQuestion === i
+                      ? "bg-primary text-white scale-110 shadow-lg shadow-primary/20 border-2 border-white ring-2 ring-primary"
+                      : flagged[i.toString()]
+                        ? "bg-amber-100 text-amber-600 border border-amber-200 hover:bg-amber-200"
+                        : answers[i.toString()]
+                          ? "bg-emerald-100 text-emerald-600 border border-emerald-200 hover:bg-emerald-200"
+                          : "bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100"
+                  )}
+                >
+                  {i + 1}
+                  {flagged[i.toString()] && (
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-amber-500 rounded-full border-2 border-white" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {/* Sequence Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-8 w-8 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
-                <Activity className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">
-                  CURRENT SECTION: <span className="text-slate-900">{isCodingQuestion ? 'CODING' : 'MCQ'}</span>
-                </p>
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <div className="space-y-4">
+              <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">LEGEND</h4>
+              <div className="space-y-3">
+                <LegendItem color="bg-primary" label="Current" />
+                <LegendItem color="bg-emerald-100 border border-emerald-200 text-emerald-600" label="Answered" />
+                <LegendItem color="bg-amber-100 border border-amber-200 text-amber-600" label="For Review" />
+                <LegendItem color="bg-slate-50 border border-slate-100 text-slate-400" label="Not Answered" />
               </div>
             </div>
-            <div className="px-6 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary italic">
-                QUESTION <span className="text-slate-900 text-sm mx-1 not-italic">{currentQuestion + 1}</span> OF <span className="text-slate-400 text-sm ml-1 not-italic">{totalQuestions}</span>
+
+            <div className="p-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+              <p className="text-[10px] font-bold text-slate-400 leading-relaxed">
+                Tip: You can mark questions for review if you're unsure. They will be highlighted in orange.
               </p>
             </div>
           </div>
 
-          {!isCodingQuestion ? (
-            <Card className="border-slate-200 shadow-sm rounded-[3rem] bg-white overflow-hidden border relative">
-              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-              <CardHeader className="p-12 lg:p-16 pb-8">
-                <div className="space-y-6">
-                  <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-400 border border-indigo-100 shadow-sm transition-transform hover:rotate-6">
-                    <Target className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-2xl lg:text-3xl font-black leading-tight text-slate-900 uppercase italic tracking-tight">
-                    {mockMCQQuestions[currentQuestion]?.question}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-12 lg:p-16 pt-0">
-                <RadioGroup
-                  value={answers[currentQuestion.toString()] || ''}
-                  onValueChange={(v) => setAnswers({ ...answers, [currentQuestion.toString()]: v })}
-                  className="grid gap-6"
-                >
-                  {mockMCQQuestions[currentQuestion]?.options.map((opt, i) => (
-                    <div
-                      key={i}
-                      onClick={() => setAnswers({ ...answers, [currentQuestion.toString()]: i.toString() })}
-                      className={cn(
-                        "group relative flex items-center space-x-6 rounded-[2rem] border p-8 cursor-pointer transition-all duration-500 hover:scale-[1.01] hover:border-primary/30",
-                        answers[currentQuestion.toString()] === i.toString()
-                          ? "border-primary bg-primary/5 shadow-md shadow-primary/5"
-                          : "border-slate-100 bg-slate-50 hover:bg-white"
-                      )}
-                    >
-                      <div className={cn(
-                        "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-500",
-                        answers[currentQuestion.toString()] === i.toString()
-                          ? "border-primary bg-primary"
-                          : "border-slate-200 group-hover:border-primary/50 bg-white"
-                      )}>
-                        {answers[currentQuestion.toString()] === i.toString() && <div className="h-2 w-2 rounded-full bg-white shadow-xl" />}
-                      </div>
-                      <Label className="flex-1 cursor-pointer font-bold text-lg text-slate-600 group-hover:text-slate-900 transition-colors italic">
-                        {opt}
-                      </Label>
-                      {answers[currentQuestion.toString()] === i.toString() && (
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2 animate-in fade-in zoom-in duration-300">
-                          <CheckCircle2 className="h-6 w-6 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </RadioGroup>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-12 animate-in slide-in-from-bottom-12 duration-1000">
-              {/* Question Details */}
-              <Card className="border-slate-200 shadow-sm rounded-[3.5rem] bg-white border overflow-hidden">
-                <CardHeader className="p-12 lg:p-16 pb-8">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="flex items-center gap-6">
-                      <div className="h-14 w-14 bg-amber-50 rounded-2.5xl flex items-center justify-center border border-amber-100 shadow-sm transition-transform hover:rotate-6">
-                        <Terminal className="h-7 w-7 text-amber-500" />
-                      </div>
-                      <div className="space-y-1">
-                        <CardTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
-                          {mockCodingQuestions[0].title}
-                        </CardTitle>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Difficulty</span>
-                          <Badge className="bg-amber-50 text-amber-600 border border-amber-200 font-black text-[9px] uppercase tracking-widest px-4 py-1.5 rounded-full shadow-none">
-                            {mockCodingQuestions[0].difficulty}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    <Cpu className="h-10 w-10 text-primary/5 opacity-50" />
-                  </div>
-                </CardHeader>
-                <CardContent className="p-12 lg:p-16 pt-0 space-y-12">
-                  <p className="text-slate-500 font-bold text-lg leading-relaxed italic">{mockCodingQuestions[0].description}</p>
-                  <div className="grid gap-6">
-                    {mockCodingQuestions[0].examples.map((ex, i) => (
-                      <div key={i} className="group relative">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/5 to-transparent rounded-[2rem] blur opacity-0 group-hover:opacity-100 transition duration-500" />
-                        <div className="relative bg-slate-50 rounded-[2rem] p-10 font-mono text-[11px] border border-slate-100 space-y-4">
-                          <div className="flex items-center gap-3 border-b border-slate-200 pb-4 mb-4">
-                            <Fingerprint className="h-4 w-4 text-slate-400" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Example Case 0{i + 1}</span>
-                          </div>
-                          <div className="flex gap-10">
-                            <p className="flex-1"><span className="text-primary font-black uppercase tracking-widest mr-4">INPUT:</span> <span className="text-slate-700 font-black italic">{ex.input}</span></p>
-                            <p className="flex-1"><span className="text-emerald-600 font-black uppercase tracking-widest mr-4">OUTPUT:</span> <span className="text-emerald-500 font-black italic">{ex.output}</span></p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Code Editor Area */}
-              <Card className="border-slate-200 shadow-sm rounded-[3.5rem] overflow-hidden bg-white border">
-                <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-[0.3em] flex items-center gap-4 italic text-[11px]">
-                      <Code2 className="h-6 w-6 text-primary" /> Code Editor
-                    </CardTitle>
-                    <div className="flex gap-2">
-                      <div className="h-2 w-2 rounded-full bg-slate-200" />
-                      <div className="h-2 w-2 rounded-full bg-slate-200" />
-                      <div className="h-2 w-2 rounded-full bg-slate-200" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 space-y-0">
-                  <div className="relative group">
-                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-slate-50 border-r border-slate-100 flex flex-col items-center pt-8 gap-4 text-[10px] font-mono text-slate-300 leading-6 cursor-default select-none">
-                      {Array.from({ length: 20 }).map((_, i) => <div key={i}>{i + 1}</div>)}
-                    </div>
-                    <Textarea
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="font-mono min-h-[500px] text-sm bg-transparent border-none rounded-none p-10 pl-20 focus-visible:ring-0 text-slate-700 shadow-inner resize-none leading-relaxed placeholder:text-slate-200 italic"
-                    />
-
-                    <div className="absolute right-10 bottom-10 flex gap-4">
-                      <Button
-                        variant="outline"
-                        className="h-14 px-8 rounded-2xl bg-white border-slate-200 hover:bg-slate-50 text-slate-900 font-black text-[10px] uppercase tracking-widest gap-3 shadow-md"
-                        onClick={runCode}
-                      >
-                        <PlayCircle className="h-5 w-5 text-primary" /> RUN CODE
-                      </Button>
-                    </div>
-                  </div>
-
-                  {output && (
-                    <div className="p-12 bg-slate-50 border-t border-slate-100 animate-in slide-in-from-bottom-4 duration-500">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                          <Activity className="h-4 w-4 text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Code Output</span>
-                        </div>
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
-                      </div>
-                      <div className="bg-white rounded-2.5xl p-10 font-mono text-[11px] text-slate-500 border border-slate-200 shadow-inner leading-loose italic">
-                        {output}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+          <div className="p-6 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PROGRESS</span>
+              <span className="text-[10px] font-black text-primary">{Math.round(progress)}%</span>
             </div>
-          )}
-        </div>
-      </main>
-
-      {/* Navigation Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 h-28 bg-white/90 backdrop-blur-3xl border-t border-slate-200 px-10 z-50">
-        <div className="max-w-[1600px] mx-auto h-full flex justify-between items-center">
-          <Button
-            variant="ghost"
-            className="h-16 px-10 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:bg-slate-50 hover:text-primary transition-all flex items-center gap-4 group italic border border-transparent hover:border-slate-100"
-            disabled={currentQuestion === 0}
-            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-          >
-            <ChevronLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" /> PREVIOUS
-          </Button>
-
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center gap-3 px-6 py-2 rounded-full bg-slate-50 border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 italic">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Secure Assessment Mode
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
+              <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${progress}%` }} />
             </div>
-            <Button
-              className="h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20 flex items-center gap-4 group/btn transition-all duration-300"
-              onClick={() => {
-                if (currentQuestion === totalQuestions - 1) {
-                  setShowSubmit(true);
-                } else {
-                  setCurrentQuestion(Math.min(totalQuestions - 1, currentQuestion + 1));
-                }
-              }}
-            >
-              {currentQuestion === totalQuestions - 1 ? 'FINISH' : 'NEXT'}
-              <ChevronRight className="h-5 w-5 group-hover/btn:translate-x-1 transition-transform" />
-            </Button>
           </div>
+        </aside>
+
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto bg-slate-50/50 relative">
+          <div className="max-w-4xl mx-auto py-12 px-8">
+            <div className="mb-8 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-white text-primary border-slate-200 font-black text-[10px] uppercase tracking-widest px-4 py-1 rounded-full shadow-sm">
+                  Section: {isCodingQuestion ? 'Coding' : 'MCQ'}
+                </Badge>
+                <div className="h-1 w-1 rounded-full bg-slate-300" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Difficulty: {isCodingQuestion ? mockCodingQuestions[0].difficulty : 'Medium'}</span>
+              </div>
+              <Button
+                variant="outline"
+                onClick={toggleFlag}
+                className={cn(
+                  "h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2 transition-all",
+                  flagged[currentQuestion.toString()]
+                    ? "bg-amber-500 text-white border-none"
+                    : "bg-white text-amber-500 border-amber-200 hover:bg-amber-50"
+                )}
+              >
+                <Target className="h-4 w-4" /> {flagged[currentQuestion.toString()] ? 'MARK AS READY' : 'MARK FOR REVIEW'}
+              </Button>
+            </div>
+
+            {!isCodingQuestion ? (
+              <div className="space-y-8 animate-in fade-in duration-500">
+                <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white overflow-hidden border">
+                  <CardHeader className="p-10">
+                    <CardTitle className="text-2xl font-black leading-tight text-slate-900 uppercase tracking-tight">
+                      {mcqQuestions[currentQuestion]?.question}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-10 pt-0">
+                    <RadioGroup
+                      value={answers[currentQuestion.toString()] || ''}
+                      onValueChange={(v) => setAnswers({ ...answers, [currentQuestion.toString()]: v })}
+                      className="grid gap-4"
+                    >
+                      {mcqQuestions[currentQuestion]?.options.map((opt, i) => (
+                        <div
+                          key={i}
+                          onClick={() => setAnswers({ ...answers, [currentQuestion.toString()]: i.toString() })}
+                          className={cn(
+                            "group relative flex items-center space-x-6 rounded-2xl border p-6 cursor-pointer transition-all duration-300",
+                            answers[currentQuestion.toString()] === i.toString()
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-slate-100 bg-slate-50 hover:bg-white"
+                          )}
+                        >
+                          <div className={cn(
+                            "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                            answers[currentQuestion.toString()] === i.toString()
+                              ? "border-primary bg-primary"
+                              : "border-slate-200 group-hover:border-primary/50"
+                          )}>
+                            {answers[currentQuestion.toString()] === i.toString() && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                          </div>
+                          <Label className="flex-1 cursor-pointer font-bold text-base text-slate-600 group-hover:text-slate-900">
+                            {opt}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+                <Card className="border-slate-200 shadow-sm rounded-[2.5rem] bg-white border overflow-hidden">
+                  <CardHeader className="p-10">
+                    <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                      {codingQuestion?.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-10 pt-0 space-y-8">
+                    <p className="text-slate-500 font-bold text-base leading-relaxed">{codingQuestion?.description}</p>
+                    <div className="grid gap-4">
+                      {codingQuestion?.examples?.map((ex: any, i: number) => (
+                        <div key={i} className="bg-slate-50 rounded-2xl p-6 font-mono text-[11px] border border-slate-100 space-y-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Example {i + 1}</span>
+                          <div className="flex gap-8">
+                            <p><span className="text-primary font-black uppercase tracking-widest mr-2">IN:</span> <span className="text-slate-700 font-black">{ex.input}</span></p>
+                            <p><span className="text-emerald-600 font-black uppercase tracking-widest mr-2">OUT:</span> <span className="text-emerald-500 font-black">{ex.output}</span></p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden bg-white border">
+                  <CardHeader className="px-10 py-6 border-b border-slate-100 bg-slate-50 flex flex-row items-center justify-between">
+                    <CardTitle className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <Code2 className="h-5 w-5 text-primary" /> Code Editor
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFullCode(true)}
+                      className="h-8 px-3 rounded-lg font-black text-[9px] uppercase tracking-widest text-slate-400 hover:text-primary gap-2"
+                    >
+                      <Maximize2 className="h-3 w-3" /> FULL SCREEN
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      <div className="absolute left-0 top-0 bottom-0 w-10 bg-slate-50 border-r border-slate-100 flex flex-col items-center pt-8 gap-3 text-[9px] font-mono text-slate-300 pointer-events-none">
+                        {Array.from({ length: 15 }).map((_, i) => <div key={i}>{i + 1}</div>)}
+                      </div>
+                      <Textarea
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        className="font-mono min-h-[400px] text-xs bg-transparent border-none rounded-none p-8 pl-14 focus-visible:ring-0 text-slate-700 resize-none leading-relaxed"
+                      />
+                      <div className="absolute right-6 bottom-6 flex gap-3">
+                        <Button
+                          className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest gap-2"
+                          onClick={runCode}
+                        >
+                          <PlayCircle className="h-4 w-4" /> RUN TESTS
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Footer Navigation */}
+      <footer className="h-24 bg-white border-t border-slate-200 px-8 flex items-center justify-between z-50 shrink-0">
+        <Button
+          variant="ghost"
+          className="h-14 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-primary gap-3"
+          disabled={currentQuestion === 0}
+          onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+        >
+          <ChevronLeft className="h-4 w-4" /> PREVIOUS
+        </Button>
+
+        <div className="flex items-center gap-4">
+          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest hidden sm:block">SAVE AUTOMATICALLY ENABLED</p>
+          <Button
+            className="h-14 px-10 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-widest gap-3 shadow-lg shadow-primary/20"
+            onClick={() => {
+              if (currentQuestion === totalQuestions - 1) {
+                setShowSubmit(true);
+              } else {
+                setCurrentQuestion(Math.min(totalQuestions - 1, currentQuestion + 1));
+              }
+            }}
+          >
+            {currentQuestion === totalQuestions - 1 ? 'REVIEW & SUBMIT' : 'SAVE & NEXT'}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </footer>
+
+      {/* Code Editor Dialog */}
+      <Dialog open={showFullCode} onOpenChange={setShowFullCode}>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col bg-white border-none rounded-[3rem] overflow-hidden">
+          <DialogHeader className="px-12 py-8 border-b border-slate-100 shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter">FULL SCREEN <span className="text-primary">EDITOR</span></DialogTitle>
+              <div className="flex gap-4">
+                <Button className="h-10 px-6 rounded-xl bg-primary text-white font-black uppercase text-[10px] tracking-widest" onClick={runCode}>RUN CODE</Button>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-16 bg-slate-50 border-r border-slate-100 flex flex-col items-center pt-10 gap-4 text-[11px] font-mono text-slate-300">
+              {Array.from({ length: 40 }).map((_, i) => <div key={i}>{i + 1}</div>)}
+            </div>
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="w-full h-full font-mono text-sm bg-transparent border-none p-12 pl-24 focus:ring-0 text-slate-700 resize-none leading-loose outline-none"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Submit Confirmation Dialog */}
       <AlertDialog open={showSubmit} onOpenChange={setShowSubmit}>
@@ -403,11 +481,11 @@ export default function TakeAssessment() {
               </div>
             </div>
             <div className="space-y-2 text-center">
-              <AlertDialogTitle className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">SUBMIT ASSESSMENT?</AlertDialogTitle>
-              <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Final Submission</p>
+              <AlertDialogTitle className="text-3xl font-black text-slate-900 uppercase tracking-tighter">SUBMIT ASSESSMENT?</AlertDialogTitle>
+              <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">Final Submission</p>
             </div>
-            <AlertDialogDescription className="text-slate-400 font-bold text-base text-center leading-relaxed italic">
-              Once you submit your assessment, you will not be able to change your answers. This action is <span className="text-slate-900 italic underline">IRREVERSIBLE</span>.
+            <AlertDialogDescription className="text-slate-400 font-bold text-base text-center leading-relaxed">
+              Once you submit your assessment, you will not be able to change your answers. This action is <span className="text-slate-900 underline">IRREVERSIBLE</span>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col sm:flex-row gap-6 mt-12">
@@ -423,6 +501,15 @@ export default function TakeAssessment() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className={cn("h-4 w-4 rounded-lg", color)} />
+      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { User, Student, Professional, Admin } from '@/types';
 export const authService = {
   // Register new user
   async register(data: {
-    role: 'student' | 'professional' | 'admin';
+    role: 'student' | 'professional' | 'admin' | 'superadmin';
     email: string;
     password: string;
     name: string;
@@ -13,12 +13,12 @@ export const authService = {
   }): Promise<{ success: boolean; data: { user: User; token: string }; message: string }> {
     try {
       const response = await apiClient.post('/auth/register', data);
-      
+
       // Store token in localStorage
       if (response.data.data.token) {
         localStorage.setItem('token', response.data.data.token);
       }
-      
+
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -29,16 +29,16 @@ export const authService = {
   async login(data: {
     email: string;
     password: string;
-    role: 'student' | 'professional' | 'admin';
+    role: 'student' | 'professional' | 'admin' | 'superadmin';
   }): Promise<{ success: boolean; data: { user: User; token: string }; message: string }> {
     try {
       const response = await apiClient.post('/auth/login', data);
-      
+
       // Store token in localStorage
       if (response.data.data.token) {
         localStorage.setItem('token', response.data.data.token);
       }
-      
+
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

@@ -69,12 +69,12 @@ export default function ProfessionalInterview() {
       <div className="max-w-[1200px] mx-auto space-y-12 pb-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-2">
           <div className="space-y-1">
-            <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-900 italic">Technical Node</h1>
-            <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-3 italic">
+            <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Technical Node</h1>
+            <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-3">
               <Activity className="h-4 w-4 text-primary" /> Phase Index: <span className="text-indigo-600">ARCHITECTURE & LOGIC SYNC</span>
             </p>
           </div>
-          <div className="flex items-center gap-3 px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 font-black text-[10px] uppercase tracking-widest italic shadow-sm">
+          <div className="flex items-center gap-3 px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 font-black text-[10px] uppercase tracking-widest shadow-sm">
             <Code2 className="h-4 w-4" /> Technical Execution Calibration
           </div>
         </div>
@@ -85,28 +85,28 @@ export default function ProfessionalInterview() {
             {!assignedProfessional ? (
               <Alert className="bg-slate-50 border-slate-200 rounded-[2rem] p-8 shadow-sm">
                 <Clock className="h-6 w-6 text-primary" />
-                <AlertDescription className="text-slate-500 font-bold italic ml-4 text-sm">
+                <AlertDescription className="text-slate-500 font-bold ml-4 text-sm">
                   Neural queue active. Waiting for industry expert assignment. You will be alerted via secure transmission once the uplink is established.
                 </AlertDescription>
               </Alert>
             ) : isCompleted ? (
               <Alert className="bg-emerald-50 border-emerald-100 rounded-[2rem] p-8 shadow-sm">
                 <ShieldCheck className="h-6 w-6 text-emerald-600" />
-                <AlertDescription className="text-emerald-700 font-bold italic ml-4 text-sm">
+                <AlertDescription className="text-emerald-700 font-bold ml-4 text-sm">
                   Technical simulation complete! Evaluation dossier submitted for administrative confirmation. Results expected in current cycle.
                 </AlertDescription>
               </Alert>
             ) : isScheduled ? (
               <Alert className="bg-primary/5 border-primary/10 rounded-[2rem] p-8 shadow-sm">
                 <Calendar className="h-6 w-6 text-primary" />
-                <AlertDescription className="text-primary font-bold italic ml-4 text-sm">
+                <AlertDescription className="text-primary font-bold ml-4 text-sm">
                   Uplink parameters synchronized. Your technical interview session is scheduled in the proximal window.
                 </AlertDescription>
               </Alert>
             ) : (
               <Alert className="bg-amber-50 border-amber-100 rounded-[2rem] p-8 shadow-sm">
                 <Monitor className="h-6 w-6 text-amber-600" />
-                <AlertDescription className="text-amber-700 font-bold italic ml-4 text-sm">
+                <AlertDescription className="text-amber-700 font-bold ml-4 text-sm">
                   Expert Analyst assigned. Awaiting temporal window definition for session initialization.
                 </AlertDescription>
               </Alert>
@@ -116,11 +116,11 @@ export default function ProfessionalInterview() {
             {isScheduled && myApplication?.meetingLink ? (
               <Card className="border-slate-200 shadow-xl rounded-[3rem] bg-white overflow-hidden border">
                 <CardHeader className="p-10 pb-4 border-b border-slate-100 bg-slate-50/50">
-                  <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900 italic">
+                  <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900">
                     <Video className="h-8 w-8 text-primary" />
                     Session Interface
                   </CardTitle>
-                  <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Live Virtual Command Protocol</CardDescription>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Live Virtual Command Protocol</CardDescription>
                 </CardHeader>
                 <CardContent className="p-10 space-y-8">
                   {myApplication.scheduledDate && (
@@ -128,8 +128,8 @@ export default function ProfessionalInterview() {
                       <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm mb-4">
                         <Calendar className="h-8 w-8 text-primary" />
                       </div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 italic">Activation Time</p>
-                      <p className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Activation Time</p>
+                      <p className="text-3xl font-black text-slate-900 uppercase tracking-tighter">
                         {format(new Date(myApplication.scheduledDate), 'dd MMM yyyy, HH:mm')}
                       </p>
                     </div>
@@ -141,17 +141,17 @@ export default function ProfessionalInterview() {
                   >
                     LAUNCH NEURAL LINK <ExternalLink className="h-6 w-6 group-hover/btn:scale-110 transition-transform" />
                   </Button>
-                  <p className="text-center text-[9px] font-black uppercase tracking-[0.4em] text-slate-300 italic">Connect via Google Neural Transmission</p>
+                  <p className="text-center text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">Connect via Google Neural Transmission</p>
                 </CardContent>
               </Card>
             ) : isCompleted && professionalFeedback ? (
               <Card className="border-slate-200 shadow-xl rounded-[3rem] bg-white overflow-hidden border">
                 <CardHeader className="p-10 pb-4 border-b border-slate-100 bg-slate-50/50">
-                  <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900 italic">
+                  <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-4 text-slate-900">
                     <FileText className="h-8 w-8 text-indigo-600" />
                     Dossier Feedback
                   </CardTitle>
-                  <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 italic">Post-Simulation Analysis Results</CardDescription>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Post-Simulation Analysis Results</CardDescription>
                 </CardHeader>
                 <CardContent className="p-10 space-y-10">
                   <div className="flex items-center gap-8 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
@@ -159,32 +159,32 @@ export default function ProfessionalInterview() {
                       <Star className="h-10 w-10 text-amber-500 fill-amber-500" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 italic">Calibration Score</p>
-                      <p className="text-4xl font-black text-slate-900 italic">{professionalFeedback.rating}/5.0 <span className="text-sm text-slate-400 font-bold">ALPHA INDEX</span></p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Calibration Score</p>
+                      <p className="text-4xl font-black text-slate-900">{professionalFeedback.rating}/5.0 <span className="text-sm text-slate-400 font-bold">ALPHA INDEX</span></p>
                     </div>
                   </div>
 
                   <div className="space-y-8">
                     <div className="p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100">
-                      <h4 className="font-black text-xs uppercase tracking-tight text-slate-900 italic mb-3">Analyst Observations</h4>
-                      <p className="text-sm text-slate-500 font-bold italic leading-relaxed">"{professionalFeedback.comments}"</p>
+                      <h4 className="font-black text-xs uppercase tracking-tight text-slate-900 mb-3">Analyst Observations</h4>
+                      <p className="text-sm text-slate-500 font-bold leading-relaxed">"{professionalFeedback.comments}"</p>
                     </div>
 
                     {professionalFeedback.improvementAreas && professionalFeedback.improvementAreas.length > 0 && (
                       <div className="space-y-4">
-                        <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-400 italic">Calibration Deltas Identified</h4>
+                        <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-400">Calibration Deltas Identified</h4>
                         <div className="flex flex-wrap gap-2">
                           {professionalFeedback.improvementAreas.map((area: string) => (
-                            <Badge key={area} className="bg-white text-slate-600 border border-slate-100 font-bold text-[9px] uppercase px-4 py-2 rounded-xl shadow-none italic">{area}</Badge>
+                            <Badge key={area} className="bg-white text-slate-600 border border-slate-100 font-bold text-[9px] uppercase px-4 py-2 rounded-xl shadow-none">{area}</Badge>
                           ))}
                         </div>
                       </div>
                     )}
 
                     <div className="pt-8 border-t border-slate-100 flex items-center justify-between">
-                      <h4 className="font-black text-sm uppercase text-slate-900 italic">Audit Recommendation</h4>
+                      <h4 className="font-black text-sm uppercase text-slate-900">Audit Recommendation</h4>
                       <Badge className={cn(
-                        "font-black text-[10px] uppercase px-6 py-2 rounded-full shadow-lg italic",
+                        "font-black text-[10px] uppercase px-6 py-2 rounded-full shadow-lg",
                         professionalFeedback.recommendation === 'Pass' ? "bg-emerald-500 text-white shadow-emerald-500/20" : "bg-rose-500 text-white shadow-rose-500/20"
                       )}>
                         {professionalFeedback.recommendation === 'Pass' ? 'APPROVED FOR DEPLOYMENT' : 'TRAJECTORY TERMINATED'}
@@ -199,8 +199,8 @@ export default function ProfessionalInterview() {
                   <Monitor className="h-16 w-16 text-slate-200" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-slate-900 uppercase italic">Awaiting Interface Data</h3>
-                  <p className="text-slate-400 font-bold text-xs uppercase italic tracking-widest">Protocol status: Queued for temporal assignment</p>
+                  <h3 className="text-2xl font-black text-slate-900 uppercase">Awaiting Interface Data</h3>
+                  <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Protocol status: Queued for temporal assignment</p>
                 </div>
               </Card>
             )}
@@ -211,7 +211,7 @@ export default function ProfessionalInterview() {
                 <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center border border-indigo-100">
                   <Globe className="h-6 w-6 text-indigo-600" />
                 </div>
-                <h4 className="text-xl font-black uppercase text-slate-900 italic tracking-tighter">Strategic Guidelines</h4>
+                <h4 className="text-xl font-black uppercase text-slate-900 tracking-tighter">Strategic Guidelines</h4>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                 {[
@@ -223,8 +223,8 @@ export default function ProfessionalInterview() {
                   <div key={i} className="flex gap-4 group cursor-default">
                     <div className="h-12 w-1 flex-shrink-0 bg-slate-100 group-hover:bg-primary transition-colors rounded-full" />
                     <div>
-                      <p className="text-xs font-black uppercase text-slate-900 italic mb-1">{item.topic}</p>
-                      <p className="text-[10px] font-bold text-slate-400 italic tracking-tight">{item.desc}</p>
+                      <p className="text-xs font-black uppercase text-slate-900 mb-1">{item.topic}</p>
+                      <p className="text-[10px] font-bold text-slate-400 tracking-tight">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -238,8 +238,8 @@ export default function ProfessionalInterview() {
               <Card className="border-slate-200 shadow-xl rounded-[3rem] bg-white overflow-hidden border">
                 <div className="p-8 space-y-8">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 italic">Interface Node</h4>
-                    <span className="flex items-center gap-2 text-primary font-black text-[8px] uppercase tracking-widest italic">
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Interface Node</h4>
+                    <span className="flex items-center gap-2 text-primary font-black text-[8px] uppercase tracking-widest">
                       <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> Industry Expert
                     </span>
                   </div>
@@ -254,18 +254,18 @@ export default function ProfessionalInterview() {
                       </Avatar>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">{assignedProfessional.name}</h3>
+                      <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{assignedProfessional.name}</h3>
                       <p className="text-[10px] font-black uppercase text-primary tracking-widest">{assignedProfessional.designation || 'Staff Engineer'}</p>
                     </div>
                   </div>
                   <div className="pt-8 border-t border-slate-100 grid grid-cols-2 gap-4">
                     <div className="text-center group border-r border-slate-100">
                       <p className="text-[9px] font-black uppercase tracking-widest mb-1 group-hover:text-primary transition-colors text-slate-300">Experience</p>
-                      <p className="text-xs font-bold text-slate-700 italic">{assignedProfessional.experience || '6+'} Years</p>
+                      <p className="text-xs font-bold text-slate-700">{assignedProfessional.experience || '6+'} Years</p>
                     </div>
                     <div className="text-center group">
                       <p className="text-[9px] font-black uppercase tracking-widest mb-1 group-hover:text-primary transition-colors text-slate-300">Operations</p>
-                      <p className="text-xs font-bold text-slate-700 italic">{assignedProfessional.interviewsTaken || '25+'}</p>
+                      <p className="text-xs font-bold text-slate-700">{assignedProfessional.interviewsTaken || '25+'}</p>
                     </div>
                   </div>
                   {assignedProfessional.techStack && (
@@ -273,7 +273,7 @@ export default function ProfessionalInterview() {
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-300 mb-3 text-center">Tech Spectrum</p>
                       <div className="flex flex-wrap justify-center gap-2">
                         {assignedProfessional.techStack.slice(0, 4).map((tech: string) => (
-                          <Badge key={tech} className="bg-slate-50 text-slate-500 border border-slate-100 font-bold text-[8px] uppercase px-2 py-0.5 rounded-md shadow-none italic">{tech}</Badge>
+                          <Badge key={tech} className="bg-slate-50 text-slate-500 border border-slate-100 font-bold text-[8px] uppercase px-2 py-0.5 rounded-md shadow-none">{tech}</Badge>
                         ))}
                       </div>
                     </div>
@@ -285,9 +285,9 @@ export default function ProfessionalInterview() {
             <Card className="border-none shadow-xl rounded-[3rem] bg-indigo-600 text-white p-10 overflow-hidden relative group">
               <Sparkles className="absolute -right-6 -top-6 h-32 w-32 opacity-10 group-hover:scale-110 transition-transform duration-1000" />
               <div className="relative z-10 space-y-6">
-                <h4 className="text-xl font-black uppercase leading-tight italic tracking-tighter">Architecture Focus</h4>
-                <p className="text-white/70 text-xs font-bold leading-relaxed italic">Technical rounds dive deep into your structural understanding of codebases and logical execution paths.</p>
-                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest italic pt-4">
+                <h4 className="text-xl font-black uppercase leading-tight tracking-tighter">Architecture Focus</h4>
+                <p className="text-white/70 text-xs font-bold leading-relaxed">Technical rounds dive deep into your structural understanding of codebases and logical execution paths.</p>
+                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest pt-4">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> System Confidence 99.8%
                 </div>
               </div>

@@ -10,6 +10,8 @@ import Splash from "./pages/Splash";
 import Login from "./pages/auth/Login";
 import StudentSignup from "./pages/auth/StudentSignup";
 import ProfessionalSignup from "./pages/auth/ProfessionalSignup";
+import RegisterCollege from "./pages/RegisterCollege";
+import SelectCollege from "./pages/SelectCollege";
 
 // Student Pages
 import StudentHome from "./pages/student/StudentHome";
@@ -30,6 +32,7 @@ import InterviewCalendar from "./pages/student/InterviewCalendar";
 import Interviews from "./pages/student/Interviews";
 import Offers from "./pages/student/Offers";
 import Profile from "./pages/student/Profile";
+import RoadmapDetail from "./pages/student/RoadmapDetail";
 
 // Professional Pages
 import ProfessionalDashboard from "./pages/professional/ProfessionalDashboard";
@@ -41,6 +44,7 @@ import PendingInterviews from "./pages/professional/PendingInterviews";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard2";
+import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 import StudentsManagement from "./pages/admin/StudentsManagement";
 import ProfessionalsManagement from "./pages/admin/ProfessionalsManagement";
 import JobsManagement from "./pages/admin/JobsManagement";
@@ -59,7 +63,11 @@ const App = () => (
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/" element={<Splash />} />
+          <Route path="/register-college" element={<RegisterCollege />} />
+          <Route path="/select-college" element={<SelectCollege />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin-tpo" element={<Login type="admin" />} />
+          <Route path="/superadmin" element={<Login type="superadmin" />} />
           <Route path="/signup/student" element={<StudentSignup />} />
           <Route path="/signup/professional" element={<ProfessionalSignup />} />
 
@@ -88,6 +96,8 @@ const App = () => (
                   <Route path="interviews" element={<Interviews />} />
                   <Route path="offers" element={<Offers />} />
                   <Route path="profile" element={<Profile />} />
+                  <Route path="roadmaps" element={<RoadmapDetail />} />
+                  <Route path="roadmaps/:type" element={<RoadmapDetail />} />
                   <Route path="*" element={<Navigate to="/student/home" replace />} />
                 </Routes>
               </ProtectedRoute>
@@ -107,6 +117,19 @@ const App = () => (
                   <Route path="history" element={<InterviewHistory />} />
                   <Route path="profile" element={<ProfessionalProfile />} />
                   <Route path="*" element={<Navigate to="/professional/dashboard" replace />} />
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Super Admin Routes */}
+          <Route
+            path="/super-admin/*"
+            element={
+              <ProtectedRoute allowedRoles={["superadmin"]}>
+                <Routes>
+                  <Route path="dashboard" element={<SuperAdminDashboard />} />
+                  <Route path="*" element={<Navigate to="/super-admin/dashboard" replace />} />
                 </Routes>
               </ProtectedRoute>
             }

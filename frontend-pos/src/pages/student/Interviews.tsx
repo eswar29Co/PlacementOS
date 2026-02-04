@@ -209,7 +209,12 @@ function InterviewCard({ app, isCompleted, onAction }: any) {
                     <p className="text-2xl font-black text-emerald-600 tracking-tighter">{isAI ? `${app.aiInterviewScore || 0}%` : `Rating: ${app.rating || 0}/5`}</p>
                   </div>
                 </div>
-                <p className="text-xs font-medium text-slate-400 italic leading-relaxed line-clamp-2">"Your performance was evaluated based on your technical knowledge and communication skills."</p>
+                <p className="text-xs font-medium text-slate-400 leading-relaxed line-clamp-3">
+                  {isAI
+                    ? app.aiInterviewSummary || "Evaluation completed by AI Neural core."
+                    : app.interviewFeedback?.[app.interviewFeedback.length - 1]?.comments || "Feedback pending final review."
+                  }
+                </p>
               </div>
             ) : (
               <div className="space-y-2">

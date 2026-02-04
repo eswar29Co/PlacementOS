@@ -10,8 +10,9 @@ import { Job, Student } from '@/types';
 import {
   Search, IndianRupee, Clock, Building2, Sparkles,
   TrendingUp, MapPin, Briefcase, ChevronRight, Filter,
-  Target, Zap, Star, Terminal, Globe, Ghost, ArrowRight
+  Target, Zap, Star, Terminal, Globe, Ghost, ArrowRight, CheckCircle2
 } from 'lucide-react';
+import { applicationService } from '@/services/applicationService';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { jobService } from '@/services/jobService';
@@ -45,6 +46,15 @@ export default function BrowseJobs() {
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
 
+  // Fetch applications to check applied status
+  const { data: applicationsData } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn: applicationService.getMyApplications,
+    enabled: !!user,
+  });
+  const myApplications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
+  const appliedJobIds = new Set(myApplications.map(app => app.jobId));
+
   // Calculate job recommendations based on student skills
   const calculateMatchScore = (job: Job): number => {
     if (!student?.skills || student.skills.length === 0) return 40; // Base score
@@ -73,7 +83,7 @@ export default function BrowseJobs() {
       <DashboardLayout title="Browse Jobs" subtitle="Finding the best career opportunities for you...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-2xl shadow-primary/20" />
-          <p className="font-black text-primary animate-pulse uppercase tracking-[0.4em] text-[10px] italic">Loading Jobs...</p>
+          <p className="font-black text-primary animate-pulse uppercase tracking-[0.4em] text-[10px]">Loading Jobs...</p>
         </div>
       </DashboardLayout>
     );
@@ -100,7 +110,7 @@ export default function BrowseJobs() {
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400 group-focus-within:text-primary transition-colors" />
                 <Input
                   placeholder="Search jobs by company, sector, or role..."
-                  className="h-16 pl-16 border-slate-100 bg-slate-50 rounded-2xl font-black text-lg text-slate-900 focus-visible:ring-primary/20 shadow-inner placeholder:text-slate-400 italic"
+                  className="h-16 pl-16 border-slate-100 bg-slate-50 rounded-2xl font-black text-lg text-slate-900 focus-visible:ring-primary/20 shadow-inner placeholder:text-slate-400"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -122,13 +132,13 @@ export default function BrowseJobs() {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <h2 className="text-3xl font-black italic tracking-tighter flex items-center gap-4 text-slate-900 uppercase">
+                <h2 className="text-3xl font-black tracking-tighter flex items-center gap-4 text-slate-900 uppercase">
                   <Sparkles className="h-8 w-8 text-amber-500 animate-pulse" />
                   RECOMMENDED FOR YOU
                 </h2>
-                <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-12 italic">Jobs that match your technical background and interests</p>
+                <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-12">Jobs that match your technical background and interests</p>
               </div>
-              <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-[10px] uppercase tracking-[0.2em] py-2 px-6 rounded-full shadow-lg shadow-amber-500/5 italic">AI MATCHING ACTIVE</Badge>
+              <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-[10px] uppercase tracking-[0.2em] py-2 px-6 rounded-full shadow-lg shadow-amber-500/5">AI MATCHING ACTIVE</Badge>
             </div>
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {recommendedJobs.map(({ job, matchScore }) => (
@@ -136,6 +146,7 @@ export default function BrowseJobs() {
                   key={job.id || job._id}
                   job={job}
                   isRecommended
+                  isApplied={appliedJobIds.has(job.id || job._id)}
                   matchScore={matchScore}
                   onApply={() => navigate(`/student/apply/${job.id || job._id}`)}
                 />
@@ -148,11 +159,11 @@ export default function BrowseJobs() {
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h2 className="text-2xl font-black tracking-tighter italic flex items-center gap-4 text-slate-900 uppercase">
+              <h2 className="text-2xl font-black tracking-tighter flex items-center gap-4 text-slate-900 uppercase">
                 <Globe className="h-7 w-7 text-primary" />
                 {search ? `SEARCH RESULTS FOR "${search.toUpperCase()}"` : "ALL AVAILABLE JOBS"}
               </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-11 italic">Access all available placement opportunities</p>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] inline-block ml-11">Access all available placement opportunities</p>
             </div>
             <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-slate-200 bg-slate-50 px-6 py-2 rounded-full shadow-none">
               <div className="h-1.5 w-1.5 rounded-full bg-primary mr-3 animate-pulse" />
@@ -174,7 +185,7 @@ export default function BrowseJobs() {
               <TableBody>
                 {filteredJobs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-bold italic h-[300px]">
+                    <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-bold h-[300px]">
                       <div className="flex flex-col items-center justify-center gap-4">
                         <Ghost className="h-10 w-10 opacity-20" />
                         No jobs found matching your search.
@@ -195,50 +206,63 @@ export default function BrowseJobs() {
                         >
                           <TableCell className="py-8 pl-10">
                             <div className="flex items-center gap-4">
-                              <div className="h-12 w-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center font-black text-primary text-xl shrink-0 group-hover:scale-110 transition-transform">
+                              <div className="h-12 w-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center font-black text-primary text-xl shrink-0 group-hover:scale-110 transition-transform relative">
                                 {job.companyName.charAt(0)}
+                                {appliedJobIds.has(job.id || job._id) && (
+                                  <div className="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-0.5 shadow-lg border-2 border-white">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                  </div>
+                                )}
                               </div>
                               <div className="space-y-1">
                                 <p className="font-black text-slate-900 leading-none uppercase tracking-tight">{job.roleTitle}</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 italic">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                                   <Building2 className="h-3 w-3" /> {job.companyName}
                                 </p>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="py-8">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-black text-xs border border-emerald-100 italic">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-black text-xs border border-emerald-100">
                               <IndianRupee className="h-3 w-3" /> {job.package || job.ctcBand}
                             </div>
                           </TableCell>
                           <TableCell className="py-8">
-                            <div className="flex items-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest italic">
+                            <div className="flex items-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest">
                               <MapPin className="h-3.5 w-3.5 text-slate-300" /> {job.locationType || 'Remote'}
                             </div>
                           </TableCell>
                           <TableCell className="py-8">
-                            <div className="flex items-center gap-2 text-rose-500 font-black text-[10px] uppercase tracking-widest italic">
+                            <div className="flex items-center gap-2 text-rose-500 font-black text-[10px] uppercase tracking-widest">
                               <Clock className="h-3.5 w-3.5" /> {format(new Date(job.deadline), 'dd MMM yyyy')}
                             </div>
                           </TableCell>
                           <TableCell className="py-8 pr-10 text-right">
                             <div className="flex items-center justify-end gap-3">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400 group-hover:text-primary transition-colors"
-                              >
-                                {isExpanded ? 'CLOSE' : 'DETAILS'}
-                              </Button>
-                              <Button
-                                className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/student/apply/${job.id || job._id}`);
-                                }}
-                              >
-                                APPLY
-                              </Button>
+                              {appliedJobIds.has(job.id || job._id) ? (
+                                <Badge className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-emerald-50 text-emerald-600 border-none shadow-none gap-2">
+                                  <CheckCircle2 className="h-4 w-4" /> APPLIED
+                                </Badge>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-10 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400 group-hover:text-primary transition-colors"
+                                  >
+                                    {isExpanded ? 'CLOSE' : 'DETAILS'}
+                                  </Button>
+                                  <Button
+                                    className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/student/apply/${job.id || job._id}`);
+                                    }}
+                                  >
+                                    APPLY
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -252,13 +276,13 @@ export default function BrowseJobs() {
                                   <div className="space-y-8">
                                     <div className="space-y-3">
                                       <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Job Description</h5>
-                                      <p className="text-slate-500 text-sm font-medium leading-relaxed italic">{job.description}</p>
+                                      <p className="text-slate-500 text-sm font-medium leading-relaxed">{job.description}</p>
                                     </div>
                                     <div className="space-y-4">
                                       <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Required Skills</h5>
                                       <div className="flex flex-wrap gap-2">
                                         {(job.skills || []).map((skill: string) => (
-                                          <Badge key={skill} variant="outline" className="rounded-lg border-slate-200 bg-white px-3 py-1 font-black text-[9px] uppercase tracking-widest text-slate-500 italic">
+                                          <Badge key={skill} variant="outline" className="rounded-lg border-slate-200 bg-white px-3 py-1 font-black text-[9px] uppercase tracking-widest text-slate-500">
                                             {skill}
                                           </Badge>
                                         ))}
@@ -270,27 +294,35 @@ export default function BrowseJobs() {
                                       <div className="absolute top-0 right-0 h-24 w-24 bg-primary/5 rounded-full blur-2xl" />
                                       <div className="space-y-1 relative">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Experience</p>
-                                        <p className="text-sm font-black text-slate-700 italic">{job.experienceRequired || 'Freshman'}</p>
+                                        <p className="text-sm font-black text-slate-700">{job.experienceRequired || 'Freshman'}</p>
                                       </div>
                                       <div className="space-y-1 relative">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Job Type</p>
-                                        <p className="text-sm font-black text-slate-700 italic">{job.jobType || 'Full-time'}</p>
+                                        <p className="text-sm font-black text-slate-700">{job.jobType || 'Full-time'}</p>
                                       </div>
                                       <div className="space-y-1 relative">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Applicants</p>
-                                        <p className="text-sm font-black text-slate-700 italic">{job.applicationCount || 0} People Applied</p>
+                                        <p className="text-sm font-black text-slate-700">{job.applicationCount || 0} People Applied</p>
                                       </div>
                                       <div className="space-y-1 relative">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Selection Process</p>
-                                        <p className="text-sm font-black text-slate-700 italic">Resume + Assessment + Interview</p>
+                                        <p className="text-sm font-black text-slate-700">Resume + Assessment + Interview</p>
                                       </div>
                                     </div>
-                                    <Button
-                                      className="w-full h-16 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest gap-3 shadow-xl shadow-indigo-100"
-                                      onClick={() => navigate(`/student/apply/${job.id || job._id}`)}
-                                    >
-                                      PROCEED TO APPLICATION <ArrowRight className="h-5 w-5" />
-                                    </Button>
+                                    {appliedJobIds.has(job.id || job._id) ? (
+                                      <Button
+                                        className="w-full h-16 rounded-[1.5rem] bg-emerald-500 text-white font-black text-xs uppercase tracking-widest gap-2 cursor-default"
+                                      >
+                                        <CheckCircle2 className="h-5 w-5" /> ALREADY APPLIED
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        className="w-full h-16 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest gap-3 shadow-xl shadow-indigo-100"
+                                        onClick={() => navigate(`/student/apply/${job.id || job._id}`)}
+                                      >
+                                        PROCEED TO APPLICATION <ArrowRight className="h-5 w-5" />
+                                      </Button>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -310,7 +342,7 @@ export default function BrowseJobs() {
   );
 }
 
-function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
+function PremiumJobCard({ job, onApply, matchScore, isRecommended, isApplied }: any) {
   const navigate = useNavigate();
   return (
     <Card className={cn(
@@ -318,8 +350,13 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
       isRecommended && "ring-1 ring-primary/30 bg-slate-50/50 shadow-md shadow-primary/5"
     )}>
       {isRecommended && (
-        <div className="absolute top-0 right-0 p-8">
-          <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter flex items-center gap-2 shadow-2xl shadow-primary/30 italic">
+        <div className="absolute top-0 right-0 p-8 flex flex-col items-end gap-2">
+          {isApplied && (
+            <Badge className="bg-emerald-500 text-white border-none px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter flex items-center gap-2 shadow-lg">
+              <CheckCircle2 className="h-3 w-3" /> APPLIED
+            </Badge>
+          )}
+          <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter flex items-center gap-2 shadow-2xl shadow-primary/30">
             <Zap className="h-3 w-3 fill-current animate-pulse" /> {matchScore}% MATCH
           </Badge>
         </div>
@@ -334,8 +371,8 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
             {job.companyName.charAt(0)}
           </div>
           <div className="space-y-1.5 flex-1 min-w-0">
-            <h4 className="font-black text-2xl leading-none uppercase italic tracking-tighter group-hover:text-primary transition-colors text-slate-900 truncate">{job.roleTitle}</h4>
-            <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] italic">
+            <h4 className="font-black text-2xl leading-none uppercase tracking-tighter group-hover:text-primary transition-colors text-slate-900 truncate">{job.roleTitle}</h4>
+            <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
               <Building2 className="h-3.5 w-3.5 text-primary/50" /> {job.companyName}
             </div>
           </div>
@@ -348,19 +385,19 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
           <Badge variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-500 font-black text-[9px] flex items-center gap-2 px-4 py-2 uppercase tracking-widest shadow-none">
             <MapPin className="h-3.5 w-3.5 text-primary/40" /> {job.locationType}
           </Badge>
-          <div className="ml-auto flex items-center gap-2 text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2 rounded-2xl border border-rose-100 italic">
+          <div className="ml-auto flex items-center gap-2 text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2 rounded-2xl border border-rose-100">
             <Clock className="h-3.5 w-3.5" /> {format(new Date(job.deadline), 'dd MMM')}
           </div>
         </div>
 
         <div className="space-y-4">
-          <p className="text-[11px] text-slate-400 font-bold leading-relaxed line-clamp-3 min-h-[48px] italic">{job.description}</p>
+          <p className="text-[11px] text-slate-400 font-bold leading-relaxed line-clamp-3 min-h-[48px]">{job.description}</p>
           <div className="flex flex-wrap gap-2">
             {job.skills.slice(0, 3).map((s: string) => (
-              <Badge key={s} variant="secondary" className="bg-slate-50 text-slate-600 border border-slate-200 text-[9px] font-black py-1.5 px-3 rounded-xl uppercase tracking-widest italic shadow-none">{s}</Badge>
+              <Badge key={s} variant="secondary" className="bg-slate-50 text-slate-600 border border-slate-200 text-[9px] font-black py-1.5 px-3 rounded-xl uppercase tracking-widest shadow-none">{s}</Badge>
             ))}
             {job.skills.length > 3 && (
-              <Badge variant="secondary" className="bg-primary/5 text-primary/60 border border-primary/10 text-[9px] font-black py-1.5 px-3 rounded-xl uppercase tracking-widest italic shadow-none">
+              <Badge variant="secondary" className="bg-primary/5 text-primary/60 border border-primary/10 text-[9px] font-black py-1.5 px-3 rounded-xl uppercase tracking-widest shadow-none">
                 +{job.skills.length - 3} MORE
               </Badge>
             )}
@@ -375,12 +412,20 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended }: any) {
           >
             VIEW DETAILS
           </Button>
-          <Button
-            className="flex-1 h-14 rounded-2xl font-black gap-3 shadow-lg shadow-primary/10 transition-all group-hover:translate-y-[-2px] group-hover:shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest"
-            onClick={onApply}
-          >
-            APPLY NOW <ChevronRight className="h-4 w-4" />
-          </Button>
+          {isApplied ? (
+            <Button
+              className="flex-1 h-14 rounded-2xl font-black gap-3 bg-emerald-500 text-white cursor-default uppercase text-[10px] tracking-widest"
+            >
+              <CheckCircle2 className="h-4 w-4" /> APPLIED
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 h-14 rounded-2xl font-black gap-3 shadow-lg shadow-primary/20 transition-all group-hover:translate-y-[-2px] group-hover:shadow-primary/20 bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest"
+              onClick={onApply}
+            >
+              APPLY NOW <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -13,7 +13,7 @@ import {
   Calendar as CalendarIcon, Clock, Video, ArrowLeft,
   Target, Zap, ShieldCheck, Sparkles, Building2,
   User, Activity, Globe, Info, ChevronRight,
-  ExternalLink
+  ExternalLink, FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -102,8 +102,8 @@ export default function ScheduleInterview() {
 
   return (
     <DashboardLayout
-      title="Tactical Scheduling"
-      subtitle={`Establishing uplink for ${student?.name || 'Candidate'} — ${round.title}`}
+      title="Schedule Interview"
+      subtitle={`Scheduling interview for ${student?.name || 'Candidate'} — ${round.title}`}
     >
       <div className="max-w-[1400px] mx-auto pb-12 space-y-10">
 
@@ -122,7 +122,7 @@ export default function ScheduleInterview() {
                   </div>
                   {round.title}
                 </CardTitle>
-                <CardDescription className="font-bold text-xs uppercase tracking-[0.2em] text-muted-foreground/50">Mission Coordinate: {job?.roleTitle}</CardDescription>
+                <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground/50">Position: {job?.roleTitle}</CardDescription>
               </CardHeader>
 
               <CardContent className="p-10 space-y-10">
@@ -158,7 +158,7 @@ export default function ScheduleInterview() {
 
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
-                        <Globe className="h-3.5 w-3.5" /> Neural Link URL (Google Meet)
+                        <Globe className="h-3.5 w-3.5" /> Meeting Link (Google Meet / Zoom)
                       </Label>
                       <div className="relative group">
                         <Video className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -170,7 +170,7 @@ export default function ScheduleInterview() {
                           className="h-16 pl-14 rounded-2xl border-2 font-bold bg-muted/10 focus-visible:ring-primary/20 shadow-inner"
                         />
                       </div>
-                      <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest ml-1 italic">* Ensure link remains active for 90 minutes post-start.</p>
+                      <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest ml-1">* Ensure link remains active for 90 minutes post-start.</p>
                     </div>
                   </div>
                 </div>
@@ -184,14 +184,14 @@ export default function ScheduleInterview() {
                   </div>
                   <div className="flex gap-4 w-full md:w-auto">
                     <Button variant="ghost" className="h-14 px-8 rounded-2xl font-black uppercase text-xs tracking-widest" onClick={() => navigate('/professional/dashboard')}>
-                      Abort Protocol
+                      Cancel
                     </Button>
                     <Button
                       disabled={!selectedDate || !time || !meetingLink || scheduleInterviewMutation.isPending}
                       onClick={handleSchedule}
                       className="h-14 px-10 flex-1 md:flex-none rounded-2xl bg-primary text-white font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/20 group/btn"
                     >
-                      {scheduleInterviewMutation.isPending ? 'Synchronizing...' : 'Initialize Schedule'}
+                      {scheduleInterviewMutation.isPending ? 'Scheduling...' : 'Confirm Schedule'}
                       <ChevronRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                     </Button>
                   </div>
@@ -210,18 +210,29 @@ export default function ScheduleInterview() {
                     <User className="h-8 w-8" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-black uppercase italic tracking-tighter">{student?.name}</h4>
+                    <h4 className="text-xl font-black uppercase tracking-tighter">{student?.name}</h4>
                     <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{student?.degree}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/10 p-3 rounded-xl border border-white/10">
+                    <p className="text-[8px] font-black uppercase text-white/40 mb-1">CGPA</p>
+                    <p className="text-sm font-black text-white">{student?.cgpa || 'N/A'}</p>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-xl border border-white/10">
+                    <p className="text-[8px] font-black uppercase text-white/40 mb-1">Degree</p>
+                    <p className="text-[10px] font-black text-white truncate">{student?.degree || 'N/A'}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/40">
-                    <span>Skills Matrix</span>
-                    <span>Expertise level</span>
+                    <span>Skills</span>
+                    <span>Recent</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {student?.skills?.map((skill: string) => (
+                    {student?.skills?.slice(0, 5).map((skill: string) => (
                       <Badge key={skill} className="bg-white/10 text-white border-white/20 font-bold uppercase text-[9px] px-3">
                         {skill}
                       </Badge>
@@ -229,9 +240,13 @@ export default function ScheduleInterview() {
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full h-14 rounded-2xl bg-white/5 border-white/20 hover:bg-white/10 font-bold text-xs uppercase tracking-widest flex items-center gap-3">
-                  <ExternalLink className="h-4 w-4" /> View Full Intelligence
-                </Button>
+                {student?.resumeUrl && (
+                  <Button variant="outline" className="w-full h-14 rounded-2xl bg-white/5 border-white/20 hover:bg-white/10 font-bold text-xs uppercase tracking-widest flex items-center gap-3" asChild>
+                    <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
+                      <FileText className="h-4 w-4" /> View Resume
+                    </a>
+                  </Button>
+                )}
               </div>
             </Card>
 
@@ -263,7 +278,7 @@ export default function ScheduleInterview() {
                     <Sparkles className="h-4 w-4" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Protocol Reminder</span>
                   </div>
-                  <p className="text-[11px] font-medium leading-relaxed italic text-muted-foreground">
+                  <p className="text-[11px] font-medium leading-relaxed text-muted-foreground">
                     Scheduled tasks automatically update the student's neural feed. No further notification required.
                   </p>
                 </div>

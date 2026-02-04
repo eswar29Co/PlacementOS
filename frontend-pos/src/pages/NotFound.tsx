@@ -28,7 +28,7 @@ const NotFound = () => {
         </div>
 
         <div className="space-y-4">
-          <h1 className="text-6xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">
+          <h1 className="text-6xl font-black tracking-tighter uppercase text-slate-900 leading-none">
             NODE <span className="text-primary">MISSING</span>
           </h1>
           <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px] max-w-xs mx-auto">

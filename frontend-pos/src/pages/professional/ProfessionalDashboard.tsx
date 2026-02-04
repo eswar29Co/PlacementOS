@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { applicationService, studentService, jobService } from '@/services';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { professionalService } from '@/services/professionalService';
 
 export default function ProfessionalDashboard() {
   const navigate = useNavigate();
@@ -26,10 +27,22 @@ export default function ProfessionalDashboard() {
   const professional = user as Professional;
 
   // Fetch applications assigned to this professional
-  const { data: applicationsData, isLoading } = useQuery({
+  const { data: applicationsData, isLoading: appsLoading } = useQuery({
     queryKey: ['assigned-applications'],
     queryFn: () => applicationService.getAssignedApplications(),
+    refetchInterval: 10000, // Live updates every 10 seconds
   });
+
+  // Fetch real-time professional statistics
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['professional-stats', user?.id],
+    queryFn: () => professionalService.getStatistics(user?.id || ''),
+    enabled: !!user?.id,
+    refetchInterval: 10000, // Live updates every 10 seconds
+  });
+
+  const profStats = statsData?.data?.statistics;
+  const dynProfessional = statsData?.data?.professional || professional;
   const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
 
   const myAssignments = applications;
@@ -57,13 +70,13 @@ export default function ProfessionalDashboard() {
   });
 
   const stats = [
-    { label: 'Interviews Taken', value: professional.interviewsTaken, icon: Activity, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Interviews Taken', value: profStats?.totalInterviews || 0, icon: Activity, color: 'text-primary', bg: 'bg-primary/5' },
     { label: 'Scheduled', value: scheduled.length, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50/5' },
     { label: 'Pending', value: pending.length, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50/5' },
-    { label: 'Average Rating', value: `${professional.rating.toFixed(1)}/5`, icon: Star, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
+    { label: 'Average Rating', value: `${(profStats?.rating || 0).toFixed(1)}/5`, icon: Star, color: 'text-emerald-600', bg: 'bg-emerald-50/5' },
   ];
 
-  if (isLoading) {
+  if (appsLoading || statsLoading) {
     return (
       <DashboardLayout title="Dashboard" subtitle="Loading your dashboard...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
@@ -108,12 +121,21 @@ export default function ProfessionalDashboard() {
                   </div>
                 </div>
                 <div className="flex gap-4 w-full md:w-auto">
-                  <div className="flex-1 md:flex-none flex items-center gap-4 bg-slate-50 px-8 py-4 rounded-3xl border border-slate-100 shadow-sm">
+                  <div className="flex-1 md:flex-none flex items-center gap-4 bg-slate-50 px-8 py-4 rounded-3xl border border-slate-100 shadow-sm transition-all group-hover:bg-slate-100">
                     <div className="text-center">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Impact Rating</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-3xl font-black text-slate-900 tracking-tighter">{professional.rating.toFixed(1)}</span>
+                        <span className="text-3xl font-black text-slate-900 tracking-tighter">{profStats?.impactRating || '0.0'}</span>
                         <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 md:flex-none flex items-center gap-4 bg-slate-50 px-8 py-4 rounded-3xl border border-slate-100 shadow-sm transition-all group-hover:bg-slate-100 hidden sm:flex">
+                    <div className="text-center">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Recommend Rate</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-black text-indigo-600 tracking-tighter">{profStats?.recommendationRate || '0'}%</span>
+                        <Award className="h-5 w-5 text-indigo-500" />
                       </div>
                     </div>
                   </div>
@@ -211,7 +233,7 @@ export default function ProfessionalDashboard() {
                     <AssignmentCard
                       key={app.id || app._id}
                       app={app}
-                      actionLabel="Start Interview"
+                      actionLabel="Submit Feedback"
                       onClick={() => navigate(`/professional/conduct/${app.id || app._id}`)}
                       isScheduled
                     />
@@ -303,14 +325,28 @@ function AssignmentCard({ app, actionLabel, onClick, isScheduled, isCompleted }:
           <div className="flex gap-4">
             {!isCompleted ? (
               <>
-                <Button className="flex-1 h-16 rounded-[1.5rem] bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 gap-3 group/btn" onClick={onClick}>
-                  {actionLabel} <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
-                {isScheduled && app.meetingLink && (
-                  <Button variant="outline" className="h-16 w-16 rounded-[1.5rem] border-slate-200 group/link bg-white hover:bg-slate-50" asChild>
-                    <a href={app.meetingLink} target="_blank" rel="noopener noreferrer">
-                      <Video className="h-5 w-5 text-primary group-hover/link:animate-pulse" />
-                    </a>
+                {isScheduled && app.meetingLink ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-16 rounded-[1.5rem] border-2 border-primary text-primary hover:bg-primary/5 font-black uppercase text-xs tracking-widest gap-3 group/link"
+                      asChild
+                    >
+                      <a href={app.meetingLink} target="_blank" rel="noopener noreferrer">
+                        <Video className="h-5 w-5 group-hover/link:animate-pulse" />
+                        Join Interview
+                      </a>
+                    </Button>
+                    <Button
+                      className="flex-1 h-16 rounded-[1.5rem] bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 gap-3 group/btn"
+                      onClick={onClick}
+                    >
+                      Rate Interview <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </>
+                ) : (
+                  <Button className="flex-1 h-16 rounded-[1.5rem] bg-primary text-white font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 gap-3 group/btn" onClick={onClick}>
+                    {actionLabel} <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                   </Button>
                 )}
               </>

@@ -1,21 +1,45 @@
 import { Response } from 'express';
 import { Job } from '../models/Job';
+import { Admin } from '../models/Admin';
 import { Student } from '../models/Student';
 import { Professional } from '../models/Professional';
 import { Application } from '../models/Application';
 import { ApiResponse } from '../utils/ApiResponse';
 import { AuthRequest } from '../middleware/auth';
 
-export const getAdminAnalytics = async (_req: AuthRequest, res: Response) => {
+export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
     try {
-        // 1. Overall Statistics
-        const totalJobs = await Job.countDocuments();
-        const totalStudents = await Student.countDocuments();
-        const totalProfessionals = await Professional.countDocuments();
-        const totalApplications = await Application.countDocuments();
+        const { userId, role: userRole } = req.user!;
 
-        // 2. Round Analytics (Passed/Failed for each round)
+        let filter: any = {};
+        if (userRole === 'admin') {
+            const admin = await Admin.findById(userId);
+            if (admin && admin.collegeId) {
+                filter.collegeId = admin.collegeId;
+            }
+        }
+
+        // 1. Overall Statistics
+        const totalJobs = await Job.countDocuments(filter);
+
+        // For Students and Professionals, they also have collegeId if relevant
+        const studentFilter = filter.collegeId ? { collegeId: filter.collegeId } : {};
+        const totalStudents = await Student.countDocuments(studentFilter);
+        const totalProfessionals = await Professional.countDocuments(); // Professionals might be global
+
+        // Application filter needs careful handling because applications are linked to students
+        let appFilter: any = {};
+        if (filter.collegeId) {
+            const studentsInCollege = await Student.find({ collegeId: filter.collegeId }).select('_id');
+            const studentIds = studentsInCollege.map((s: any) => s._id);
+            appFilter.studentId = { $in: studentIds };
+        }
+
+        const totalApplications = await Application.countDocuments(appFilter);
+
+        // 2. Round Analytics
         const roundStats = await Application.aggregate([
+            { $match: appFilter },
             {
                 $project: {
                     resumePassed: { $eq: ['$resumeApproved', true] },
@@ -51,6 +75,7 @@ export const getAdminAnalytics = async (_req: AuthRequest, res: Response) => {
 
         // 4. CGPA Stats
         const cgpaStats = await Application.aggregate([
+            { $match: appFilter },
             {
                 $lookup: {
                     from: 'students',
@@ -90,12 +115,12 @@ export const getAdminAnalytics = async (_req: AuthRequest, res: Response) => {
             { $sort: { _id: 1 } }
         ]);
 
-        // 5. Monthly Application Trends (Last 6 months)
+        // 5. Monthly Application Trends
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
         const monthlyTrends = await Application.aggregate([
-            { $match: { appliedAt: { $gte: sixMonthsAgo } } },
+            { $match: { ...appFilter, appliedAt: { $gte: sixMonthsAgo } } },
             {
                 $group: {
                     _id: {
@@ -123,6 +148,7 @@ export const getAdminAnalytics = async (_req: AuthRequest, res: Response) => {
 
         // 6. Application Status Distribution
         const applicationStatus = await Application.aggregate([
+            { $match: appFilter },
             { $group: { _id: '$status', count: { $sum: 1 } } },
             { $project: { name: '$_id', value: '$count', _id: 0 } }
         ]);
@@ -133,10 +159,10 @@ export const getAdminAnalytics = async (_req: AuthRequest, res: Response) => {
                 totalStudents,
                 totalProfessionals,
                 totalApplications,
-                activeApplications: await Application.countDocuments({ status: { $nin: ['hired', 'rejected', 'offer_accepted'] } })
+                activeApplications: await Application.countDocuments({ ...appFilter, status: { $nin: ['hired', 'rejected', 'offer_accepted'] } })
             },
             roundBreakdown,
-            cgpaStats: cgpaStats.map(s => ({ range: s._id, passed: s.passed, failed: s.failed })),
+            cgpaStats: cgpaStats.map((s: any) => ({ range: s._id, passed: s.passed, failed: s.failed })),
             monthlyTrends,
             applicationStatus
         });
@@ -152,10 +178,23 @@ export const getAdminAnalytics = async (_req: AuthRequest, res: Response) => {
 export const getStudentProfileHistory = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+        const { userId, role } = req.user!;
+
         const student = await Student.findById(id).select('-password -refreshToken');
 
         if (!student) {
             return ApiResponse.notFound(res, 'Student not found');
+        }
+
+        // Security check for TPO (Admin role)
+        if (role === 'admin') {
+            const admin = await Admin.findById(userId);
+            if (admin && admin.collegeId) {
+                // Check if student belongs to the same college
+                if (!student.collegeId || student.collegeId.toString() !== admin.collegeId.toString()) {
+                    return ApiResponse.forbidden(res, 'You are not authorized to view students from other colleges');
+                }
+            }
         }
 
         const applications = await Application.find({ studentId: id })

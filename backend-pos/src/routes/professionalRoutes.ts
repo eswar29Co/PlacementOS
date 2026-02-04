@@ -16,21 +16,21 @@ const router = Router();
  * @desc    Get all professionals
  * @access  Private (Admin)
  */
-router.get('/', authenticate, authorize('admin'), getAllProfessionals);
+router.get('/', authenticate, authorize('admin', 'superadmin'), getAllProfessionals);
 
 /**
  * @route   GET /api/v1/professionals/pending
  * @desc    Get pending professionals
  * @access  Private (Admin)
  */
-router.get('/pending', authenticate, authorize('admin'), getPendingProfessionals);
+router.get('/pending', authenticate, authorize('superadmin'), getPendingProfessionals);
 
 /**
  * @route   GET /api/v1/professionals/available
  * @desc    Get available professionals for assignment
  * @access  Private (Admin)
  */
-router.get('/available', authenticate, authorize('admin'), getAvailableProfessionals);
+router.get('/available', authenticate, authorize('admin', 'superadmin'), getAvailableProfessionals);
 
 /**
  * @route   GET /api/v1/professionals/:id/statistics
@@ -44,7 +44,7 @@ router.get('/:id/statistics', authenticate, getProfessionalStatistics);
  * @desc    Approve/Reject professional
  * @access  Private (Admin)
  */
-router.put('/:id/status', authenticate, authorize('admin'), updateProfessionalStatus);
+router.put('/:id/status', authenticate, authorize('superadmin'), updateProfessionalStatus);
 
 /**
  * @route   PUT /api/v1/professionals/profile

@@ -97,7 +97,7 @@ export default function ProfessionalProfile() {
               <Info className="h-10 w-10 text-primary/40" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-black uppercase tracking-tighter">NO <span className="text-primary italic">DATA</span></h3>
+              <h3 className="text-2xl font-black uppercase tracking-tighter">NO <span className="text-primary">DATA</span></h3>
               <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Profile not found</p>
             </div>
           </Card>
@@ -215,7 +215,7 @@ export default function ProfessionalProfile() {
                     {techStack.length === 0 ? (
                       <div className="flex flex-col items-center justify-center w-full space-y-4 opacity-20">
                         <Network className="h-12 w-12 text-slate-400" />
-                        <p className="text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-400">No Skills Added</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">No Skills Added</p>
                       </div>
                     ) : (
                       techStack.map((tech) => (
@@ -292,7 +292,7 @@ export default function ProfessionalProfile() {
                 <LedgerItem label="System Status" value={professional.status?.toUpperCase()} valueColor="text-emerald-600" icon={Activity} />
                 <LedgerItem label="Pending Interviews" value={professional.activeInterviewCount} icon={Briefcase} />
                 <div className="pt-6 border-t border-slate-100">
-                  <p className="text-[10px] font-medium text-slate-400 leading-relaxed italic">
+                  <p className="text-[10px] font-medium text-slate-400 leading-relaxed">
                     Your basic account details are managed by the admin. Please contact support for changes.
                   </p>
                 </div>
@@ -306,7 +306,7 @@ export default function ProfessionalProfile() {
                 <Zap className="absolute -right-8 -bottom-8 h-40 w-40 text-slate-50 group-hover/save:rotate-12 transition-transform duration-1000" />
                 <div className="space-y-8 relative z-10">
                   <div className="space-y-3">
-                    <h4 className="text-2xl font-black uppercase leading-tight italic text-slate-900">SAVE PROFILE</h4>
+                    <h4 className="text-2xl font-black uppercase leading-tight text-slate-900">SAVE PROFILE</h4>
                     <p className="text-slate-500 text-xs font-bold leading-relaxed">Keep your profile updated to match with the most relevant candidates.</p>
                   </div>
                   <Button
@@ -328,7 +328,7 @@ export default function ProfessionalProfile() {
                   <CheckCircle2 className="h-5 w-5" />
                   <span className="text-[10px] font-black uppercase tracking-widest">Pro Tip</span>
                 </div>
-                <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">
+                <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
                   Keep your bio and skills updated to help students understand your expectations.
                 </p>
               </div>

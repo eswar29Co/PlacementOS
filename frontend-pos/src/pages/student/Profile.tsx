@@ -71,7 +71,7 @@ export default function Profile() {
                 <div className="relative shrink-0">
                   <div className="relative p-1 rounded-[3.5rem] bg-slate-100">
                     <Avatar className="h-44 w-44 rounded-[3.2rem] bg-slate-50 flex items-center justify-center border-4 border-white shadow-xl text-slate-300 text-6xl font-black transition-all duration-500 group-hover/hero:scale-[1.02]">
-                      <AvatarFallback className="bg-transparent italic tracking-tighter">
+                      <AvatarFallback className="bg-transparent tracking-tighter">
                         {student?.name?.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                       <AvatarImage src={student?.avatar} />
@@ -87,7 +87,7 @@ export default function Profile() {
                 <div className="flex-1 text-center lg:text-left space-y-6">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
-                      <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">
+                      <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase text-slate-900 leading-none">
                         {student?.name?.split(' ')[0]}<span className="text-primary">{student?.name?.split(' ')[1] || ''}</span>
                       </h2>
                       <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-[0.3em] inline-flex items-center gap-2">
@@ -97,7 +97,7 @@ export default function Profile() {
                     </div>
                     <div className="flex items-center justify-center lg:justify-start gap-3">
                       <div className="h-px w-12 bg-slate-200" />
-                      <p className="text-slate-400 font-bold flex items-center gap-3 uppercase tracking-[0.4em] text-[10px] italic">
+                      <p className="text-slate-400 font-bold flex items-center gap-3 uppercase tracking-[0.4em] text-[10px]">
                         <GraduationCap className="h-4 w-4 text-primary" /> {student?.branch} <span className="text-slate-200">•</span> {student?.college}
                       </p>
                     </div>
@@ -131,7 +131,7 @@ export default function Profile() {
                 <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10" />
                 <div className="flex items-center justify-between relative z-10">
                   <div className="space-y-2">
-                    <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
+                    <CardTitle className="text-3xl font-black uppercase tracking-tighter flex items-center gap-4 text-slate-900">
                       <Terminal className="h-8 w-8 text-primary" /> ACCOUNT INFORMATION
                     </CardTitle>
                     <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">Manage your basic details and academic info</CardDescription>
@@ -163,7 +163,7 @@ export default function Profile() {
                   <div className="flex flex-wrap gap-4 p-12 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 min-h-[160px] relative overflow-hidden group/matrix">
                     <div className="absolute bottom-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover/matrix:scale-150 transition-transform duration-1000" />
                     {student?.skills?.map(skill => (
-                      <Badge key={skill} className="h-14 px-8 rounded-2xl bg-white text-slate-900 border border-slate-200 hover:border-primary/50 hover:bg-slate-50 transition-all font-black uppercase text-[11px] tracking-[0.2em] shadow-sm italic cursor-default">
+                      <Badge key={skill} className="h-14 px-8 rounded-2xl bg-white text-slate-900 border border-slate-200 hover:border-primary/50 hover:bg-slate-50 transition-all font-black uppercase text-[11px] tracking-[0.2em] shadow-sm cursor-default">
                         {skill}
                       </Badge>
                     ))}
@@ -182,10 +182,10 @@ export default function Profile() {
                   <div className="absolute top-0 right-0 h-64 w-64 bg-primary/5 rounded-full blur-[100px] -z-10" />
                   <div className="space-y-8 relative z-10 text-center md:text-left">
                     <div className="space-y-2">
-                      <h3 className="text-4xl font-black uppercase italic tracking-tighter leading-none">PORTFOLIO <span className="text-primary italic">WEBSITE</span></h3>
+                      <h3 className="text-4xl font-black uppercase tracking-tighter leading-none">PORTFOLIO <span className="text-primary">WEBSITE</span></h3>
                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">YOUR PROFESSIONAL ONLINE PRESENCE</p>
                     </div>
-                    <p className="text-slate-500 font-bold text-sm leading-relaxed max-w-sm italic">
+                    <p className="text-slate-500 font-bold text-sm leading-relaxed max-w-sm">
                       Create a professional portfolio website based on your profile and skills to help recruiters find you.
                     </p>
                     <Button className="h-16 px-12 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl shadow-lg shadow-primary/20 uppercase tracking-[0.2em] text-xs transition-all hover:scale-105">CREATE PORTFOLIO</Button>
@@ -202,7 +202,7 @@ export default function Profile() {
           <div className="lg:col-span-4 space-y-10">
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border">
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50">
-                <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
+                <CardTitle className="text-xl font-black uppercase tracking-tighter flex items-center gap-4 text-slate-900">
                   <Briefcase className="h-6 w-6 text-primary" /> RESUME & MATCHING
                 </CardTitle>
               </CardHeader>
@@ -212,7 +212,7 @@ export default function Profile() {
                   <label htmlFor="resume-upload" className="block p-14 border-2 border-dashed border-slate-200 rounded-[3rem] text-center hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50 hover:bg-slate-50 shadow-sm group/upload overflow-hidden relative">
                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Upload className="h-14 w-14 text-slate-300 mx-auto mb-6 group-hover:scale-110 group-hover:text-primary transition-all duration-500" />
-                    <p className="font-black text-[11px] uppercase tracking-[0.4em] text-slate-400 italic relative z-10 group-hover:text-slate-600">
+                    <p className="font-black text-[11px] uppercase tracking-[0.4em] text-slate-400 relative z-10 group-hover:text-slate-600">
                       {resumeName ? `LOADED: ${resumeName}` : 'UPLOAD RESUME'}
                     </p>
                   </label>
@@ -246,9 +246,9 @@ export default function Profile() {
                       <div className="flex justify-between items-end">
                         <div className="space-y-1">
                           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">RESUME SCORE</p>
-                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic animate-pulse">Good Profile Match</p>
+                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest animate-pulse">Good Profile Match</p>
                         </div>
-                        <p className="text-5xl font-black text-primary italic leading-none">{atsAnalysis.atsScore}<span className="text-xs opacity-30 not-italic ml-1 font-bold">/100</span></p>
+                        <p className="text-5xl font-black text-primary leading-none">{atsAnalysis.atsScore}<span className="text-xs opacity-30 not-italic ml-1 font-bold">/100</span></p>
                       </div>
                       <div className="relative h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1">
                         <div className="h-full bg-primary rounded-full transition-all duration-1500 ease-out shadow-[0_0_15px_rgba(20,184,166,0.3)]" style={{ width: `${atsAnalysis.atsScore}%` }}>
@@ -259,19 +259,19 @@ export default function Profile() {
 
                     <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 relative overflow-hidden group/feedback">
                       <Sparkles className="absolute -right-6 -top-6 h-24 w-24 text-primary opacity-5 rotate-12 transition-transform group-hover/feedback:scale-125" />
-                      <p className="text-xs font-bold leading-relaxed text-slate-500 italic relative z-10">{atsAnalysis.summary}</p>
+                      <p className="text-xs font-bold leading-relaxed text-slate-500 relative z-10">{atsAnalysis.summary}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
                       <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group/metric">
                         <div className="absolute top-0 right-0 h-16 w-16 bg-primary/5 rounded-full blur-2xl" />
                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">MATCHING KEYWORDS</p>
-                        <p className="text-3xl font-black text-slate-900 italic leading-none">{atsAnalysis.keywordMatches.length}</p>
+                        <p className="text-3xl font-black text-slate-900 leading-none">{atsAnalysis.keywordMatches.length}</p>
                       </div>
                       <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group/metric">
                         <div className="absolute top-0 right-0 h-16 w-16 bg-blue-500/5 rounded-full blur-2xl" />
                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.3em] mb-3">WORD COUNT</p>
-                        <p className="text-3xl font-black text-slate-900 italic leading-none">{atsAnalysis.readability.wordCount}</p>
+                        <p className="text-3xl font-black text-slate-900 leading-none">{atsAnalysis.readability.wordCount}</p>
                       </div>
                     </div>
 
@@ -287,8 +287,8 @@ export default function Profile() {
                   <Activity className="h-8 w-8 text-amber-500" />
                 </div>
                 <div className="space-y-3">
-                  <h4 className="font-black text-[11px] uppercase tracking-[0.3em] text-amber-600 italic">DATA PRIVACY</h4>
-                  <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">
+                  <h4 className="font-black text-[11px] uppercase tracking-[0.3em] text-amber-600">DATA PRIVACY</h4>
+                  <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
                     Your data is securely stored and protected. We use advanced encryption to keep your info safe.
                   </p>
                 </div>
@@ -307,7 +307,7 @@ function MetricBadge({ icon: Icon, label, value, color }: any) {
       <Icon className={cn("h-4.5 w-4.5", color)} />
       <div className="flex items-baseline gap-2">
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</span>
-        <span className="text-sm font-black text-slate-900 italic">{value}</span>
+        <span className="text-sm font-black text-slate-900">{value}</span>
       </div>
     </div>
   );

@@ -31,17 +31,17 @@ export default function Splash() {
         {/* Textual Identity */}
         <div className="space-y-6">
           <div className="space-y-1">
-            <h1 className="text-7xl md:text-8xl font-black text-slate-900 italic tracking-tighter uppercase leading-[0.8]">
-              PLACEMENT<span className="text-primary italic">OS</span>
+            <h1 className="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase leading-[0.8]">
+              PLACEMENT<span className="text-primary">OS</span>
             </h1>
             <div className="flex items-center justify-center gap-4 mt-2">
               <div className="h-px w-12 bg-slate-100" />
-              <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.6em] italic">Advanced Recruitment Platform</p>
+              <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.6em]">Advanced Recruitment Platform</p>
               <div className="h-px w-12 bg-slate-100" />
             </div>
           </div>
 
-          <h2 className="text-xl md:text-2xl text-slate-400 font-bold uppercase tracking-tight italic max-w-2xl mx-auto leading-relaxed">
+          <h2 className="text-xl md:text-2xl text-slate-400 font-bold uppercase tracking-tight max-w-2xl mx-auto leading-relaxed">
             The next-generation <span className="text-slate-600">career platform</span> for students and top-tier companies.
           </h2>
         </div>
@@ -55,7 +55,7 @@ export default function Splash() {
         </div>
 
         {/* CTA Section */}
-        <div className="space-y-6 mt-4">
+        <div className="flex flex-col sm:flex-row items-center gap-6 mt-4">
           <Button
             onClick={() => navigate('/login')}
             className="group h-16 px-12 rounded-[2rem] bg-primary hover:bg-primary/90 text-white font-black uppercase text-sm tracking-[0.2em] shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-4"
@@ -63,11 +63,11 @@ export default function Splash() {
             Get Started
             <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
           </Button>
-
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-            <Users className="h-3 w-3" /> Secure Global Platform <span className="text-primary">•</span> Official v2.0
-          </p>
         </div>
+
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2 mt-4">
+          <Users className="h-3 w-3" /> Secure Global Platform <span className="text-primary">•</span> Official v2.0
+        </p>
       </div>
 
       {/* Footer Branding */}

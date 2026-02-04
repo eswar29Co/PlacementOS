@@ -75,4 +75,14 @@ export const professionalService = {
       throw new Error(handleApiError(error));
     }
   },
+
+  // Get professional statistics
+  async getStatistics(id: string): Promise<{ success: boolean; data: any }> {
+    try {
+      const response = await apiClient.get(`/professionals/${id}/statistics`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
 };

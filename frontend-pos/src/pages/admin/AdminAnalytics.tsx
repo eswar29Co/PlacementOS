@@ -64,7 +64,7 @@ export default function AdminAnalytics() {
 
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
                     <div className="space-y-2">
-                        <h1 className="text-4xl font-black tracking-tighter uppercase italic text-slate-900">PLACEMENT <span className="text-primary">INTELLIGENCE</span></h1>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900">PLACEMENT <span className="text-primary">INTELLIGENCE</span></h1>
                         <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">GOD-EYE VIEW of students, experts, and hiring outcomes</p>
                     </div>
                     <div className="flex items-center gap-4 px-6 py-3 bg-primary/5 border border-primary/10 text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm animate-pulse">
@@ -203,7 +203,7 @@ export default function AdminAnalytics() {
                                 <Info className="h-7 w-7" />
                             </div>
                             <div className="space-y-2">
-                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Executive Summary</CardTitle>
+                                <CardTitle className="text-xl font-black uppercase tracking-tighter text-slate-900">Executive Summary</CardTitle>
                                 <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Summarized system insights</CardDescription>
                             </div>
                         </CardHeader>
@@ -221,12 +221,12 @@ export default function AdminAnalytics() {
                                 <Target className="h-7 w-7" />
                             </div>
                             <div className="space-y-2">
-                                <CardTitle className="text-xl font-black uppercase tracking-tighter italic text-slate-900">Intelligence Guide</CardTitle>
+                                <CardTitle className="text-xl font-black uppercase tracking-tighter text-slate-900">Intelligence Guide</CardTitle>
                                 <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Decision support systems</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="px-10 pb-10">
-                            <p className="text-slate-500 font-bold text-xs leading-relaxed italic">
+                            <p className="text-slate-500 font-bold text-xs leading-relaxed">
                                 This dashboard provides a God-eye view of the entire placement process. Use the Hiring Pipeline tab to identify bottlenecks and the CGPA Analytics to understand selection patterns.
                             </p>
                         </CardContent>
@@ -246,7 +246,7 @@ function AnalyticsCard({ label, value, icon: Icon, color, bg }: any) {
                         <Icon className="h-8 w-8" />
                     </div>
                     <div className="text-right">
-                        <p className={cn("text-4xl font-black tracking-tighter italic leading-none", color)}>{value}</p>
+                        <p className={cn("text-4xl font-black tracking-tighter leading-none", color)}>{value}</p>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4 opacity-70">{label}</p>
                     </div>
                 </div>
@@ -265,7 +265,7 @@ function ChartCard({ title, subtitle, icon: Icon, children, className }: any) {
                         <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                        <CardTitle className="text-xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">{title}</CardTitle>
+                        <CardTitle className="text-xl font-black tracking-tighter uppercase text-slate-900 leading-none">{title}</CardTitle>
                         <CardDescription className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-2">{subtitle}</CardDescription>
                     </div>
                 </div>
@@ -281,7 +281,7 @@ function InsightItem({ text }: { text: string }) {
     return (
         <div className="flex items-center gap-4 group/item">
             <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-            <p className="text-[11px] font-bold text-slate-500 group-hover/item:text-slate-900 transition-colors uppercase tracking-tight italic">{text}</p>
+            <p className="text-[11px] font-bold text-slate-500 group-hover/item:text-slate-900 transition-colors uppercase tracking-tight">{text}</p>
         </div>
     );
 }

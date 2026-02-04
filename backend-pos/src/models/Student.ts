@@ -24,6 +24,7 @@ const studentSchema = new Schema<IStudentDocument>(
 
     // Student specific fields
     college: { type: String, required: true },
+    collegeId: { type: Schema.Types.ObjectId, ref: 'College' },
     degree: { type: String, required: true },
     branch: { type: String },
     cgpa: { type: Number, required: true, min: 0, max: 10 },
@@ -66,6 +67,7 @@ studentSchema.methods.comparePassword = async function (candidatePassword: strin
 };
 
 // Index for efficient queries
+studentSchema.index({ collegeId: 1 });
 studentSchema.index({ skills: 1 });
 studentSchema.index({ graduationYear: 1 });
 

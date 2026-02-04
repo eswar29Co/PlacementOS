@@ -20,6 +20,7 @@ import notificationRoutes from './routes/notificationRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 
 import adminRoutes from './routes/adminRoutes';
+import collegeRoutes from './routes/collegeRoutes';
 
 const app: Application = express();
 
@@ -79,6 +80,7 @@ app.use(`${API_PREFIX}/students`, studentRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/admin`, adminRoutes);
+app.use(`${API_PREFIX}/colleges`, collegeRoutes);
 
 // Static files and Client-side routing for production
 if (process.env.NODE_ENV === 'production') {

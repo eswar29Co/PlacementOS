@@ -34,7 +34,7 @@ export function Header({ title, subtitle }: HeaderProps) {
           <span className="text-[9px] font-black uppercase tracking-widest text-primary">System Online</span>
         </div>
         <div className="space-y-0.5">
-          <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">{title}</h1>
+          <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{title}</h1>
           {subtitle && (
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
               {subtitle}
@@ -100,7 +100,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                   <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
                     <ShieldCheck className="h-3 w-3 text-emerald-500" /> Security
                   </div>
-                  <p className="text-[10px] text-slate-500 italic font-medium leading-relaxed">
+                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
                     Your account is secure.
                   </p>
                 </div>

@@ -2,9 +2,12 @@ import { Response } from 'express';
 import { Student } from '../models/Student';
 import { Professional } from '../models/Professional';
 import { Admin } from '../models/Admin';
+import { SuperAdmin } from '../models/SuperAdmin';
+import { College } from '../models/College';
 import { generateToken, generateRefreshToken } from '../utils/jwt';
 import { ApiResponse } from '../utils/ApiResponse';
 import { AuthRequest } from '../middleware/auth';
+import { createNotification } from '../utils/notifHelper';
 
 export const register = async (req: AuthRequest, res: Response) => {
   try {
@@ -22,6 +25,9 @@ export const register = async (req: AuthRequest, res: Response) => {
       case 'admin':
         existingUser = await Admin.findOne({ email });
         break;
+      case 'superadmin':
+        existingUser = await SuperAdmin.findOne({ email });
+        break;
       default:
         return ApiResponse.badRequest(res, 'Invalid role');
     }
@@ -34,27 +40,79 @@ export const register = async (req: AuthRequest, res: Response) => {
     let user;
     switch (role) {
       case 'student':
-        user = await Student.create({ 
-          email, 
-          password, 
+        // Extract domain from email
+        const emailDomain = email.split('@')[1];
+        const college = await College.findOne({ domain: emailDomain });
+
+        if (!college) {
+          return ApiResponse.badRequest(res, `Your college domain (@${emailDomain}) is not registered. Please ask your TPO to enroll.`);
+        }
+
+        user = await Student.create({
+          email,
+          password,
           role,
-          ...userData 
+          college: college.name,
+          collegeId: college._id,
+          ...userData
         });
+
+        // Notify College Admin (TPO)
+        const collegeAdmins = await Admin.find({ collegeId: college._id });
+        for (const admin of collegeAdmins) {
+          await createNotification(
+            admin._id.toString(),
+            'student_registered',
+            'New Student Registered',
+            `${user.name} has registered from your college.`,
+            `/admin/students`
+          );
+        }
         break;
       case 'professional':
-        user = await Professional.create({ 
-          email, 
-          password, 
+        user = await Professional.create({
+          email,
+          password,
           role,
-          ...userData 
+          ...userData
         });
+
+        // Notify SuperAdmins
+        const superAdmins = await SuperAdmin.find();
+        for (const sa of superAdmins) {
+          await createNotification(
+            sa._id.toString(),
+            'professional_signup',
+            'New Professional Signup',
+            `${user.name} from ${user.company} has signed up and is pending approval.`,
+            `/super-admin/dashboard`
+          );
+        }
         break;
       case 'admin':
-        user = await Admin.create({ 
-          email, 
-          password, 
+        // Extract domain from email
+        const adminEmailDomain = email.split('@')[1];
+        const adminCollege = await College.findOne({ domain: adminEmailDomain });
+
+        if (!adminCollege) {
+          return ApiResponse.badRequest(res, `Your college domain (@${adminEmailDomain}) is not registered. Please contact Super Admin to enroll your college first.`);
+        }
+
+        user = await Admin.create({
+          email,
+          password,
           role,
-          ...userData 
+          isSuperAdmin: false,
+          collegeId: adminCollege._id,
+          ...userData
+        });
+        break;
+      case 'superadmin':
+        user = await SuperAdmin.create({
+          email,
+          password,
+          role: 'superadmin',
+          ...userData
         });
         break;
     }
@@ -105,6 +163,9 @@ export const login = async (req: AuthRequest, res: Response) => {
         break;
       case 'admin':
         user = await Admin.findOne({ email });
+        break;
+      case 'superadmin':
+        user = await SuperAdmin.findOne({ email });
         break;
       default:
         return ApiResponse.badRequest(res, 'Invalid role');
@@ -168,6 +229,9 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
       case 'admin':
         user = await Admin.findById(userId);
         break;
+      case 'superadmin':
+        user = await SuperAdmin.findById(userId);
+        break;
     }
 
     if (!user) {
@@ -197,22 +261,29 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     switch (role) {
       case 'student':
         user = await Student.findByIdAndUpdate(
-          userId, 
-          updates, 
+          userId,
+          updates,
           { new: true, runValidators: true }
         );
         break;
       case 'professional':
         user = await Professional.findByIdAndUpdate(
-          userId, 
-          updates, 
+          userId,
+          updates,
           { new: true, runValidators: true }
         );
         break;
       case 'admin':
         user = await Admin.findByIdAndUpdate(
-          userId, 
-          updates, 
+          userId,
+          updates,
+          { new: true, runValidators: true }
+        );
+        break;
+      case 'superadmin':
+        user = await SuperAdmin.findByIdAndUpdate(
+          userId,
+          updates,
           { new: true, runValidators: true }
         );
         break;
@@ -228,3 +299,4 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     return ApiResponse.error(res, error.message || 'Failed to update profile');
   }
 };
+

@@ -8,6 +8,7 @@ export { professionalService } from './professionalService';
 export { studentService } from './studentService';
 export { dashboardService } from './dashboardService';
 export { adminService } from './adminService';
+export { collegeService } from './collegeService';
 
 // Export API client for custom requests
 export { default as apiClient, handleApiError } from './api';

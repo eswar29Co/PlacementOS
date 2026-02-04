@@ -4,16 +4,44 @@ import { Application } from '../models/Application';
 import { Student } from '../models/Student';
 import { ApiResponse } from '../utils/ApiResponse';
 import { AuthRequest } from '../middleware/auth';
+import { Admin } from '../models/Admin';
+import { Notification } from '../models/Notification';
 
 // Admin: Create a job
 export const createJob = async (req: AuthRequest, res: Response) => {
   try {
+    const { userId, role } = req.user!;
+    let collegeId = req.body.collegeId;
+
+    if (role === 'admin') {
+      const admin = await Admin.findById(userId);
+      collegeId = admin?.collegeId || collegeId;
+    }
+
     const jobData = {
       ...req.body,
-      createdBy: req.user!.userId,
+      createdBy: userId,
+      collegeId
     };
 
     const job = await Job.create(jobData);
+
+    // Notify students of the college
+    if (collegeId) {
+      const students = await Student.find({ collegeId });
+      for (const student of students) {
+        await Notification.create({
+          userId: student._id,
+          type: 'new_job_posted',
+          title: 'New Opportunity!',
+          message: `${job.companyName} is hiring for ${job.roleTitle}. Apply now!`,
+          read: false,
+          createdAt: new Date(),
+          actionUrl: `/student/jobs/${job._id}`
+        });
+      }
+    }
+
     return ApiResponse.created(res, job, 'Job created successfully');
   } catch (error: any) {
     console.error('Create job error:', error);
@@ -64,15 +92,25 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
 // Get all jobs (with optional filters)
 export const getJobs = async (req: AuthRequest, res: Response) => {
   try {
-    const { 
-      isActive, 
-      locationType, 
+    const {
+      isActive,
+      locationType,
       search,
       page = 1,
-      limit = 10 
+      limit = 10
     } = req.query;
 
     const query: any = {};
+
+    if (req.user) {
+      const { role, userId } = req.user;
+      if (role === 'admin') {
+        const admin = await Admin.findById(userId);
+        if (admin && admin.collegeId) {
+          query.collegeId = admin.collegeId;
+        }
+      }
+    }
 
     if (isActive !== undefined) {
       query.isActive = isActive === 'true';
@@ -166,7 +204,7 @@ export const getRecommendedJobs = async (req: AuthRequest, res: Response) => {
         ...job.requiredTechStack.map(s => s.toLowerCase()),
       ];
 
-      const matchedSkills = studentSkills.filter(skill => 
+      const matchedSkills = studentSkills.filter(skill =>
         jobSkills.includes(skill)
       );
 
@@ -183,8 +221,8 @@ export const getRecommendedJobs = async (req: AuthRequest, res: Response) => {
     jobsWithScore.sort((a, b) => b.matchScore - a.matchScore);
 
     // Return at least 3 jobs
-    const finalJobs = jobsWithScore.length >= 3 
-      ? jobsWithScore 
+    const finalJobs = jobsWithScore.length >= 3
+      ? jobsWithScore
       : jobsWithScore;
 
     return ApiResponse.success(res, finalJobs);
@@ -195,18 +233,37 @@ export const getRecommendedJobs = async (req: AuthRequest, res: Response) => {
 };
 
 // Get job statistics (for admin dashboard)
-export const getJobStatistics = async (_: AuthRequest, res: Response) => {
+export const getJobStatistics = async (req: AuthRequest, res: Response) => {
   try {
-    const totalJobs = await Job.countDocuments();
-    const activeJobs = await Job.countDocuments({ isActive: true });
-    const expiredJobs = await Job.countDocuments({ 
-      deadline: { $lt: new Date() } 
+    const { userId, role } = req.user!;
+    let filter: any = {};
+
+    if (role === 'admin') {
+      const admin = await Admin.findById(userId);
+      if (admin && admin.collegeId) {
+        filter.collegeId = admin.collegeId;
+      }
+    }
+
+    const totalJobs = await Job.countDocuments(filter);
+    const activeJobs = await Job.countDocuments({ ...filter, isActive: true });
+    const expiredJobs = await Job.countDocuments({
+      ...filter,
+      deadline: { $lt: new Date() }
     });
 
-    const totalApplications = await Application.countDocuments();
+    let appFilter: any = {};
+    if (filter.collegeId) {
+      const collegeJobs = await Job.find({ collegeId: filter.collegeId }).select('_id');
+      const jobIds = collegeJobs.map((j: any) => j._id);
+      appFilter.jobId = { $in: jobIds };
+    }
+
+    const totalApplications = await Application.countDocuments(appFilter);
 
     // Get applications per job
     const jobsWithApplications = await Application.aggregate([
+      { $match: appFilter },
       {
         $group: {
           _id: '$jobId',

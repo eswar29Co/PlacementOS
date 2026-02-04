@@ -1,5 +1,7 @@
 import pdfParse from 'pdf-parse';
 import natural from 'natural';
+import axios from 'axios';
+import { config } from '../config';
 
 const { TfIdf } = natural;
 
@@ -8,6 +10,12 @@ export interface ATSResult {
   matchedKeywords: string[];
   missingKeywords: string[];
   suggestions: string[];
+  semantic_match?: number;
+  hasContactInfo?: boolean;
+  readability?: {
+    charCount: number;
+    wordCount: number;
+  };
 }
 
 /**
@@ -23,8 +31,46 @@ export const calculateATSScore = async (
 ): Promise<ATSResult> => {
   try {
     // Extract text from PDF
+    console.log('Extracting text from resume PDF...');
     const pdfData = await pdfParse(resumeBuffer);
-    const resumeText = pdfData.text.toLowerCase();
+    const resumeText = pdfData.text || '';
+    const resumeTextLower = resumeText.toLowerCase();
+
+    console.log(`Successfully extracted ${resumeText.length} characters from the resume.`);
+
+    if (!resumeText || resumeText.length < 50) {
+      console.warn('Resume text extraction resulted in very short or empty content. ATS score might be inaccurate.');
+    }
+
+    // Try AI Service first
+    const aiUrl = `${config.aiServiceUrl}/ats/analyze`;
+    try {
+      console.log(`Calling AI Service at ${aiUrl} for ATS analysis...`);
+      const aiResponse = await axios.post(aiUrl, {
+        resume_text: resumeText,
+        job_description: jobDescription,
+        skills_required: jobSkills
+      }, { timeout: 15000 }); // 15s timeout
+
+      if (aiResponse.data) {
+        console.log('AI Service analysis successful. Response Score:', aiResponse.data.score);
+        return {
+          score: aiResponse.data.score,
+          matchedKeywords: aiResponse.data.matching_skills,
+          missingKeywords: aiResponse.data.missing_skills,
+          suggestions: [aiResponse.data.summary, "Consider adding missing skills to improve your score."],
+          semantic_match: aiResponse.data.semantic_match,
+          hasContactInfo: aiResponse.data.hasContactInfo,
+          readability: aiResponse.data.readability
+        };
+      }
+    } catch (aiError: any) {
+      console.warn(`AI Service at ${aiUrl} failed: ${aiError.message}. Falling back to local scoring.`);
+    }
+
+    // Fallback Local Logic
+    console.log('Using local fallback logic for ATS scoring...');
+    const resumeText_local = resumeTextLower;
 
     // Prepare job requirements
     const requiredSkills = jobSkills.map(skill => skill.toLowerCase());
@@ -35,69 +81,49 @@ export const calculateATSScore = async (
     const missingKeywords: string[] = [];
 
     requiredSkills.forEach(skill => {
-      if (resumeText.includes(skill)) {
+      if (resumeText_local.includes(skill)) {
         matchedKeywords.push(skill);
       } else {
         missingKeywords.push(skill);
       }
     });
 
-    // Calculate base score from keyword matching
-    const keywordMatchScore = (matchedKeywords.length / requiredSkills.length) * 60;
+    // Calculate base score from keyword matching (50%)
+    const keywordMatchScore = (matchedKeywords.length / (requiredSkills.length || 1)) * 50;
 
-    // Use TF-IDF for semantic similarity
+    // Simple TF-IDF for fallback semantic similarity (50%)
     const tfidf = new TfIdf();
-    tfidf.addDocument(resumeText);
+    tfidf.addDocument(resumeText_local);
     tfidf.addDocument(jobDescLower);
 
-    // Calculate semantic similarity score
     let semanticScore = 0;
-    const terms = jobDescLower.split(/\s+/).filter(term => term.length > 3);
-    
+    const terms = jobDescLower.split(/\s+/).filter(term => term.length > 4);
+
     terms.forEach(term => {
-      const resumeScore = tfidf.tfidf(term, 0);
-      const jobScore = tfidf.tfidf(term, 1);
-      
-      if (resumeScore > 0 && jobScore > 0) {
-        semanticScore += Math.min(resumeScore, jobScore);
-      }
+      if (tfidf.tfidf(term, 0) > 0) semanticScore++;
     });
 
-    // Normalize semantic score (0-40)
-    const normalizedSemanticScore = Math.min((semanticScore / terms.length) * 40, 40);
+    const normalizedSemanticScore = Math.min((semanticScore / (terms.length || 1)) * 50, 50);
 
     // Calculate final ATS score
     const finalScore = Math.round(keywordMatchScore + normalizedSemanticScore);
-
-    // Generate suggestions
-    const suggestions: string[] = [];
-    
-    if (matchedKeywords.length < requiredSkills.length * 0.7) {
-      suggestions.push('Add more relevant technical skills from the job description');
-    }
-    
-    if (missingKeywords.length > 0) {
-      suggestions.push(`Include these important skills: ${missingKeywords.slice(0, 3).join(', ')}`);
-    }
-    
-    if (finalScore < 60) {
-      suggestions.push('Tailor your resume to better match the job requirements');
-      suggestions.push('Use industry-standard terminology and keywords');
-    }
-
-    if (resumeText.split(/\s+/).length < 200) {
-      suggestions.push('Consider adding more details about your experience and projects');
-    }
 
     return {
       score: Math.max(0, Math.min(100, finalScore)),
       matchedKeywords,
       missingKeywords,
-      suggestions,
+      suggestions: [
+        `Matched ${matchedKeywords.length} out of ${requiredSkills.length} core keywords.`,
+        missingKeywords.length > 0 ? `Try adding: ${missingKeywords.slice(0, 3).join(', ')}` : "Great keyword alignment!"
+      ],
+      semantic_match: Math.round(normalizedSemanticScore * 2),
+      readability: {
+        charCount: resumeText.length,
+        wordCount: resumeText.split(/\s+/).length
+      }
     };
   } catch (error) {
     console.error('ATS Score calculation error:', error);
-    // Return default score if parsing fails
     return {
       score: 50,
       matchedKeywords: [],

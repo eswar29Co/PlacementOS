@@ -72,17 +72,40 @@ export default function StudentHome() {
       <DashboardLayout title="Dashboard" subtitle="Loading your dashboard...">
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
           <div className="h-12 w-12 border-4 border-primary border-t-transparent animate-spin rounded-full shadow-xl shadow-primary/20" />
-          <p className="font-black text-primary animate-pulse text-[10px] uppercase tracking-[0.3em] italic">Loading data...</p>
+          <p className="font-black text-primary animate-pulse text-[10px] uppercase tracking-[0.3em]">Loading data...</p>
         </div>
       </DashboardLayout>
     );
   }
 
-  // Calculate platform stats based on real data (if available) or more realistic simulations
+  // Platform stats populated from real DB data
   const platformStats = [
-    { label: "Active Opportunities", value: jobs.length, trend: "REAL-TIME", color: "text-primary" },
-    { label: "Your Selection Rate", value: myApplications.length > 0 ? `${Math.round((myApplications.filter(a => ['offer_released', 'offer_accepted', 'hired'].includes(a.status)).length / myApplications.length) * 100)}%` : '0%', trend: "PERSONAL", color: "text-emerald-600" },
-    { label: "Completed Rounds", value: myApplications.reduce((acc, a) => acc + (a.timeline?.length || 0), 0), trend: "ACTIVITY", color: "text-amber-600" }
+    {
+      label: "Active Opportunities",
+      value: statsResponse.platformStats?.activeJobs || jobs.length,
+      trend: "REAL-TIME",
+      color: "text-primary"
+    },
+    {
+      label: "Selection Rate",
+      value: myApplications.length > 0
+        ? `${Math.round((myApplications.filter(a => ['offer_released', 'offer_accepted', 'hired'].includes(a.status)).length / myApplications.length) * 100)}%`
+        : '0%',
+      trend: "PERSONAL",
+      color: "text-emerald-600"
+    },
+    {
+      label: "Completed Rounds",
+      value: statsResponse.platformStats?.completedRounds || 0,
+      trend: "ACTIVITY",
+      color: "text-amber-600"
+    },
+    {
+      label: "Platform Success",
+      value: statsResponse.platformStats?.totalOffers || 0,
+      trend: "OFFERS",
+      color: "text-indigo-600"
+    }
   ];
 
   return (
@@ -113,7 +136,7 @@ export default function StudentHome() {
                   </div>
                   <div className="text-center md:text-left space-y-4">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                      <h2 className="text-5xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">
+                      <h2 className="text-5xl font-black tracking-tighter uppercase text-slate-900 leading-none">
                         {student?.name?.split(' ')[0]}<span className="text-primary">{student?.name?.split(' ')[1] || ''}</span>
                       </h2>
                       <Badge className="bg-primary/10 text-primary border border-primary/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-[0.3em] flex items-center gap-2">
@@ -121,7 +144,7 @@ export default function StudentHome() {
                         VERIFIED STUDENT
                       </Badge>
                     </div>
-                    <p className="text-slate-400 font-bold text-sm flex items-center justify-center md:justify-start gap-3 uppercase tracking-[0.3em] italic">
+                    <p className="text-slate-400 font-bold text-sm flex items-center justify-center md:justify-start gap-3 uppercase tracking-[0.3em]">
                       <Target className="h-4 w-4 text-primary" /> {student?.branch} <span className="text-primary/10">•</span> {student?.college}
                     </p>
                   </div>
@@ -146,12 +169,12 @@ export default function StudentHome() {
               <div className={cn("absolute top-0 right-0 h-16 w-16 opacity-5 rounded-full blur-2xl", stat.bg)} />
               <CardContent className="p-8 space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">{stat.label}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{stat.label}</p>
                   <div className={cn("rounded-2xl p-4 transition-transform group-hover:scale-110 duration-500", stat.bg, stat.color)}>
                     <stat.icon className="h-6 w-6" />
                   </div>
                 </div>
-                <p className={cn("text-4xl font-black tracking-tighter italic", stat.color)}>{stat.value}</p>
+                <p className={cn("text-4xl font-black tracking-tighter", stat.color)}>{stat.value}</p>
               </CardContent>
             </Card>
           ))}
@@ -165,11 +188,11 @@ export default function StudentHome() {
               <div className="absolute top-0 right-0 h-64 w-64 bg-primary/5 rounded-full blur-[100px] -z-10 group-hover/banner:scale-125 transition-transform duration-1000" />
               <CardContent className="p-12 flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
                 <div className="space-y-6 text-center md:text-left flex-1">
-                  <Badge className="bg-primary/10 text-primary border border-primary/20 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] italic mb-2">
+                  <Badge className="bg-primary/10 text-primary border border-primary/20 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] mb-2">
                     <Activity className="h-3 w-3 mr-2" /> JOB ALERTS
                   </Badge>
-                  <h3 className="text-4xl font-black leading-none uppercase italic tracking-tighter text-slate-900">READY FOR A NEW <span className="text-primary">JOB?</span></h3>
-                  <p className="text-slate-500 font-bold leading-relaxed max-w-sm italic">New companies have posted job opportunities in your field this week. Check them out and apply now.</p>
+                  <h3 className="text-4xl font-black leading-none uppercase tracking-tighter text-slate-900">READY FOR A NEW <span className="text-primary">JOB?</span></h3>
+                  <p className="text-slate-500 font-bold leading-relaxed max-w-sm">New companies have posted job opportunities in your field this week. Check them out and apply now.</p>
                   <Button size="lg" className="bg-primary shadow-lg shadow-primary/20 text-white font-black rounded-2xl px-12 h-16 hover:bg-primary/90 gap-3 uppercase text-xs tracking-[0.2em] transition-all hover:translate-y-[-4px]" onClick={() => navigate('/student/browse-jobs')}>
                     EXPLORE JOBS <ArrowRight className="h-5 w-5" />
                   </Button>
@@ -188,7 +211,7 @@ export default function StudentHome() {
               <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50 relative">
                 <div className="flex items-center justify-between relative z-10">
                   <div className="space-y-2">
-                    <CardTitle className="text-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
+                    <CardTitle className="text-3xl font-black uppercase tracking-tighter flex items-center gap-4 text-slate-900">
                       <Activity className="h-8 w-8 text-primary" /> MY APPLICATIONS
                     </CardTitle>
                     <CardDescription className="font-bold text-[10px] uppercase tracking-[0.3em] text-slate-400">TRACK THE STATUS OF YOUR APPLICATIONS</CardDescription>
@@ -204,7 +227,7 @@ export default function StudentHome() {
                     <div className="absolute inset-0 bg-primary/5 opacity-10" />
                     <Ghost className="h-20 w-20 text-slate-300 relative z-10" />
                     <div className="space-y-2 relative z-10">
-                      <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 italic">No Active Applications Found</p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">No Active Applications Found</p>
                       <Button variant="link" className="font-black text-primary uppercase text-[10px] tracking-widest" onClick={() => navigate('/student/browse-jobs')}>Apply for Jobs</Button>
                     </div>
                   </div>
@@ -224,12 +247,12 @@ export default function StudentHome() {
                                 {job?.companyName.charAt(0)}
                               </div>
                               <div className="space-y-1">
-                                <p className="font-black text-xl leading-none uppercase italic tracking-tighter text-slate-900">{job?.companyName}</p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">{job?.roleTitle}</p>
+                                <p className="font-black text-xl leading-none uppercase tracking-tighter text-slate-900">{job?.companyName}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{job?.roleTitle}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-4">
-                              <Badge className="bg-primary/10 text-primary border border-primary/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-widest italic">
+                              <Badge className="bg-primary/10 text-primary border border-primary/20 font-black px-6 py-2 rounded-full uppercase text-[10px] tracking-widest">
                                 {app.status.replace(/_/g, ' ')}
                               </Badge>
                               <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl">
@@ -240,7 +263,7 @@ export default function StudentHome() {
                           <div className="space-y-4 relative z-10 px-1">
                             <div className="flex justify-between items-end">
                               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">PROGRESS</p>
-                              <p className="text-xl font-black text-primary italic leading-none">{Math.round(progress)}%</p>
+                              <p className="text-xl font-black text-primary leading-none">{Math.round(progress)}%</p>
                             </div>
                             <div className="h-3 bg-slate-200 rounded-full overflow-hidden p-[1px] border border-slate-200 shadow-sm relative">
                               <div className="h-full bg-primary rounded-full transition-all duration-1500 ease-out" style={{ width: `${progress}%` }}>
@@ -261,7 +284,7 @@ export default function StudentHome() {
             {/* Platform Insights */}
             <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
               <CardHeader className="bg-slate-50 p-10 border-b border-slate-100 transition-colors group-hover:bg-slate-100">
-                <CardTitle className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-4 text-slate-900">
+                <CardTitle className="text-xl font-black uppercase tracking-tighter flex items-center gap-4 text-slate-900">
                   <BarChart3 className="h-6 w-6 text-primary" /> PLATFORM STATS
                 </CardTitle>
               </CardHeader>
@@ -294,8 +317,8 @@ export default function StudentHome() {
                 </div>
                 <div className="p-8 bg-white/10 rounded-[2.5rem] border border-white/20 backdrop-blur-md">
                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">UPCOMING</p>
-                  <p className="text-2xl font-black italic uppercase tracking-tighter">NO EVENTS SCHEDULED</p>
-                  <div className="mt-4 flex items-center gap-3 text-[10px] font-bold text-white/60 uppercase italic">
+                  <p className="text-2xl font-black uppercase tracking-tighter">NO EVENTS SCHEDULED</p>
+                  <div className="mt-4 flex items-center gap-3 text-[10px] font-bold text-white/60 uppercase">
                     <div className="h-1.5 w-1.5 rounded-full bg-white/40 animate-pulse" />
                     NO NEW EVENTS
                   </div>
@@ -317,7 +340,7 @@ function MetricInsight({ label, value, color }: { label: string, value: any, col
   return (
     <div className="flex items-center gap-3 bg-slate-50 px-6 py-2.5 rounded-2xl border border-slate-200 shadow-sm">
       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</span>
-      <span className={cn("text-[11px] font-black italic", color)}>{value}</span>
+      <span className={cn("text-[11px] font-black", color)}>{value}</span>
     </div>
   );
 }
@@ -327,7 +350,7 @@ function InsightMetricItem({ label, value, trend, color }: any) {
     <div className="space-y-3 group">
       <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] transition-colors group-hover:text-slate-500">{label}</p>
       <div className="flex items-center justify-between">
-        <p className="text-3xl font-black tracking-tighter text-slate-900 italic leading-none">{value}</p>
+        <p className="text-3xl font-black tracking-tighter text-slate-900 leading-none">{value}</p>
         <Badge className={cn("bg-emerald-50 text-emerald-600 border-none font-black text-[9px] uppercase tracking-widest py-1 px-3", color.replace('text-', 'text-'))}>{trend}</Badge>
       </div>
     </div>

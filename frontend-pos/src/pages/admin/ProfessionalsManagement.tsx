@@ -26,7 +26,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+import { useAppSelector } from '@/store/hooks';
+
 export default function ProfessionalsManagement() {
+  const { user, role } = useAppSelector((state) => state.auth);
+  const isSuperAdmin = (user as any)?.isSuperAdmin || role === 'superadmin';
+
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProfId, setSelectedProfId] = useState<string | null>(null);
@@ -115,7 +120,7 @@ export default function ProfessionalsManagement() {
           <CardHeader className="bg-slate-50 p-12 border-b border-slate-100">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
               <div className="space-y-2">
-                <CardTitle className="text-3xl font-black flex items-center gap-4 italic uppercase tracking-tighter text-slate-900">
+                <CardTitle className="text-3xl font-black flex items-center gap-4 uppercase tracking-tighter text-slate-900">
                   <UserCheck className="h-8 w-8 text-primary" />
                   Expert Database
                 </CardTitle>
@@ -150,7 +155,7 @@ export default function ProfessionalsManagement() {
                       <TableCell colSpan={5} className="py-48 text-center">
                         <div className="flex flex-col items-center gap-6">
                           <ShieldCheck className="h-12 w-12 text-slate-200" />
-                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter italic">No Expert Records Found</p>
+                          <p className="font-black text-2xl text-slate-300 uppercase tracking-tighter">No Expert Records Found</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -160,10 +165,10 @@ export default function ProfessionalsManagement() {
                         <TableCell className="px-12 py-10">
                           <div className="flex items-center gap-8">
                             <Avatar className="h-16 w-16 rounded-[1.5rem] border-2 border-slate-100 shadow-sm group-hover:scale-110 duration-500">
-                              <AvatarFallback className="bg-slate-100 text-primary font-black text-xl italic">{prof.name.charAt(0)}</AvatarFallback>
+                              <AvatarFallback className="bg-slate-100 text-primary font-black text-xl">{prof.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="space-y-1">
-                              <p className="font-black text-xl leading-none italic uppercase tracking-tighter text-slate-900">{prof.name}</p>
+                              <p className="font-black text-xl leading-none uppercase tracking-tighter text-slate-900">{prof.name}</p>
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{prof.company}</p>
                             </div>
                           </div>
@@ -171,12 +176,12 @@ export default function ProfessionalsManagement() {
                         <TableCell>
                           <div className="space-y-3">
                             <Badge className="bg-primary/5 text-primary border border-primary/10 font-black text-[8px] uppercase tracking-widest">{prof.professionalRole}</Badge>
-                            <p className="text-sm font-black text-slate-600 uppercase tracking-tight italic leading-none">{prof.designation}</p>
+                            <p className="text-sm font-black text-slate-600 uppercase tracking-tight leading-none">{prof.designation}</p>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="inline-flex flex-col items-center">
-                            <span className="text-xl font-black text-slate-900 italic leading-none">{prof.activeInterviewCount || 0}</span>
+                            <span className="text-xl font-black text-slate-900 leading-none">{prof.activeInterviewCount || 0}</span>
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">ACTIVE</span>
                           </div>
                         </TableCell>
@@ -191,7 +196,7 @@ export default function ProfessionalsManagement() {
                         </TableCell>
                         <TableCell className="px-12 text-right">
                           <div className="flex justify-end gap-3">
-                            {prof.status === 'pending' && (
+                            {prof.status === 'pending' && isSuperAdmin && (
                               <Button className="h-10 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase shadow-lg shadow-emerald-600/10" onClick={() => approveMutation.mutate(prof._id || prof.id)}>APPROVE</Button>
                             )}
                             <Button className="h-10 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-[9px] uppercase shadow-lg shadow-slate-900/10 gap-2" onClick={() => handleViewProfile(prof._id || prof.id)}>PROFILE <ArrowRight className="h-3.5 w-3.5" /></Button>
@@ -212,16 +217,16 @@ export default function ProfessionalsManagement() {
             <DialogHeader className="p-12 bg-slate-50 border-b border-slate-100 shrink-0">
               <div className="flex items-center gap-10">
                 <Avatar className="h-24 w-24 rounded-[2rem] border-4 border-white shadow-xl">
-                  <AvatarFallback className="bg-primary text-white font-black text-3xl italic">
+                  <AvatarFallback className="bg-primary text-white font-black text-3xl">
                     {historyData?.data?.professional?.name?.charAt(0) || 'E'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                  <DialogTitle className="text-4xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
+                  <DialogTitle className="text-4xl font-black uppercase tracking-tighter text-slate-900 leading-none">
                     {historyData?.data?.professional?.name || 'Loading...'}
                   </DialogTitle>
                   <div className="flex items-center gap-6">
-                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em] italic">{historyData?.data?.professional?.email}</p>
+                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em]">{historyData?.data?.professional?.email}</p>
                     <Badge className="bg-white text-slate-600 border border-slate-200 font-black text-[9px] uppercase px-3 py-1 rounded-full">{historyData?.data?.professional?.company}</Badge>
                     <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 font-black text-[9px] uppercase px-3 py-1 rounded-full">{historyData?.data?.professional?.designation}</Badge>
                   </div>
@@ -248,13 +253,13 @@ export default function ProfessionalsManagement() {
                   {/* Bio & Tech Stack */}
                   <div className="grid grid-cols-2 gap-12">
                     <div className="space-y-6">
-                      <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 italic"><Fingerprint className="h-4 w-4" /> PROFESSIONAL BIO</h5>
-                      <p className="text-slate-600 font-bold text-sm leading-relaxed italic border-l-4 border-primary/20 pl-6">
+                      <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3"><Fingerprint className="h-4 w-4" /> PROFESSIONAL BIO</h5>
+                      <p className="text-slate-600 font-bold text-sm leading-relaxed border-l-4 border-primary/20 pl-6">
                         {historyData?.data?.professional?.bio || "Highly experienced technical specialist currently contributing to global platform architecture and candidate assessment protocols."}
                       </p>
                     </div>
                     <div className="space-y-6">
-                      <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 italic"><Cpu className="h-4 w-4" /> EXPERTISE STACK</h5>
+                      <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3"><Cpu className="h-4 w-4" /> EXPERTISE STACK</h5>
                       <div className="flex flex-wrap gap-2">
                         {historyData?.data?.professional?.techStack?.map((tech: string) => (
                           <Badge key={tech} className="bg-slate-50 text-slate-500 border border-slate-200 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest">{tech}</Badge>
@@ -265,14 +270,14 @@ export default function ProfessionalsManagement() {
 
                   {/* Interview History */}
                   <div className="space-y-8">
-                    <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 italic">
+                    <h5 className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
                       <MessageSquare className="h-4 w-4" /> CANDIDATE ASSESSMENT LOGS
                     </h5>
 
                     <div className="space-y-6">
                       {historyData?.data?.interviews?.length === 0 ? (
                         <div className="bg-slate-50 rounded-3xl p-10 text-center border border-dashed border-slate-200">
-                          <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest italic">No candidate sessions recorded.</p>
+                          <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest">No candidate sessions recorded.</p>
                         </div>
                       ) : (
                         historyData?.data?.interviews?.map((interview: any) => (
@@ -280,28 +285,28 @@ export default function ProfessionalsManagement() {
                             <div className="flex justify-between items-start mb-6">
                               <div className="flex items-center gap-6">
                                 <Avatar className="h-12 w-12 rounded-2xl border border-slate-100">
-                                  <AvatarFallback className="bg-primary/5 text-primary font-black text-xs italic">{interview.studentId?.name?.charAt(0)}</AvatarFallback>
+                                  <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">{interview.studentId?.name?.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <p className="font-black text-lg italic uppercase tracking-tighter text-slate-900">{interview.studentId?.name}</p>
+                                  <p className="font-black text-lg uppercase tracking-tighter text-slate-900">{interview.studentId?.name}</p>
                                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{interview.studentId?.college || 'External Candidate'}</p>
                                 </div>
                               </div>
                               <div className="text-right">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">SESSION DATE</p>
-                                <p className="text-[11px] font-black text-slate-900 italic uppercase">{format(new Date(interview.updatedAt), 'PPP')}</p>
+                                <p className="text-[11px] font-black text-slate-900 uppercase">{format(new Date(interview.updatedAt), 'PPP')}</p>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-100">
                               <div>
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">TARGET ROLE</p>
-                                <p className="text-xs font-black text-slate-600 uppercase italic leading-none">{interview.jobId?.companyName} • {interview.jobId?.roleTitle}</p>
+                                <p className="text-xs font-black text-slate-600 uppercase leading-none">{interview.jobId?.companyName} • {interview.jobId?.roleTitle}</p>
                               </div>
                               <div className="flex justify-end gap-10">
                                 <div className="text-right">
                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">SESSION ID</p>
-                                  <p className="text-xs font-black text-primary italic">{interview.id.slice(-8).toUpperCase()}</p>
+                                  <p className="text-xs font-black text-primary">{interview.id.slice(-8).toUpperCase()}</p>
                                 </div>
                               </div>
                             </div>
@@ -323,7 +328,7 @@ export default function ProfessionalsManagement() {
                     </a>
                   </Button>
                 )}
-                <Button className="rounded-2xl h-12 px-10 bg-slate-900 text-white font-black uppercase text-[10px] tracking-[0.3em] italic" onClick={() => setIsModalOpen(false)}>
+                <Button className="rounded-2xl h-12 px-10 bg-slate-900 text-white font-black uppercase text-[10px] tracking-[0.3em]" onClick={() => setIsModalOpen(false)}>
                   CLOSE REGISTRY
                 </Button>
               </div>
@@ -344,7 +349,7 @@ function StatCard({ label, value, icon: Icon, color }: any) {
             <Icon className="h-6 w-6" />
           </div>
           <div className="text-right">
-            <p className={cn("text-3xl font-black tracking-tighter italic leading-none", color)}>{value}</p>
+            <p className={cn("text-3xl font-black tracking-tighter leading-none", color)}>{value}</p>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-3 opacity-80">{label}</p>
           </div>
         </div>
@@ -361,7 +366,7 @@ function HistoryStat({ label, value, icon: Icon, color }: any) {
       </div>
       <div>
         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-xl font-black italic text-slate-900 leading-none">{value}</p>
+        <p className="text-xl font-black text-slate-900 leading-none">{value}</p>
       </div>
     </div>
   );
