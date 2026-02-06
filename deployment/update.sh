@@ -67,6 +67,11 @@ $DC down
 
 print_success "Containers stopped"
 
+# Clean up before rebuilding to save space
+print_info "Cleaning up old Docker resources to free space..."
+docker system prune -f
+print_success "Cleanup completed"
+
 # Rebuild images
 print_info "Rebuilding Docker images..."
 $DC build --no-cache
