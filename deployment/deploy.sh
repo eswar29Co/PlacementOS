@@ -52,9 +52,18 @@ done
 
 print_success "All required environment variables are set"
 
+# Determine which docker compose command to use
+if command -v docker-compose &> /dev/null; then
+    DC="docker-compose"
+else
+    DC="docker compose"
+fi
+
+print_info "Using Docker Compose command: $DC"
+
 # Stop and remove existing containers
 print_info "Stopping existing containers..."
-docker-compose down 2>/dev/null || true
+$DC down 2>/dev/null || true
 print_success "Existing containers stopped"
 
 # Remove old images (optional - uncomment to save disk space)
@@ -63,12 +72,12 @@ print_success "Existing containers stopped"
 
 # Build and start containers
 print_info "Building Docker images..."
-docker-compose build --no-cache
+$DC build --no-cache
 
 print_success "Docker images built successfully"
 
 print_info "Starting containers..."
-docker-compose up -d
+$DC up -d
 
 print_success "Containers started successfully"
 
@@ -81,7 +90,7 @@ if curl -f http://localhost:5000/health > /dev/null 2>&1; then
     print_success "Backend is healthy"
 else
     print_error "Backend health check failed"
-    docker-compose logs backend
+    $DC logs backend
     exit 1
 fi
 
@@ -90,7 +99,7 @@ if curl -f http://localhost/health > /dev/null 2>&1; then
     print_success "Frontend is healthy"
 else
     print_error "Frontend health check failed"
-    docker-compose logs frontend
+    $DC logs frontend
     exit 1
 fi
 
@@ -105,8 +114,8 @@ echo "  Backend:  http://$(curl -s http://checkip.amazonaws.com 2>/dev/null || e
 echo "  API:      http://$(curl -s http://checkip.amazonaws.com 2>/dev/null || echo 'localhost'):5000/api/v1"
 echo ""
 echo "To view logs:"
-echo "  docker-compose logs -f"
+echo "  $DC logs -f"
 echo ""
 echo "To stop services:"
-echo "  docker-compose down"
+echo "  $DC down"
 echo ""

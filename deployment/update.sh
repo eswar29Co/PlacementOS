@@ -29,6 +29,15 @@ print_info() {
     echo -e "${YELLOW}ℹ $1${NC}"
 }
 
+# Determine which docker compose command to use
+if command -v docker-compose &> /dev/null; then
+    DC="docker-compose"
+else
+    DC="docker compose"
+fi
+
+print_info "Using Docker Compose command: $DC"
+
 # Backup .env file
 print_info "Backing up .env file..."
 if [ -f .env ]; then
@@ -54,19 +63,19 @@ print_success ".env file restored"
 
 # Stop containers
 print_info "Stopping containers..."
-docker-compose down
+$DC down
 
 print_success "Containers stopped"
 
 # Rebuild images
 print_info "Rebuilding Docker images..."
-docker-compose build --no-cache
+$DC build --no-cache
 
 print_success "Images rebuilt"
 
 # Start containers
 print_info "Starting containers..."
-docker-compose up -d
+$DC up -d
 
 print_success "Containers started"
 
@@ -86,7 +95,7 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
             print_error "Backend health check failed after $MAX_RETRIES attempts"
             print_info "Showing backend logs:"
-            docker-compose logs --tail=50 backend
+            $DC logs --tail=50 backend
             exit 1
         fi
         print_info "Waiting for backend... (attempt $RETRY_COUNT/$MAX_RETRIES)"
@@ -100,7 +109,7 @@ if curl -f http://localhost/health > /dev/null 2>&1; then
 else
     print_error "Frontend health check failed"
     print_info "Showing frontend logs:"
-    docker-compose logs --tail=50 frontend
+    $DC logs --tail=50 frontend
     exit 1
 fi
 
@@ -119,9 +128,9 @@ echo "  Frontend: http://$(curl -s http://checkip.amazonaws.com 2>/dev/null || e
 echo "  Backend:  http://$(curl -s http://checkip.amazonaws.com 2>/dev/null || echo 'localhost'):5000"
 echo ""
 echo "To view logs:"
-echo "  docker-compose logs -f"
+echo "  $DC logs -f"
 echo ""
 echo "To rollback (if needed):"
 echo "  git reset --hard HEAD~1"
-echo "  docker-compose down && docker-compose up -d"
+echo "  $DC down && $DC up -d"
 echo ""
