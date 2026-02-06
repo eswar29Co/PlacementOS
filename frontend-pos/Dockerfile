@@ -19,6 +19,9 @@ COPY . .
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
+# Increase memory limit for the build process
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 # Build the application
 RUN npm run build
 
