@@ -76,9 +76,14 @@ export default function StudentsManagement() {
         {/* Tactical Header Stats */}
         <div className="grid gap-6 md:grid-cols-4">
           <StatCard label="Total Candidates" value={studentsList.length} icon={Users} color="text-primary" />
-          <StatCard label="Avg Placement CGPA" value="8.4" icon={Star} color="text-amber-500" />
-          <StatCard label="Active Funnel" value="124" icon={Target} color="text-blue-500" />
-          <StatCard label="Success Ratio" value="92%" icon={Activity} color="text-emerald-500" />
+          <StatCard
+            label="Avg Placement CGPA"
+            value={studentsList.length > 0 ? (studentsList.reduce((acc: number, s: any) => acc + (parseFloat(s.cgpa) || 0), 0) / studentsList.length).toFixed(1) : 'N/A'}
+            icon={Star}
+            color="text-amber-500"
+          />
+          <StatCard label="Active Funnel" value="N/A" icon={Target} color="text-blue-500" />
+          <StatCard label="Success Ratio" value="N/A" icon={Activity} color="text-emerald-500" />
         </div>
 
         {/* Database Board */}
@@ -204,10 +209,10 @@ export default function StudentsManagement() {
                 <div className="space-y-12">
                   {/* Stats Grid for Student */}
                   <div className="grid grid-cols-4 gap-6">
-                    <HistoryStat label="CGPA" value={historyData?.data?.student?.cgpa} icon={Star} color="text-amber-500" />
+                    <HistoryStat label="CGPA" value={historyData?.data?.student?.cgpa || 'N/A'} icon={Star} color="text-amber-500" />
                     <HistoryStat label="Applications" value={historyData?.data?.applications?.length || 0} icon={FileText} color="text-blue-500" />
                     <HistoryStat label="Skills" value={historyData?.data?.student?.skills?.length || 0} icon={Cpu} color="text-purple-500" />
-                    <HistoryStat label="Active Status" value="Online" icon={Activity} color="text-emerald-500" />
+                    <HistoryStat label="Active Status" value={historyData?.data?.student?.isActive ? 'Online' : 'Offline'} icon={Activity} color="text-emerald-500" />
                   </div>
 
                   {/* Skills Section */}

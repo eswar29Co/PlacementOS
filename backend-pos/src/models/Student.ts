@@ -33,6 +33,18 @@ const studentSchema = new Schema<IStudentDocument>(
     resumeUrl: { type: String },
     linkedinUrl: { type: String },
     githubUrl: { type: String },
+    projects: [{
+      title: { type: String, required: true },
+      description: { type: String, required: true },
+      link: { type: String },
+      technologies: [{ type: String }]
+    }],
+    certifications: [{
+      name: { type: String, required: true },
+      organization: { type: String, required: true },
+      issueDate: { type: Date },
+      link: { type: String }
+    }],
   },
   {
     timestamps: true,

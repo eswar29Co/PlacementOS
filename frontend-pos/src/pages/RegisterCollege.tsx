@@ -66,18 +66,33 @@ export default function RegisterCollege() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-                <Card className="max-w-md w-full text-center p-8 space-y-6">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+                <Card className="max-w-lg w-full text-center p-10 space-y-8 shadow-2xl rounded-[3rem] border-2 border-slate-200">
                     <div className="flex justify-center">
-                        <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle2 className="h-10 w-10 text-green-600" />
+                        <div className="h-24 w-24 bg-amber-100 rounded-full flex items-center justify-center border-4 border-amber-200 shadow-lg">
+                            <CheckCircle2 className="h-12 w-12 text-amber-600" />
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <h2 className="text-2xl font-bold text-slate-900">Registration Complete!</h2>
-                        <p className="text-slate-500">Your college has been successfully enrolled in PlacementOS. Redirecting you to login...</p>
+                    <div className="space-y-4">
+                        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Registration Submitted!</h2>
+                        <div className="space-y-2">
+                            <p className="text-slate-600 font-bold text-sm">Your college registration has been submitted successfully.</p>
+                            <div className="p-6 bg-amber-50 rounded-2xl border-2 border-amber-200">
+                                <p className="text-xs font-black text-amber-800 uppercase tracking-widest mb-2">⏳ Pending SuperAdmin Approval</p>
+                                <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                                    Your college is currently under review. Once approved by our SuperAdmin team, you'll be able to login and students can register using your college domain.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <Button onClick={() => navigate('/login')} className="w-full">Go to Login</Button>
+                    <div className="space-y-3">
+                        <Button onClick={() => navigate('/login')} className="w-full h-14 rounded-2xl font-black uppercase tracking-widest">
+                            Go to Login
+                        </Button>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            You'll receive a notification once approved
+                        </p>
+                    </div>
                 </Card>
             </div>
         );

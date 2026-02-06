@@ -58,6 +58,20 @@ export type NotificationType =
   | 'new_job_posted'
   | 'admin_note';
 
+export interface IProject {
+  title: string;
+  description: string;
+  link?: string;
+  technologies: string[];
+}
+
+export interface ICertification {
+  name: string;
+  organization: string;
+  issueDate?: Date | string;
+  link?: string;
+}
+
 export interface IUser {
   _id?: string;
   name: string;
@@ -82,6 +96,8 @@ export interface IStudent extends IUser {
   resumeUrl?: string;
   linkedinUrl?: string;
   githubUrl?: string;
+  projects?: IProject[];
+  certifications?: ICertification[];
 }
 
 export interface IProfessional extends IUser {
@@ -152,6 +168,8 @@ export interface IApplication {
   resumeUrl?: string;
   resumeScore?: number;
   atsAnalysis?: any;
+  atsBreakdown?: any;  // Enhanced ATS breakdown with 5 scoring categories
+  parsedResume?: any;  // Structured resume data
   resumeApproved?: boolean | null; // null = pending, true = approved, false = rejected
   resumeApprovedAt?: Date;
   resumeApprovedBy?: string;

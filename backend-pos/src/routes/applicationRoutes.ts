@@ -21,6 +21,7 @@ import {
   acceptOffer,
   rejectOffer,
 } from '../controllers/applicationController';
+
 import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();

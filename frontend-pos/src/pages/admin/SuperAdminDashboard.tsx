@@ -29,8 +29,8 @@ export default function SuperAdminDashboard() {
     });
 
     const { data: collegesData, isLoading: collegesLoading } = useQuery({
-        queryKey: ['colleges'],
-        queryFn: () => collegeService.getColleges()
+        queryKey: ['all-colleges'],
+        queryFn: () => collegeService.getAllColleges()
     });
 
     const { data: professionalsData } = useQuery({
@@ -65,6 +65,25 @@ export default function SuperAdminDashboard() {
             toast.error('Expert registration declined.');
         },
         onError: (error: any) => toast.error(error.message || 'Operation failed'),
+    });
+
+    const approveCollegeMutation = useMutation({
+        mutationFn: (collegeId: string) => collegeService.approveCollege(collegeId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['all-colleges'] });
+            toast.success('College approved successfully!');
+        },
+        onError: (error: any) => toast.error(error.message || 'Approval failed'),
+    });
+
+    const rejectCollegeMutation = useMutation({
+        mutationFn: ({ collegeId, reason }: { collegeId: string; reason: string }) =>
+            collegeService.rejectCollege(collegeId, reason),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['all-colleges'] });
+            toast.error('College registration rejected.');
+        },
+        onError: (error: any) => toast.error(error.message || 'Rejection failed'),
     });
 
     const filteredColleges = useMemo(() => {
@@ -165,7 +184,12 @@ export default function SuperAdminDashboard() {
                                 </div>
                             ) : (
                                 filteredColleges.map((college: any) => (
-                                    <CollegeCard key={college.id || college._id} college={college} />
+                                    <CollegeCard
+                                        key={college.id || college._id}
+                                        college={college}
+                                        onApprove={() => approveCollegeMutation.mutate(college.id || college._id)}
+                                        onReject={(reason: string) => rejectCollegeMutation.mutate({ collegeId: college.id || college._id, reason })}
+                                    />
                                 ))
                             )}
                         </div>
@@ -349,7 +373,31 @@ function StatCard({ label, value, icon: Icon, trend, color, bg }: any) {
     );
 }
 
-function CollegeCard({ college }: { college: any }) {
+function CollegeCard({ college, onApprove, onReject }: { college: any; onApprove?: () => void; onReject?: (reason: string) => void }) {
+    const [showRejectDialog, setShowRejectDialog] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
+
+    const handleReject = () => {
+        if (onReject && rejectionReason.trim()) {
+            onReject(rejectionReason);
+            setShowRejectDialog(false);
+            setRejectionReason('');
+        }
+    };
+
+    const getStatusBadge = () => {
+        switch (college.approvalStatus) {
+            case 'approved':
+                return <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-3 py-1 font-black text-[9px] uppercase">✓ APPROVED</Badge>;
+            case 'pending':
+                return <Badge className="bg-amber-500/10 text-amber-600 border-none px-3 py-1 font-black text-[9px] uppercase animate-pulse">⏳ PENDING</Badge>;
+            case 'rejected':
+                return <Badge className="bg-rose-500/10 text-rose-600 border-none px-3 py-1 font-black text-[9px] uppercase">✗ REJECTED</Badge>;
+            default:
+                return <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-3 py-1 font-black text-[9px] uppercase">ACTIVE</Badge>;
+        }
+    };
+
     return (
         <Card className="rounded-[3rem] border-none shadow-sm bg-white overflow-hidden hover:shadow-2xl transition-all duration-700 group border border-slate-100 relative">
             <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[60px] -z-10 group-hover:scale-150 transition-transform duration-1000" />
@@ -358,7 +406,7 @@ function CollegeCard({ college }: { college: any }) {
                     <div className="h-20 w-20 rounded-[1.5rem] bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-2xl text-slate-300 group-hover:border-primary/30 transition-colors">
                         {college.logo ? <img src={college.logo} alt="" className="h-full w-full object-contain" /> : college.name[0]}
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <h4 className="text-2xl font-black uppercase tracking-tighter text-slate-900">{college.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
                             <Globe className="h-3 w-3 text-slate-400" />
@@ -370,13 +418,71 @@ function CollegeCard({ college }: { college: any }) {
                 <div className="grid grid-cols-2 gap-6 mb-10">
                     <div className="space-y-1">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Status</p>
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-3 py-1 font-black text-[9px] uppercase">ACTIVENET</Badge>
+                        {getStatusBadge()}
                     </div>
                     <div className="space-y-1">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Region</p>
                         <p className="text-xs font-black text-slate-700 flex items-center gap-1"><MapPin className="h-3 w-3 text-primary" /> GLOBAL</p>
                     </div>
                 </div>
+
+                {college.approvalStatus === 'pending' && onApprove && onReject && (
+                    <div className="space-y-3 mb-6 p-6 bg-amber-50 rounded-2xl border-2 border-amber-200">
+                        <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest mb-4">⚠️ Approval Required</p>
+                        {!showRejectDialog ? (
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={onApprove}
+                                    className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest shadow-lg"
+                                >
+                                    <CheckCircle2 className="mr-2 h-4 w-4" /> APPROVE
+                                </Button>
+                                <Button
+                                    onClick={() => setShowRejectDialog(true)}
+                                    variant="outline"
+                                    className="flex-1 h-12 rounded-xl border-2 border-rose-200 bg-white hover:bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-widest"
+                                >
+                                    <XCircle className="mr-2 h-4 w-4" /> REJECT
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <Input
+                                    placeholder="Reason for rejection..."
+                                    value={rejectionReason}
+                                    onChange={(e) => setRejectionReason(e.target.value)}
+                                    className="h-12 rounded-xl border-2 border-rose-200 font-bold text-sm"
+                                />
+                                <div className="flex gap-3">
+                                    <Button
+                                        onClick={handleReject}
+                                        disabled={!rejectionReason.trim()}
+                                        className="flex-1 h-10 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-[9px] uppercase"
+                                    >
+                                        CONFIRM REJECT
+                                    </Button>
+                                    <Button
+                                        onClick={() => {
+                                            setShowRejectDialog(false);
+                                            setRejectionReason('');
+                                        }}
+                                        variant="outline"
+                                        className="flex-1 h-10 rounded-xl font-black text-[9px] uppercase"
+                                    >
+                                        CANCEL
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {college.approvalStatus === 'rejected' && college.rejectionReason && (
+                    <div className="mb-6 p-6 bg-rose-50 rounded-2xl border-2 border-rose-200">
+                        <p className="text-[10px] font-black text-rose-800 uppercase tracking-widest mb-2">Rejection Reason</p>
+                        <p className="text-xs text-rose-700 font-medium">{college.rejectionReason}</p>
+                    </div>
+                )}
 
                 <div className="space-y-3 pt-6 border-t border-slate-100">
                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
@@ -393,3 +499,4 @@ function CollegeCard({ college }: { college: any }) {
         </Card>
     );
 }
+

@@ -17,11 +17,22 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type InterviewType = 'all' | 'ai' | 'technical' | 'manager' | 'hr';
 
 export default function Interviews() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
+  const [interviewType, setInterviewType] = useState<InterviewType>('all');
 
   const { data: applicationsData, isLoading } = useQuery({
     queryKey: ['my-applications'],
@@ -29,18 +40,33 @@ export default function Interviews() {
   });
 
   const applications = Array.isArray(applicationsData?.data) ? applicationsData.data : [];
-  const myApplications = applications;
 
-  const scheduled = myApplications.filter((a: any) =>
-    ['ai_interview_pending', 'professional_interview_pending', 'professional_interview_scheduled',
-      'manager_interview_pending', 'manager_interview_scheduled', 'hr_interview_pending',
-      'hr_interview_scheduled'].includes(a.status)
-  );
+  const filterInterviews = (type: InterviewType, isCompleted: boolean) => {
+    return applications.filter((a: any) => {
+      const status = a.status.toLowerCase();
+      const isAiRound = status.includes('ai_');
+      const isTechRound = status.includes('professional_');
+      const isManagerRound = status.includes('manager_');
+      const isHRRound = status.includes('hr_');
 
-  const completed = myApplications.filter((a: any) =>
-    ['ai_interview_completed', 'professional_interview_completed', 'manager_round_completed',
-      'hr_round_completed', 'hired', 'rejected', 'offer_released', 'offer_accepted', 'offer_rejected'].includes(a.status)
-  );
+      const matchesType =
+        type === 'all' ||
+        (type === 'ai' && isAiRound) ||
+        (type === 'technical' && isTechRound) ||
+        (type === 'manager' && isManagerRound) ||
+        (type === 'hr' && isHRRound);
+
+      if (!matchesType) return false;
+
+      const completedStatuses = ['completed', 'round_completed', 'hired', 'rejected', 'offer_released', 'offer_accepted', 'offer_rejected'];
+      const currentIsCompleted = completedStatuses.some(s => status.includes(s));
+
+      return isCompleted ? currentIsCompleted : !currentIsCompleted;
+    });
+  };
+
+  const scheduled = filterInterviews(interviewType, false);
+  const completed = filterInterviews(interviewType, true);
 
   if (isLoading) {
     return (
@@ -53,79 +79,98 @@ export default function Interviews() {
     );
   }
 
-  const conversionRate = myApplications.length > 0 ? Math.round((completed.length / myApplications.length) * 100) : 0;
+  const conversionRate = (scheduled.length + completed.length) > 0
+    ? Math.round((completed.length / (scheduled.length + completed.length)) * 100)
+    : 0;
 
   return (
     <DashboardLayout title="Interviews" subtitle="Manage your upcoming interviews and view past feedback">
       <div className="space-y-10 max-w-[1400px] mx-auto pb-12">
 
-        {/* Overview Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SummaryCard title="Upcoming" value={scheduled.length} icon={Zap} color="text-primary" bg="bg-primary/5" gradient="from-primary/5 to-blue-50/5" />
-          <SummaryCard title="Completed" value={completed.length} icon={ShieldCheck} color="text-emerald-600" bg="bg-emerald-50/5" gradient="from-emerald-50/5 to-teal-50/5" />
-          <SummaryCard title="Completion Rate" value={`${conversionRate}%`} icon={BarChart3} color="text-indigo-600" bg="bg-indigo-50/5" gradient="from-indigo-50/5 to-indigo-100/5" />
+        {/* Filters & Dropdown Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-slate-900">
+              <Network className="h-6 w-6 text-primary" />
+              Interview Workspace
+            </h2>
+            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Select around to view detailed analytics and schedules</p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Select value={interviewType} onValueChange={(v) => setInterviewType(v as InterviewType)}>
+              <SelectTrigger className="w-[200px] h-12 rounded-xl border-slate-200 bg-white font-black text-[10px] uppercase tracking-widest text-slate-600 focus:ring-primary/20">
+                <SelectValue placeholder="Round Type" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-slate-100 font-bold uppercase text-[9px]">
+                <SelectItem value="all">All Interviews</SelectItem>
+                <SelectItem value="ai">AI Round Only</SelectItem>
+                <SelectItem value="technical">Technical Round</SelectItem>
+                <SelectItem value="manager">Manager Round</SelectItem>
+                <SelectItem value="hr">HR Round Only</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge className="h-12 px-6 rounded-xl bg-primary/5 text-primary border border-primary/10 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-none">
+              <Activity className="h-4 w-4" /> Real-time tracking
+            </Badge>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-            <div className="space-y-1">
-              <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-slate-900">
-                <Network className="h-6 w-6 text-primary" />
-                Interview Schedule
-              </h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Track your active interviews and past results</p>
+        {/* Overview Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <SummaryCard title={`${interviewType === 'all' ? '' : interviewType.toUpperCase()} Upcoming`} value={scheduled.length} icon={Zap} color="text-primary" bg="bg-primary/5" gradient="from-primary/5 to-blue-50/5" />
+          <SummaryCard title={`${interviewType === 'all' ? '' : interviewType.toUpperCase()} Completed`} value={completed.length} icon={ShieldCheck} color="text-emerald-600" bg="bg-emerald-50/5" gradient="from-emerald-50/5 to-teal-50/5" />
+          <SummaryCard title="Success Rate" value={`${conversionRate}%`} icon={BarChart3} color="text-indigo-600" bg="bg-indigo-50/5" gradient="from-indigo-50/5 to-indigo-100/5" />
+        </div>
+
+        <Tabs defaultValue="scheduled" className="space-y-8">
+          <div className="flex items-center justify-between p-2 bg-slate-50/50 rounded-[2rem] border border-slate-200 overflow-x-auto no-scrollbar">
+            <TabsList className="bg-transparent h-auto p-0 flex gap-2">
+              <TabsTrigger value="scheduled" className="rounded-2xl px-8 py-3.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-black text-xs uppercase tracking-widest flex items-center gap-3 text-slate-400">
+                <Monitor className="h-4 w-4 text-primary" /> Active Round
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="rounded-2xl px-8 py-3.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 font-black text-xs uppercase tracking-widest flex items-center gap-3 text-slate-400">
+                <Star className="h-4 w-4 text-emerald-500" /> Past Rounds
+              </TabsTrigger>
+            </TabsList>
+            <div className="px-6 hidden lg:block">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/50">Interview Management System</p>
             </div>
           </div>
 
-          <Tabs defaultValue="scheduled" className="space-y-8">
-            <div className="flex items-center justify-between p-2 bg-slate-50/50 rounded-[2rem] border border-slate-200 overflow-x-auto no-scrollbar">
-              <TabsList className="bg-transparent h-auto p-0 flex gap-2">
-                <TabsTrigger value="scheduled" className="rounded-2xl px-8 py-3.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-black text-xs uppercase tracking-widest flex items-center gap-3 text-slate-400">
-                  <Monitor className="h-4 w-4 text-primary" /> Upcoming Interviews
-                </TabsTrigger>
-                <TabsTrigger value="completed" className="rounded-2xl px-8 py-3.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 font-black text-xs uppercase tracking-widest flex items-center gap-3 text-slate-400">
-                  <Star className="h-4 w-4 text-emerald-500" /> Past Interviews
-                </TabsTrigger>
-              </TabsList>
-              <div className="px-6 hidden lg:block">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400/50">Interview Management System</p>
-              </div>
+          <TabsContent value="scheduled" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {scheduled.length === 0 ? (
+                <EmptyState icon={Video} title="No Interviews" description="You have no upcoming interviews scheduled." />
+              ) : (
+                scheduled.map((app: any) => (
+                  <InterviewCard
+                    key={app.id || app._id}
+                    app={app}
+                    onAction={() => app.status === 'ai_interview_pending' ? navigate(`/student/ai-interview/${app.id || app._id}`) : window.open(app.meetingLink, '_blank')}
+                  />
+                ))
+              )}
             </div>
+          </TabsContent>
 
-            <TabsContent value="scheduled" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {scheduled.length === 0 ? (
-                  <EmptyState icon={Video} title="No Interviews" description="You have no upcoming interviews scheduled." />
-                ) : (
-                  scheduled.map((app: any) => (
-                    <InterviewCard
-                      key={app.id || app._id}
-                      app={app}
-                      onAction={() => app.status === 'ai_interview_pending' ? navigate(`/student/ai-interview/${app.id || app._id}`) : window.open(app.meetingLink, '_blank')}
-                    />
-                  ))
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="completed" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {completed.length === 0 ? (
-                  <EmptyState icon={Star} title="No History" description="Your past interview results will appear here." />
-                ) : (
-                  completed.map((app: any) => (
-                    <InterviewCard
-                      key={app.id || app._id}
-                      app={app}
-                      isCompleted
-                      onAction={() => { }}
-                    />
-                  ))
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+          <TabsContent value="completed" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {completed.length === 0 ? (
+                <EmptyState icon={Star} title="No History" description="Your past interview results will appear here." />
+              ) : (
+                completed.map((app: any) => (
+                  <InterviewCard
+                    key={app.id || app._id}
+                    app={app}
+                    isCompleted
+                    onAction={() => { }}
+                  />
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

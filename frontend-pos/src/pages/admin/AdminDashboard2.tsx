@@ -268,6 +268,14 @@ export default function AdminDashboard() {
   const getStudentById = (id: string) => (students as any[]).find(s => (s._id || s.id) === id);
   const getJobById = (id: string) => (jobs as any[]).find(j => (j._id || j.id) === id);
 
+  // Helper to get student ID string from either object or string
+  const getStudentId = (studentId: any): string => {
+    if (typeof studentId === 'string') return studentId;
+    if (studentId?._id) return studentId._id;
+    if (studentId?.id) return studentId.id;
+    return 'N/A';
+  };
+
   return (
     <DashboardLayout title="Dashboard" subtitle="Global management of platform operations and reviews">
       <div className="space-y-8 max-w-[1600px] mx-auto pb-12 relative">
@@ -364,11 +372,11 @@ export default function AdminDashboard() {
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-6">
                             <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-black text-2xl">
-                              {student?.name?.charAt(0)}
+                              S
                             </div>
                             <div>
-                              <h4 className="font-black text-xl uppercase tracking-tighter text-slate-900">{student?.name}</h4>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student?.college}</p>
+                              <h4 className="font-black text-xl uppercase tracking-tighter text-slate-900">STUDENT #{getStudentId(app.studentId).slice(-6)}</h4>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student?.college || 'N/A'}</p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -455,18 +463,18 @@ export default function AdminDashboard() {
                     <div className="p-12 flex-1 space-y-10">
                       <div className="flex items-center gap-8">
                         <Avatar className="h-20 w-20 rounded-[1.5rem] border-2 border-slate-100 p-0.5">
-                          <AvatarFallback className="bg-slate-50 text-blue-500 font-black text-2xl">{getStudentById(app.studentId)?.name?.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="bg-slate-50 text-blue-500 font-black text-2xl">S</AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">
-                          <h4 className="text-2xl font-black uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{getJobById(app.jobId)?.companyName} <span className="text-primary mx-2">•</span> {getJobById(app.jobId)?.roleTitle}</p>
+                          <h4 className="text-2xl font-black uppercase tracking-tighter text-slate-900">STUDENT #{getStudentId(app.studentId).slice(-6)}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{getJobById(app.jobId)?.companyName || 'N/A'} <span className="text-primary mx-2">•</span> {getJobById(app.jobId)?.roleTitle || 'N/A'}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-10">
-                        <MetricBlock label="Active Time" value="24M 12S" />
-                        <MetricBlock label="Assessment Score" value="88 / 100" color="text-primary" />
-                        <MetricBlock label="Submitted At" value="TODAY, 10:45 AM" />
-                        <MetricBlock label="Integrity" value="PASSED" color="text-emerald-500" />
+                        <MetricBlock label="Active Time" value={app.assessmentDuration || 'N/A'} />
+                        <MetricBlock label="Assessment Score" value={app.assessmentScore ? `${app.assessmentScore} / 100` : 'N/A'} color="text-primary" />
+                        <MetricBlock label="Submitted At" value={app.assessmentCompletedAt ? format(new Date(app.assessmentCompletedAt), 'MMM dd, hh:mm a') : 'N/A'} />
+                        <MetricBlock label="Integrity" value={app.proctorStatus || 'N/A'} color={app.proctorStatus === 'PASSED' ? 'text-emerald-500' : 'text-slate-500'} />
                       </div>
                       {isAdminTPO && (
                         <div className="flex gap-4 pt-6">
@@ -510,12 +518,12 @@ export default function AdminDashboard() {
                             <Brain className="h-7 w-7" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="text-xl font-black uppercase tracking-tighter text-slate-900">{getStudentById(app.studentId)?.name}</h4>
+                            <h4 className="text-xl font-black uppercase tracking-tighter text-slate-900">STUDENT #{getStudentId(app.studentId).slice(-6)}</h4>
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">AI INTERVIEW LOGS</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge className="bg-purple-50 text-purple-500 border border-purple-100 px-6 py-2 rounded-full font-black text-[12px] shadow-sm">SCORE: {app.aiInterviewScore}</Badge>
+                          <Badge className="bg-purple-50 text-purple-500 border border-purple-100 px-6 py-2 rounded-full font-black text-[12px] shadow-sm">SCORE: {app.aiInterviewScore || 'N/A'}</Badge>
                         </div>
                       </div>
                       <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 relative overflow-hidden group/feedback">
@@ -629,8 +637,8 @@ export default function AdminDashboard() {
                               <User className="h-7 w-7" />
                             </div>
                             <div className="space-y-1">
-                              <h4 className="text-xl font-black uppercase tracking-tighter text-slate-900">{student?.name}</h4>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{job?.companyName}</p>
+                              <h4 className="text-xl font-black uppercase tracking-tighter text-slate-900">STUDENT #{getStudentId(app.studentId).slice(-6)}</h4>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{job?.companyName || 'N/A'}</p>
                             </div>
                           </div>
                           <Badge className={cn(
@@ -698,8 +706,8 @@ export default function AdminDashboard() {
                           <Sparkles className="absolute -top-3 -right-3 h-8 w-8 text-primary animate-pulse" />
                         </div>
                         <div className="space-y-2">
-                          <CardTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900">{student?.name}</CardTitle>
-                          <CardDescription className="font-black text-emerald-600 uppercase tracking-[0.3em] text-[10px]">{job?.companyName}</CardDescription>
+                          <CardTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900">STUDENT #{getStudentId(app.studentId).slice(-6)}</CardTitle>
+                          <CardDescription className="font-black text-emerald-600 uppercase tracking-[0.3em] text-[10px]">{job?.companyName || 'N/A'}</CardDescription>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-8 p-10 pt-0">
@@ -787,8 +795,8 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-8">
-                    <DetailedMetric label="Avg Assessment" value="82%" sub="STABLE" color="primary" />
-                    <DetailedMetric label="Expert Approval" value="68%" sub="OPTIMIZING" color="emerald" />
+                    <DetailedMetric label="Avg Assessment" value={assessmentReviewApps.length > 0 ? `${Math.round(assessmentReviewApps.reduce((acc: number, app: any) => acc + (app.assessmentScore || 0), 0) / assessmentReviewApps.length)}%` : 'N/A'} sub="CALCULATED" color="primary" />
+                    <DetailedMetric label="Expert Approval" value={aiInterviewReviewApps.length > 0 ? `${Math.round((aiInterviewReviewApps.filter((app: any) => app.aiInterviewApproved).length / aiInterviewReviewApps.length) * 100)}%` : 'N/A'} sub="REAL-TIME" color="emerald" />
                   </div>
                 </CardContent>
               </Card>

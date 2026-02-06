@@ -56,18 +56,24 @@ export default function BrowseJobs() {
   const appliedJobIds = new Set(myApplications.map(app => app.jobId));
 
   // Calculate job recommendations based on student skills
-  const calculateMatchScore = (job: Job): number => {
-    if (!student?.skills || student.skills.length === 0) return 40; // Base score
+  const calculateMatch = (job: Job) => {
     const jobSkills = [...(job.skills || []), ...(job.requiredTechStack || [])];
-    const matchingSkills = student.skills.filter(skill =>
+    if (!student?.skills || student.skills.length === 0) return { score: 40, matching: [] };
+
+    const matching = student.skills.filter(skill =>
       jobSkills.some(jobSkill => jobSkill.toLowerCase().includes(skill.toLowerCase()))
     );
-    return Math.min(Math.round((matchingSkills.length / Math.max(jobSkills.length, 1)) * 100) + 50, 98);
+
+    const score = Math.min(Math.round((matching.length / Math.max(jobSkills.length, 1)) * 100) + 50, 98);
+    return { score, matching: matching.slice(0, 3) };
   };
 
   const recommendedJobs = jobs
     .filter(job => job.isActive)
-    .map(job => ({ job, matchScore: calculateMatchScore(job) }))
+    .map(job => {
+      const match = calculateMatch(job);
+      return { job, matchScore: match.score, matchingSkills: match.matching };
+    })
     .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 3);
 
@@ -141,13 +147,14 @@ export default function BrowseJobs() {
               <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 font-black text-[10px] uppercase tracking-[0.2em] py-2 px-6 rounded-full shadow-lg shadow-amber-500/5">AI MATCHING ACTIVE</Badge>
             </div>
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {recommendedJobs.map(({ job, matchScore }) => (
+              {recommendedJobs.map(({ job, matchScore, matchingSkills }) => (
                 <PremiumJobCard
                   key={job.id || job._id}
                   job={job}
                   isRecommended
                   isApplied={appliedJobIds.has(job.id || job._id)}
                   matchScore={matchScore}
+                  matchingSkills={matchingSkills}
                   onApply={() => navigate(`/student/apply/${job.id || job._id}`)}
                 />
               ))}
@@ -281,11 +288,15 @@ export default function BrowseJobs() {
                                     <div className="space-y-4">
                                       <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Required Skills</h5>
                                       <div className="flex flex-wrap gap-2">
-                                        {(job.skills || []).map((skill: string) => (
-                                          <Badge key={skill} variant="outline" className="rounded-lg border-slate-200 bg-white px-3 py-1 font-black text-[9px] uppercase tracking-widest text-slate-500">
-                                            {skill}
-                                          </Badge>
-                                        ))}
+                                        {[...(job.skills || []), ...(job.requiredTechStack || [])].length > 0 ? (
+                                          [...(job.skills || []), ...(job.requiredTechStack || [])].map((skill: string) => (
+                                            <Badge key={skill} variant="outline" className="rounded-lg border-slate-200 bg-white px-3 py-1 font-black text-[9px] uppercase tracking-widest text-slate-500">
+                                              {skill}
+                                            </Badge>
+                                          ))
+                                        ) : (
+                                          <p className="text-slate-400 text-[10px] font-bold uppercase">No specific skills mentioned</p>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -342,7 +353,7 @@ export default function BrowseJobs() {
   );
 }
 
-function PremiumJobCard({ job, onApply, matchScore, isRecommended, isApplied }: any) {
+function PremiumJobCard({ job, onApply, matchScore, matchingSkills, isRecommended, isApplied }: any) {
   const navigate = useNavigate();
   return (
     <Card className={cn(
@@ -392,13 +403,27 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended, isApplied }: 
 
         <div className="space-y-4">
           <p className="text-[11px] text-slate-400 font-bold leading-relaxed line-clamp-3 min-h-[48px]">{job.description}</p>
+
+          {/* Skill Matching Labels */}
+          {matchingSkills && matchingSkills.length > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+              <Zap className="h-3 w-3 text-emerald-600 fill-current" />
+              <div className="flex flex-wrap gap-1">
+                <span className="text-[9px] font-black text-emerald-600 uppercase mr-1">Matches:</span>
+                {matchingSkills.map((skill: string) => (
+                  <span key={skill} className="text-[9px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200 uppercase">{skill}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
-            {job.skills.slice(0, 3).map((s: string) => (
+            {[...(job.skills || []), ...(job.requiredTechStack || [])].slice(0, 3).map((s: string) => (
               <Badge key={s} variant="secondary" className="bg-slate-50 text-slate-600 border border-slate-200 text-[9px] font-black py-1.5 px-3 rounded-xl uppercase tracking-widest shadow-none">{s}</Badge>
             ))}
-            {job.skills.length > 3 && (
+            {[...(job.skills || []), ...(job.requiredTechStack || [])].length > 3 && (
               <Badge variant="secondary" className="bg-primary/5 text-primary/60 border border-primary/10 text-[9px] font-black py-1.5 px-3 rounded-xl uppercase tracking-widest shadow-none">
-                +{job.skills.length - 3} MORE
+                +{[...(job.skills || []), ...(job.requiredTechStack || [])].length - 3} MORE
               </Badge>
             )}
           </div>
@@ -414,7 +439,8 @@ function PremiumJobCard({ job, onApply, matchScore, isRecommended, isApplied }: 
           </Button>
           {isApplied ? (
             <Button
-              className="flex-1 h-14 rounded-2xl font-black gap-3 bg-emerald-500 text-white cursor-default uppercase text-[10px] tracking-widest"
+              disabled
+              className="flex-1 h-14 rounded-2xl font-black gap-3 bg-emerald-500 text-white uppercase text-[10px] tracking-widest opacity-100"
             >
               <CheckCircle2 className="h-4 w-4" /> APPLIED
             </Button>

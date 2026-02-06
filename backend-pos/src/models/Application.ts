@@ -63,7 +63,19 @@ const applicationSchema = new Schema<IApplicationDocument>(
     // Resume phase
     resumeUrl: { type: String },
     resumeScore: { type: Number, min: 0, max: 100 },
-    atsAnalysis: { type: Schema.Types.Mixed },
+    atsAnalysis: {
+      type: Schema.Types.Mixed,
+      default: null
+    },
+    // Enhanced ATS fields
+    atsBreakdown: {
+      type: Schema.Types.Mixed,
+      default: null
+    },
+    parsedResume: {
+      type: Schema.Types.Mixed,
+      default: null
+    },
     resumeApproved: { type: Boolean, default: null }, // null = pending, true = approved, false = rejected
     resumeApprovedAt: { type: Date },
     resumeApprovedBy: { type: Schema.Types.ObjectId, ref: 'Admin' },

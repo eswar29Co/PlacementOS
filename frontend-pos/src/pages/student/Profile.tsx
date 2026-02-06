@@ -7,31 +7,72 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateUser } from '@/store/slices/authSlice';
-import { Student } from '@/types';
+import { Student, Project, Certification } from '@/types';
+import { studentService } from '@/services/studentService';
 import {
   Upload, Github, Linkedin, FileText, Save,
   CheckCircle2, AlertTriangle, Zap, User,
   Briefcase, GraduationCap, MapPin, Mail,
   Phone, Globe, Sparkles, Target, BarChart3,
   ExternalLink, DownloadCloud, Terminal,
-  Cpu, Activity, ShieldCheck, Fingerprint
+  Cpu, Activity, ShieldCheck, Fingerprint,
+  Edit3, Plus, X, Link as LinkIcon, Monitor
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { generateATSAnalysis } from '@/lib/atsUtils';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function Profile() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const student = user as Student;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Partial<Student>>({});
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeName, setResumeName] = useState<string>(student?.resumeUrl ? 'resume.pdf' : '');
   const [atsAnalysis, setAtsAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (student) {
+      setFormData({
+        name: student.name,
+        phone: student.phone,
+        linkedinUrl: student.linkedinUrl,
+        githubUrl: student.githubUrl,
+        skills: student.skills,
+      });
+      setProjects(student.projects || []);
+      setCertifications(student.certifications || []);
+    }
+  }, [student]);
+
+  const handleSave = async () => {
+    try {
+      const updates = {
+        ...formData,
+        projects,
+        certifications,
+      };
+      const response = await studentService.updateStudent(student.id, updates);
+      if (response.success) {
+        dispatch(updateUser(response.data));
+        setIsEditing(false);
+        toast.success('Profile updated successfully!');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update profile');
+    }
+  };
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -110,12 +151,30 @@ export default function Profile() {
                 </div>
 
                 <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col gap-4">
-                  <Button className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 gap-3 group/btn uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95">
-                    <Save className="h-5 w-5 group-hover/btn:rotate-12 transition-transform" /> SAVE CHANGES
-                  </Button>
-                  <Button variant="outline" className="h-16 px-10 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black gap-3 uppercase tracking-widest text-xs transition-all">
-                    <Globe className="h-5 w-5 opacity-50" /> VIEW AS PUBLIC
-                  </Button>
+                  {isEditing ? (
+                    <>
+                      <Button
+                        onClick={handleSave}
+                        className="h-16 px-10 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-lg shadow-emerald-200 gap-3 group/btn uppercase tracking-widest text-xs transition-all hover:scale-105"
+                      >
+                        <Save className="h-5 w-5" /> SAVE PROFILE
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditing(false)}
+                        className="h-16 px-10 rounded-2xl border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-black gap-3 uppercase tracking-widest text-xs transition-all"
+                      >
+                        CANCEL
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 gap-3 group/btn uppercase tracking-widest text-xs transition-all hover:scale-105"
+                    >
+                      <Edit3 className="h-5 w-5" /> EDIT PROFILE
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -141,16 +200,34 @@ export default function Profile() {
               </CardHeader>
               <CardContent className="p-12 space-y-12">
                 <div className="grid gap-12 md:grid-cols-2">
-                  <FormInput label="Full Name" icon={User} defaultValue={student?.name} />
-                  <FormInput label="Email Address" icon={Mail} defaultValue={student?.email} readOnly />
-                  <FormInput label="Phone Number" icon={Phone} defaultValue={student?.phone || '1234567890'} />
+                  <FormInput
+                    label="Full Name"
+                    icon={User}
+                    value={formData.name}
+                    onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
+                    readOnly={!isEditing}
+                  />
+                  <FormInput label="Email Address" icon={Mail} value={student?.email} readOnly />
+                  <FormInput
+                    label="Phone Number"
+                    icon={Phone}
+                    value={formData.phone}
+                    onChange={(e: any) => setFormData({ ...formData, phone: e.target.value })}
+                    readOnly={!isEditing}
+                  />
                   <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1">PROFESSIONAL LINKS (LINKEDIN)</Label>
                     <div className="flex gap-4">
                       <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm group/link transition-all hover:bg-indigo-100/50">
                         <Linkedin className="h-6 w-6 text-indigo-600" />
                       </div>
-                      <Input defaultValue={student?.linkedinUrl} placeholder="linkedin.com/in/..." className="h-14 bg-white border-slate-200 rounded-2xl font-black text-slate-900 shadow-sm focus-visible:ring-indigo-500/20" />
+                      <Input
+                        value={formData.linkedinUrl || ''}
+                        onChange={(e: any) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                        readOnly={!isEditing}
+                        placeholder="linkedin.com/in/..."
+                        className="h-14 bg-white border-slate-200 rounded-2xl font-black text-slate-900 shadow-sm focus-visible:ring-indigo-500/20"
+                      />
                     </div>
                   </div>
                 </div>
@@ -162,16 +239,231 @@ export default function Profile() {
                   </div>
                   <div className="flex flex-wrap gap-4 p-12 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200 min-h-[160px] relative overflow-hidden group/matrix">
                     <div className="absolute bottom-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover/matrix:scale-150 transition-transform duration-1000" />
-                    {student?.skills?.map(skill => (
-                      <Badge key={skill} className="h-14 px-8 rounded-2xl bg-white text-slate-900 border border-slate-200 hover:border-primary/50 hover:bg-slate-50 transition-all font-black uppercase text-[11px] tracking-[0.2em] shadow-sm cursor-default">
+                    {formData.skills?.map((skill, index) => (
+                      <Badge key={index} className="h-14 px-8 rounded-2xl bg-white text-slate-900 border border-slate-200 hover:border-primary/50 hover:bg-slate-50 transition-all font-black uppercase text-[11px] tracking-[0.2em] shadow-sm cursor-default relative group/badge">
                         {skill}
+                        {isEditing && (
+                          <button
+                            onClick={() => setFormData({ ...formData, skills: formData.skills?.filter((_, i) => i !== index) })}
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/badge:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
                       </Badge>
                     ))}
-                    <Button variant="ghost" className="h-14 px-8 rounded-2xl bg-primary/5 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all font-black uppercase text-[10px] tracking-[0.2em]">
-                      + ADD SKILL
-                    </Button>
+                    {isEditing && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          const skill = prompt('Enter skill');
+                          if (skill) setFormData({ ...formData, skills: [...(formData.skills || []), skill] });
+                        }}
+                        className="h-14 px-8 rounded-2xl bg-primary/5 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all font-black uppercase text-[10px] tracking-[0.2em]"
+                      >
+                        + ADD SKILL
+                      </Button>
+                    )}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Projects Section */}
+            <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
+              <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-4">
+                    <Briefcase className="h-7 w-7 text-primary" /> PROJECTS
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Showcase your best work and technical projects</CardDescription>
+                </div>
+                {isEditing && (
+                  <Button
+                    onClick={() => setProjects([...projects, { title: '', description: '', technologies: [] }])}
+                    className="rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-[9px] tracking-widest py-2 px-6"
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> ADD PROJECT
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="p-12 space-y-8">
+                {projects.length === 0 ? (
+                  <div className="text-center py-12 p-8 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                    <Monitor className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No projects added yet</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-8">
+                    {projects.map((project, index) => (
+                      <div key={index} className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm relative group/project hover:border-primary/20 transition-all">
+                        {isEditing && (
+                          <button
+                            onClick={() => setProjects(projects.filter((_, i) => i !== index))}
+                            className="absolute top-6 right-6 h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        )}
+                        <div className="space-y-6">
+                          {isEditing ? (
+                            <div className="space-y-4">
+                              <Input
+                                placeholder="Project Title"
+                                value={project.title || ''}
+                                onChange={(e) => {
+                                  const newProjects = [...projects];
+                                  newProjects[index].title = e.target.value;
+                                  setProjects(newProjects);
+                                }}
+                                className="font-black text-xl border-none p-0 focus-visible:ring-0 uppercase tracking-tight text-slate-900 h-auto"
+                              />
+                              <Textarea
+                                placeholder="Project Description"
+                                value={project.description || ''}
+                                onChange={(e) => {
+                                  const newProjects = [...projects];
+                                  newProjects[index].description = e.target.value;
+                                  setProjects(newProjects);
+                                }}
+                                className="font-medium text-xs text-slate-500 border-none p-0 focus-visible:ring-0 resize-none h-24"
+                              />
+                              <div className="flex gap-4">
+                                <div className="flex-1 relative">
+                                  <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                                  <Input
+                                    placeholder="Project Link (Optional)"
+                                    value={project.link || ''}
+                                    onChange={(e) => {
+                                      const newProjects = [...projects];
+                                      newProjects[index].link = e.target.value;
+                                      setProjects(newProjects);
+                                    }}
+                                    className="pl-12 h-12 bg-slate-50 border-slate-100 rounded-xl text-xs font-bold"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <h4 className="text-xl font-black text-slate-900 uppercase tracking-tight">{project.title}</h4>
+                                {project.link && (
+                                  <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:scale-110 transition-transform">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </a>
+                                )}
+                              </div>
+                              <p className="text-xs font-medium text-slate-500 leading-relaxed">{project.description}</p>
+                            </div>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {project.technologies?.map((tech, ti) => (
+                              <Badge key={ti} variant="secondary" className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase px-3 py-1 border border-slate-100 rounded-lg">
+                                {tech}
+                              </Badge>
+                            ))}
+                            {isEditing && (
+                              <Button
+                                variant="ghost"
+                                onClick={() => {
+                                  const tech = prompt('Enter technology');
+                                  if (tech) {
+                                    const newProjects = [...projects];
+                                    newProjects[index].technologies = [...(newProjects[index].technologies || []), tech];
+                                    setProjects(newProjects);
+                                  }
+                                }}
+                                className="h-8 px-4 rounded-lg bg-primary/5 text-primary border border-primary/20 font-black uppercase text-[8px] tracking-widest"
+                              >
+                                + TECH
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Certifications Section */}
+            <Card className="border-slate-200 shadow-sm rounded-[3rem] overflow-hidden bg-white border group">
+              <CardHeader className="p-12 pb-6 border-b border-slate-100 bg-slate-50 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-4">
+                    <ShieldCheck className="h-7 w-7 text-emerald-600" /> CERTIFICATIONS
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Professional credentials and endorsements</CardDescription>
+                </div>
+                {isEditing && (
+                  <Button
+                    onClick={() => setCertifications([...certifications, { name: '', organization: '' }])}
+                    className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[9px] tracking-widest py-2 px-6"
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> ADD CERT
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="p-12 space-y-8">
+                {certifications.length === 0 ? (
+                  <div className="text-center py-12 p-8 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                    <Target className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No certifications added</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {certifications.map((cert, index) => (
+                      <div key={index} className="flex items-center justify-between p-6 bg-slate-50/50 rounded-2xl border border-slate-100 group/cert">
+                        <div className="flex items-center gap-6">
+                          <div className="h-12 w-12 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+                            <Sparkles className="h-6 w-6 text-amber-500" />
+                          </div>
+                          <div className="space-y-1">
+                            {isEditing ? (
+                              <div className="flex gap-4">
+                                <Input
+                                  placeholder="Certification Name"
+                                  value={cert.name || ''}
+                                  onChange={(e) => {
+                                    const newCerts = [...certifications];
+                                    newCerts[index].name = e.target.value;
+                                    setCertifications(newCerts);
+                                  }}
+                                  className="h-9 font-black text-xs uppercase"
+                                />
+                                <Input
+                                  placeholder="Organization"
+                                  value={cert.organization || ''}
+                                  onChange={(e) => {
+                                    const newCerts = [...certifications];
+                                    newCerts[index].organization = e.target.value;
+                                    setCertifications(newCerts);
+                                  }}
+                                  className="h-9 font-bold text-xs"
+                                />
+                              </div>
+                            ) : (
+                              <>
+                                <h5 className="font-black text-sm text-slate-900 uppercase tracking-tight">{cert.name}</h5>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{cert.organization}</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        {isEditing && (
+                          <button
+                            onClick={() => setCertifications(certifications.filter((_, i) => i !== index))}
+                            className="h-8 w-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center opacity-0 group-hover/cert:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -313,14 +605,15 @@ function MetricBadge({ icon: Icon, label, value, color }: any) {
   );
 }
 
-function FormInput({ label, icon: Icon, defaultValue, readOnly = false }: any) {
+function FormInput({ label, icon: Icon, value, onChange, readOnly = false }: any) {
   return (
     <div className="space-y-4 group">
       <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 ml-1 transition-colors group-focus-within:text-primary">{label}</Label>
       <div className="relative">
         <Icon className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
         <Input
-          defaultValue={defaultValue}
+          value={value || ''}
+          onChange={onChange}
           readOnly={readOnly}
           className={cn(
             "h-16 pl-14 bg-white border-slate-200 rounded-2xl font-black text-slate-900 shadow-sm transition-all focus-visible:ring-primary/20 hover:bg-slate-50 focus-visible:bg-slate-50 placeholder:opacity-20",

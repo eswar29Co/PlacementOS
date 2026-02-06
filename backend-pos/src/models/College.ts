@@ -8,6 +8,10 @@ export interface ICollege extends Document {
   contactPhone: string;
   logo?: string;
   website?: string;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  approvedBy?: string;
+  approvedAt?: Date;
+  rejectionReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +24,10 @@ const CollegeSchema: Schema = new Schema({
   contactPhone: { type: String, required: true },
   logo: { type: String },
   website: { type: String },
+  approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  approvedBy: { type: Schema.Types.ObjectId, ref: 'SuperAdmin' },
+  approvedAt: { type: Date },
+  rejectionReason: { type: String },
 }, {
   timestamps: true,
   toJSON: {

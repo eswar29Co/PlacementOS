@@ -149,7 +149,10 @@ export default function Applications() {
                 <PremiumApplicationCard
                   key={app.id}
                   app={app}
-                  job={jobs.find(j => j.id === app.jobId || j._id === app.jobId)}
+                  job={jobs.find(j => {
+                    const appId = typeof app.jobId === 'object' ? (app.jobId._id || app.jobId.id) : app.jobId;
+                    return j.id === appId || j._id === appId;
+                  })}
                   onToggleExpand={() => setExpandedApp(expandedApp === app.id ? null : app.id)}
                   isExpanded={expandedApp === app.id}
                 />
@@ -188,6 +191,13 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
   const isCurrentlyRejected = isRejected(app.status);
   const isAccepted = app.status === 'offer_accepted';
 
+  // Robust information fallbacks
+  const resolvedJob = job || (typeof app.jobId === 'object' ? app.jobId : null) || app.job;
+  const companyName = resolvedJob?.companyName || app.jobDetails?.companyName || "Unknown Company";
+  const roleTitle = resolvedJob?.roleTitle || app.jobDetails?.roleTitle || "Specialist Role";
+  const location = resolvedJob?.locationType || app.jobDetails?.locationType || "Remote / On-site";
+  const salary = resolvedJob?.ctcBand || resolvedJob?.package || app.jobDetails?.ctcBand || "Competitive";
+
   return (
     <Card className={cn(
       "border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden transition-all duration-500 bg-white border border-l-8",
@@ -198,23 +208,27 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             {/* Job Info */}
             <div className="flex items-start gap-6 flex-1">
-              <div className="h-20 w-20 rounded-[1.5rem] bg-slate-50 shadow-sm flex flex-col items-center justify-center text-3xl font-black text-slate-300 border border-slate-100 shrink-0">
-                {job?.companyName.charAt(0)}
+              <div className="h-20 w-20 rounded-[1.75rem] bg-gradient-to-br from-slate-50 to-slate-100 shadow-inner flex flex-col items-center justify-center border border-slate-200 shrink-0 relative overflow-hidden group/logo">
+                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/logo:opacity-100 transition-opacity" />
+                <Building2 className="h-8 w-8 text-primary/20 absolute" />
+                <span className="relative z-10 text-3xl font-black text-primary transition-transform group-hover/logo:scale-110">
+                  {companyName.charAt(0)}
+                </span>
               </div>
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h3 className="text-2xl font-black leading-tight uppercase tracking-tight text-slate-900">{job?.companyName}</h3>
+                  <h3 className="text-2xl font-black leading-tight uppercase tracking-tight text-slate-900">{companyName}</h3>
                   <Badge variant={getStatusVariant(app.status)} className="rounded-full px-3 py-0.5 font-black text-[9px] uppercase tracking-widest border-none shadow-none">
                     {getStatusLabel(app.status)}
                   </Badge>
                 </div>
                 <p className="text-slate-400 font-black text-sm uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-primary/50" /> {job?.roleTitle}
+                  <Briefcase className="h-4 w-4 text-primary/50" /> {roleTitle}
                 </p>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">
-                  <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {job?.locationType}</span>
-                  <span className="flex items-center gap-1.5"><IndianRupee className="h-3.5 w-3.5" /> {job?.ctcBand || 'Competitive'}</span>
-                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> APPLIED ON {format(new Date(app.appliedAt), 'dd MMM yyyy')}</span>
+                  <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary/40" /> {location}</span>
+                  <span className="flex items-center gap-1.5"><IndianRupee className="h-3.5 w-3.5 text-primary/40" /> {salary}</span>
+                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary/40" /> APPLIED ON {format(new Date(app.appliedAt), 'dd MMM yyyy')}</span>
                 </div>
               </div>
             </div>
@@ -366,34 +380,34 @@ function PremiumApplicationCard({ app, job, onToggleExpand, isExpanded }: any) {
                   <div className="space-y-8">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-slate-50 shadow-sm flex items-center justify-center text-xl font-black text-slate-300 border border-slate-100">
-                          {job?.companyName.charAt(0)}
+                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 shadow-sm flex items-center justify-center text-xl font-black text-primary border border-slate-100">
+                          {companyName.charAt(0)}
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-sm font-black uppercase leading-none text-slate-900">{job?.companyName}</p>
-                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{job?.roleTitle}</p>
+                          <p className="text-sm font-black uppercase leading-none text-slate-900">{companyName}</p>
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{roleTitle}</p>
                         </div>
                       </div>
                       <p className="text-xs font-medium text-slate-500 leading-relaxed line-clamp-4">
-                        {job?.description || 'Strategic simulation for software engineering leaders.'}
+                        {resolvedJob?.description || app.jobDetails?.description || 'Strategic simulation for software engineering leaders.'}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
                       <div className="space-y-1">
                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Compensation</p>
-                        <p className="text-sm font-black text-emerald-600">{job?.ctcBand || job?.package || 'Competitive'}</p>
+                        <p className="text-sm font-black text-emerald-600">{salary}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Job Location</p>
-                        <p className="text-sm font-black text-slate-700">{job?.locationType}</p>
+                        <p className="text-sm font-black text-slate-700">{location}</p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Required Skills</p>
                       <div className="flex flex-wrap gap-2">
-                        {(job?.skills || []).slice(0, 8).map((s: any, i: number) => (
+                        {[...(resolvedJob?.skills || []), ...(resolvedJob?.requiredTechStack || []), ...(app.jobDetails?.skills || [])].slice(0, 8).map((s: any, i: number) => (
                           <Badge key={i} className="bg-slate-50 text-slate-600 border border-slate-100 text-[9px] font-bold uppercase py-1 px-3 rounded-lg shadow-none">
                             {s}
                           </Badge>

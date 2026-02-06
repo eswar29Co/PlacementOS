@@ -38,6 +38,21 @@ export type ApplicationStatus =
 export type ProfessionalStatus = 'pending' | 'approved' | 'rejected';
 export type ProfessionalRole = 'Technical' | 'Manager' | 'HR' | 'Admin';
 export type InterviewRound = 'professional' | 'manager' | 'hr';
+export type InterviewType = 'ai' | 'professional' | 'manager' | 'hr';
+
+export interface Project {
+  title: string;
+  description: string;
+  link?: string;
+  technologies: string[];
+}
+
+export interface Certification {
+  name: string;
+  organization: string;
+  issueDate?: Date | string;
+  link?: string;
+}
 
 export interface User {
   id: string;
@@ -63,6 +78,8 @@ export interface Student extends User {
   linkedinUrl?: string;
   githubUrl?: string;
   password: string;
+  projects?: Project[];
+  certifications?: Certification[];
 }
 
 export interface Professional extends User {
@@ -219,7 +236,6 @@ export interface CodingQuestion {
 }
 
 // Interview types
-export type InterviewType = 'ai' | 'professional' | 'manager' | 'hr';
 
 export interface Interview {
   id: string;

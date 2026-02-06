@@ -1,0 +1,67 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          # Save private key to file
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          
+          # Deploy via SSH
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} << 'EOF'
+            cd ~/placementos
+            
+            # Backup .env
+            cp .env .env.backup
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Restore .env
+            cp .env.backup .env
+            
+            # Rebuild and restart
+            docker-compose down
+            docker-compose build --no-cache
+            docker-compose up -d
+            
+            # Wait for services
+            sleep 15
+            
+            # Health check
+            curl -f http://localhost:5000/health || exit 1
+            curl -f http://localhost/health || exit 1
+            
+            # Cleanup
+            docker image prune -f
+            
+            echo "Deployment successful!"
+          EOF
+          
+          # Cleanup
+          rm -f private_key.pem
+
+      - name: Notify on success
+        if: success()
+        run: echo "Deployment to EC2 completed successfully!"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Deployment to EC2 failed!"

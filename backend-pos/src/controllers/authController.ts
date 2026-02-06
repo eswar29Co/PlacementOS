@@ -48,6 +48,11 @@ export const register = async (req: AuthRequest, res: Response) => {
           return ApiResponse.badRequest(res, `Your college domain (@${emailDomain}) is not registered. Please ask your TPO to enroll.`);
         }
 
+        // Check if college is approved
+        if (college.approvalStatus !== 'approved') {
+          return ApiResponse.forbidden(res, `Your college registration is ${college.approvalStatus}. Students cannot register until the college is approved by SuperAdmin.`);
+        }
+
         user = await Student.create({
           email,
           password,
@@ -96,6 +101,11 @@ export const register = async (req: AuthRequest, res: Response) => {
 
         if (!adminCollege) {
           return ApiResponse.badRequest(res, `Your college domain (@${adminEmailDomain}) is not registered. Please contact Super Admin to enroll your college first.`);
+        }
+
+        // Check if college is approved
+        if (adminCollege.approvalStatus !== 'approved') {
+          return ApiResponse.forbidden(res, `Your college registration is ${adminCollege.approvalStatus}. Please wait for SuperAdmin approval before registering.`);
         }
 
         user = await Admin.create({
@@ -184,6 +194,17 @@ export const login = async (req: AuthRequest, res: Response) => {
     // Check if professional is approved
     if (role === 'professional' && (user as any).status !== 'approved') {
       return ApiResponse.forbidden(res, 'Your account is pending approval');
+    }
+
+    // Check if student/admin's college is approved
+    if (role === 'student' || role === 'admin') {
+      const userCollegeId = (user as any).collegeId;
+      if (userCollegeId) {
+        const userCollege = await College.findById(userCollegeId);
+        if (userCollege && userCollege.approvalStatus !== 'approved') {
+          return ApiResponse.forbidden(res, `Your college is ${userCollege.approvalStatus}. Login is disabled until SuperAdmin approves the college.`);
+        }
+      }
     }
 
     // Generate tokens

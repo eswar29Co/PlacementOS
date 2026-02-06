@@ -6,7 +6,7 @@ import { applicationService } from '@/services';
 import {
   Calendar as CalendarIcon, Video, Clock, User,
   CheckCircle, ChevronLeft, ChevronRight, Zap,
-  Target, Info, MapPin, Sparkles, Filter
+  Target, Info, MapPin, Sparkles, Filter, Building2, Briefcase
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -122,64 +122,51 @@ export default function InterviewCalendar() {
           </Card>
 
           {/* Right Side: Operational Tasks */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-xl font-black flex items-center gap-2 text-slate-900">
-                <Target className="h-5 w-5 text-primary" /> Tasks For Today
-              </h3>
-              <Badge className="bg-primary/10 text-primary border-none font-black shadow-none">{selectedDateInterviews.length} Interviews</Badge>
+          <div className="lg:col-span-4 space-y-8">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-xl font-black flex items-center gap-2 text-slate-900">
+                  <Target className="h-5 w-5 text-primary" /> Tasks For Today
+                </h3>
+                <Badge className="bg-primary/10 text-primary border-none font-black shadow-none">{selectedDateInterviews.length} Interviews</Badge>
+              </div>
+
+              {selectedDateInterviews.length === 0 ? (
+                <Card className="border-slate-200 shadow-sm rounded-[2rem] bg-white border p-8 text-center space-y-4">
+                  <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                    <Clock className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-black text-lg text-slate-800">No Interviews</p>
+                    <p className="text-xs font-medium text-slate-400">You have no interviews scheduled for this day.</p>
+                  </div>
+                  <Button variant="ghost" className="w-full font-bold text-primary hover:bg-primary/5" onClick={() => navigate('/student/browse-jobs')}>View Jobs</Button>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {selectedDateInterviews.map((int, idx) => (
+                    <InterviewTaskCard key={idx} interview={int} />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {selectedDateInterviews.length === 0 ? (
-              <Card className="border-slate-200 shadow-sm rounded-[2rem] bg-white border p-8 text-center space-y-4">
-                <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-                  <Clock className="h-8 w-8 text-slate-300" />
+            {/* Upcoming Section */}
+            {allInterviews.some(int => int.date && new Date(int.date) > new Date()) && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-xl font-black flex items-center gap-2 text-slate-900 uppercase tracking-tight">
+                    <CalendarIcon className="h-5 w-5 text-indigo-500" /> Upcoming Schedules
+                  </h3>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-black text-lg text-slate-800">No Interviews</p>
-                  <p className="text-xs font-medium text-slate-400">You have no interviews scheduled for this day.</p>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                  {allInterviews
+                    .filter(int => int.date && new Date(int.date) > new Date() && !isSameDay(new Date(int.date), selectedDate))
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    .map((int, idx) => (
+                      <InterviewTaskCard key={idx} interview={int} isCompact />
+                    ))}
                 </div>
-                <Button variant="ghost" className="w-full font-bold text-primary hover:bg-primary/5">View Jobs</Button>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {selectedDateInterviews.map((int, idx) => (
-                  <Card key={idx} className="border-slate-200 shadow-sm rounded-[2rem] overflow-hidden group hover:scale-[1.02] transition-transform duration-300 bg-white border">
-                    <div className={cn("h-2 w-full", int.status === 'completed' ? "bg-emerald-500" : "bg-primary")} />
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="space-y-1">
-                          <Badge className={cn("border-none font-black text-[9px] uppercase tracking-tighter shadow-none", int.status === 'completed' ? "bg-emerald-50 text-emerald-600" : "bg-primary/10 text-primary")}>
-                            {int.type} Round
-                          </Badge>
-                          <h4 className="font-black text-lg leading-tight uppercase tracking-tight text-slate-900">{int.app.jobId?.roleTitle}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {int.app.jobId?.companyName}
-                          </p>
-                        </div>
-                        {int.status === 'completed' ? <CheckCircle className="h-6 w-6 text-emerald-500" /> : <Zap className="h-6 w-6 text-amber-500 fill-amber-500" />}
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 mb-4 shadow-inner">
-                        <div className="flex items-center gap-2 text-xs font-black text-slate-700">
-                          <Clock className="h-3.5 w-3.5 text-primary" />
-                          {int.date && format(new Date(int.date), 'hh:mm a')}
-                        </div>
-                        <Badge variant="outline" className="border-none font-bold text-[9px] uppercase tracking-widest text-slate-400 shadow-none">Local Time</Badge>
-                      </div>
-
-                      {int.status === 'scheduled' && int.app.meetingLink ? (
-                        <Button className="w-full h-11 rounded-xl font-black gap-2 shadow-lg shadow-primary/10" onClick={() => window.open(int.app.meetingLink, '_blank')}>
-                          <Video className="h-4 w-4" /> Join Meeting
-                        </Button>
-                      ) : (
-                        <Button variant="outline" className="w-full h-11 rounded-xl border-2 font-black gap-2 opacity-50">
-                          {int.status === 'completed' ? 'Completed' : 'Link Pending'}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
             )}
 
@@ -201,5 +188,57 @@ export default function InterviewCalendar() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function InterviewTaskCard({ interview: int, isCompact }: any) {
+  return (
+    <Card className={cn(
+      "border-slate-200 shadow-sm rounded-[2rem] overflow-hidden group transition-all duration-300 bg-white border",
+      !isCompact && "hover:scale-[1.02]"
+    )}>
+      <div className={cn("h-1.5 w-full", int.status === 'completed' ? "bg-emerald-500" : "bg-primary")} />
+      <CardContent className={cn("p-6", isCompact && "p-4")}>
+        <div className="flex items-start justify-between mb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Badge className={cn("border-none font-black text-[8px] uppercase tracking-tighter shadow-none", int.status === 'completed' ? "bg-emerald-50 text-emerald-600" : "bg-primary/10 text-primary")}>
+                {int.type} Round
+              </Badge>
+              {isCompact && (
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                  {format(new Date(int.date), 'dd MMM')}
+                </span>
+              )}
+            </div>
+            <h4 className={cn("font-black leading-tight uppercase tracking-tight text-slate-900", isCompact ? "text-sm" : "text-lg")}>
+              {int.app.jobDetails?.roleTitle || "Specialist Role"}
+            </h4>
+            <p className="text-[9px] font-bold text-slate-400 uppercase flex items-center gap-1">
+              <Briefcase className="h-2.5 w-2.5" /> {int.app.jobDetails?.companyName || "Unknown Company"}
+            </p>
+          </div>
+          {int.status === 'completed' ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />}
+        </div>
+
+        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 mb-4 shadow-inner">
+          <div className="flex items-center gap-2 text-[11px] font-black text-slate-700">
+            <Clock className="h-3.5 w-3.5 text-primary" />
+            {int.date && format(new Date(int.date), 'hh:mm a')}
+          </div>
+          <Badge variant="outline" className="border-none font-bold text-[8px] uppercase tracking-widest text-slate-400 shadow-none">Local Time</Badge>
+        </div>
+
+        {int.status === 'scheduled' && int.app.meetingLink ? (
+          <Button className="w-full h-10 rounded-xl font-black gap-2 shadow-lg shadow-primary/10 text-[10px] uppercase" onClick={() => window.open(int.app.meetingLink, '_blank')}>
+            <Video className="h-4 w-4" /> Join Meeting
+          </Button>
+        ) : (
+          <Button variant="outline" className="w-full h-10 rounded-xl border font-black gap-2 opacity-50 text-[10px] uppercase">
+            {int.status === 'completed' ? 'Completed' : 'Link Pending'}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }
